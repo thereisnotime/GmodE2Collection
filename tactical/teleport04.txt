@@ -1,0 +1,12 @@
+@name TP - Server
+
+runOnChat(1)
+
+if(first()|duped()){
+    hint("Tell players to add you on their prop protection, then they can use /ptp <name>",20)   
+}
+
+if((lastSaid():explode(" ")[1,string] == "/ptp") & chatClk()){
+    TP = findPlayerByName(lastSaid():explode(" ")[2,string])
+    lastSpoke():teleport(TP:pos()+vec(0,0,TP:height()+5))   
+}

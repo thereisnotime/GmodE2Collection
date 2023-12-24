@@ -1,0 +1,14 @@
+@name Teleport - Personal - NEED NEXUS
+
+runOnChat(1)
+
+if(first()|duped()){
+    hint("To use, say /ptp <name>",10)   
+}
+
+if((owner():lastSaid():explode(" ")[1,string] == "/ptp") & chatClk(owner())){
+    hideChat(1)
+    PTP = findPlayerByName(lastSaid():explode(" ")[2,string])
+    owner():teleport(PTP:pos()+vec(0,0,PTP:height()+5))
+}
+# NOTE: Nexus e2 functions are needed

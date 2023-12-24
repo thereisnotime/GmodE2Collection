@@ -1,0 +1,53 @@
+@name Follower
+@persist Target:entity Orbit
+
+## ONLY CHANGE THESE OPTIONS
+CommandColor = vec(255,255,0) # Vector color of highlighted commands.
+ChatColor = vec(255,255,255) # Vector color of the defualt chat.
+YourNameColor = vec(0,150,255) # Vector color of your name in chat.
+RingColor = vec(255,0,150) # Vector color of the follower's ring
+## HOW TO USE ##
+# /orbit <name> - Follows another player. If you do your name, it will follow you.
+# /e2 - Teleports you to e2
+# /ptp <name> - Teleports you to player
+## NOTHING PAST THIS ##
+
+runOnChat(1)
+runOnTick(1)
+
+if(first()|duped()){
+    holoCreate(1)
+    holoParent(1,entity())
+    holoModel(1,"hq_icosphere")
+    holoMaterial(1,"models/wireframe")
+    holoCreate(2)
+    holoParent(2,entity())
+    holoModel(2,"models/holograms/hq_torus.mdl")
+    holoAng(1,ang(0,0,0)) 
+    holoAng(2,ang(0,0,0)) 
+    holoScale(2,vec(2,2,2))
+    holoColor(2,RingColor) 
+}
+
+if((owner():lastSaid():explode(" ")[1,string] == "/orbit") & chatClk(owner())){
+    hideChat(1)
+    Target = findPlayerByName(lastSaid():explode(" ")[2,string])
+    if(Target:name() == owner():name()){
+        printColor(CommandColor,"Orbiting ",YourNameColor,"you") 
+    }
+    else{
+        printColor(CommandColor,"Orbiting ",YourNameColor,Target:name())
+    }
+    Orbit = 1 
+}
+if(Orbit == 1){
+    entity():setPos(Target:pos()+vec(75,0,80):rotate(ang(0,curtime()*90,0))) 
+}
+if((owner():lastSaid()=="/e2") & chatClk(owner())){
+    owner():teleport(entity():pos())   
+}
+if((owner():lastSaid():explode(" ")[1,string] == "/ptp") & chatClk(owner())){
+    hideChat(1)
+    Ply = findPlayerByName(lastSaid():explode(" ")[2,string])
+    owner():teleport(Ply:pos()+vec(0,0,Ply:height()+5))   
+}

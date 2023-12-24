@@ -1,0 +1,35 @@
+@name Door Controller - FADE
+@inputs Key1 Key2
+@outputs Open
+@persist Open
+
+if(first()) {
+    propSpawnUndo(0)
+    findIncludePlayer(owner())
+    findIncludePlayer("Name")
+    findByClass("player")
+    A = findToArray()
+    foreach(X,Ply:entity = A) {
+        runOnKeys(Ply,1)
+    }
+    Open = 0
+}
+if((keyClkPressed()=="pad_0") & (keyClk():keyPressed("pad_0"))){
+    Open = 1
+    timer("close",5000)   
+}
+if(clk("close")){
+    Open = 0   
+}
+if(Key1 == 1){
+    Open = 1
+    timer("close",5000)   
+}
+if(Key2 == 1){
+    Open = 1
+    timer("close",5000)   
+}
+
+#[
+    Inputs Key1 and Key2 are for keypads, if you want them
+]#

@@ -1,0 +1,24 @@
+@name Teleport - Personal - NEED PROPCORE
+@persist [PTP E]:entity
+
+runOnChat(1)
+
+if(first()|duped()){
+    hint("To use, say /ptp <name>",10)   
+}
+
+if((owner():lastSaid():explode(" ")[1,string] == "/ptp") & chatClk(owner())){
+    hideChat(1)
+    E:propDelete()
+    PTP = findPlayerByName(lastSaid():explode(" ")[2,string])
+    E = propSpawn("models/hunter/blocks/cube05x05x025.mdl",owner():pos()+vec(0,0,7.5),1)
+    timer("tp",4000)
+}
+if(clk("tp")){
+    E:setPos(PTP:pos()+vec(0,0,PTP:height()+7.5))
+    timer("d",50)   
+}
+if(clk("d")){
+    E:propDelete()   
+}
+# NOTE: Propcore needs to be on
