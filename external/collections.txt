@@ -1,3 +1,7 @@
 https://github.com/Fasteroid/expression2-public
 https://github.com/plebble/expression2
 https://github.com/mouuff/Garry-s-mod-E2
+https://github.com/evinbg/Expression-2s
+https://github.com/AlexALX/wiremod_e2_os
+https://github.com/aemarkov/gmod_stuff
+https://gitlab.com/CardboardFace/e2-scripts
