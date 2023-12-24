@@ -1,6 +1,6 @@
 # GmodE2Collection
 
-Expression2 Collection that includes all of my E2s and some other E2s that I like.
+Expression2 Collection that includes all of my E2s and some other external E2s that I like - some are random, some are crappy but all of them will make you happy. 
 
 ## Structure
 
