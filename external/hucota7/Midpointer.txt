@@ -1,0 +1,41 @@
+@name Midpointer
+@persist Phase Pos1:vector Pos2:vector Pos3:vector
+
+runOnKeys(owner(),1)
+if (first()) {
+    Phase = 1
+    hint("Press Use to place the first point, again for the second, and again to reset.",8)
+}
+if (owner():keyUse())
+{
+    switch (Phase) {
+        case 1,
+            Pos1 = owner():aimPos()
+            holoCreate(1,Pos1,vec(0.5,0.5,0.5))
+            holoModel(1,"hq_icosphere")
+            holoColor(1,vec4(255,64,64,128))
+            holoDisableShading(1,1)
+            Phase++
+            break
+        case 2,
+            Pos2 = owner():aimPos()
+            holoCreate(2,Pos2,vec(0.5,0.5,0.5))
+            holoModel(2,"hq_icosphere")
+            holoColor(2,vec4(64,255,64,128))
+            holoDisableShading(2,1)
+            
+            Pos3 = mix(Pos1,Pos2,0.5)
+            holoCreate(3,Pos3,vec(0.5,0.5,0.5))
+            holoModel(3,"hq_icosphere")
+            holoColor(3,vec4(64,64,255,128))
+            holoDisableShading(3,1)
+            Phase++
+            break
+        case 3,
+            Pos1 = vec()
+            Pos2 = vec()
+            Pos3 = vec()
+            holoDeleteAll()
+            Phase = 1
+    }
+}

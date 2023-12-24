@@ -1,0 +1,64 @@
+@name MP Interface
+@inputs Amount
+@outputs Withdraw
+@persist PrevAmount Pot:entity Max ID:string
+@trigger Amount
+runOnLast(1)
+
+if (last()) {
+    print("[MP] "+entity():getName()+" chip deleted.")
+}
+
+if (first()) {
+    PrevAmount = 0
+    runOnChat(1)
+    if (entity():isWeldedTo()) {
+        Pot = entity():isWeldedTo()
+        entity():createWire(Pot,"Amount","StoredAmount")
+        Pot:createWire(entity(),"SpawnAmount","Withdraw")
+    } else {
+        print("[MP] Spawn the chip on a Money Pot.")
+        selfDestruct()
+        exit()
+    }
+    print("[MP] Assign a name to your Money Pot: !mpname <name>")
+}
+
+if (changed(Amount) && !first()) {
+    Name = entity():getName()
+    Difference = Amount - PrevAmount
+    if (Difference > 0){
+        print("[MP] $"+Difference+" has been deposited to "+Name)
+    }elseif (Difference < 0) {
+        print("[MP] $"+abs(Difference)+" has been withdrawn from "+Name)
+    }
+    PrevAmount = Amount
+    print("[MP] "+entity():getName()+" now has $"+Amount)
+}
+
+if (chatClk(owner())) {
+    Said = owner():lastSaid()
+    Prefix = Said:index(1)
+
+    if (Prefix == "!") {
+        Command = Said:sub(2):explode(" ")
+        Func = Command[1,string]
+        Arg = Command:concat(" ",2)
+        if (Func == "mpname") {
+            hideChat(1)
+            setName(Arg)
+            ID = Arg:explode(" "):concat(""):lower()
+            print("[MP] Money Pot assigned the name \""+entity():getName()+"\"")
+            print("[MP] Money Pot ID assigned to \""+ID+"\"")
+        }elseif (Func == "mpgive") {
+            hideChat(1)
+            if (Command[2,string] == ID) {
+                if (Command[3,string]:toNumber():toString() == Command[3,string]) {
+                    if (Command[3,string]:toNumber() <= Amount) {
+                        Withdraw = Command[3,string]:toNumber()
+                    }
+                }
+            }
+        }
+    }
+}

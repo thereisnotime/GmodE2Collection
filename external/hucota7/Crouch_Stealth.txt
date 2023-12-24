@@ -1,0 +1,22 @@
+@name Crouch Stealth
+@persist MatStill:string MatMoving:string
+interval(200)
+
+if (first()) {
+    MatStill = "models/props_c17/fisheyelens"
+    MatMoving = "models/shadertest/predator"
+}
+
+if (owner():isCrouch() && owner():keyDuck() && owner():isOnGround()) {
+    if (owner():vel() == vec(0,0,0)) {
+        owner():setMaterial(MatStill)
+    } else {
+        owner():setMaterial(MatMoving)
+    }
+} elseif (owner():keyDuck() && owner():isOnGround()) {
+    owner():setMaterial(MatMoving)
+} elseif (owner():isCrouch() && owner():isOnGround()) {
+    owner():setMaterial(MatMoving)
+} else {
+    owner():setMaterial("")
+}

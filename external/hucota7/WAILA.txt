@@ -1,0 +1,57 @@
+@name WAILA
+@inputs EGP:wirelink
+@persist ScrW ScrH
+interval(500)
+
+if (first()) {ScrW = egpScrW(owner()) ScrH = egpScrH(owner())}
+
+Tgt = owner():aimEntity()
+EGP:egpClear()
+
+if (owner():aimPos():distance(owner():pos()) > 1000) { exit() }
+
+if (Tgt:type()) {
+    EGP:egpBox(1,vec2(ScrW*0.5,30),vec2(400,50))
+    EGP:egpColor(1,vec4(192,0,0,77))
+    if (!Tgt:isPlayer()) { #is prop
+        EGP:egpText(2,Tgt:type(),vec2(ScrW*0.5,10))
+        EGP:egpAlign(2,1,0)
+        EGP:egpColor(2,vec4(255,255,255,192))
+        if (Tgt:owner()) { #is player-owned
+            EGP:egpText(3,Tgt:owner():name(),vec2(ScrW*0.5,45))
+            EGP:egpAlign(3,1,2)
+            EGP:egpColor(3,vec4(255,255,255,192))
+        } else { #is world-owned
+            EGP:egpText(3,"world",vec2(ScrW*0.5,45))
+            EGP:egpAlign(3,1,2)
+            EGP:egpColor(3,vec4(255,255,255,192))
+        }
+    } else { #is player
+        EGP:egpText(2,Tgt:name(),vec2(ScrW*0.5,10)) #player
+        EGP:egpAlign(2,1,0)
+        EGP:egpColor(2,vec4(255,255,255,192))
+        EGP:egpText(3,Tgt:health():toString(),vec2(ScrW*0.5-195,10)) #health
+        EGP:egpAlign(3,0,0)
+        EGP:egpColor(3,vec4(64,255,64,192))
+        EGP:egpText(4,Tgt:armor():toString(),vec2(ScrW*0.5+195,10)) #armor
+        EGP:egpAlign(4,2,0)
+        EGP:egpColor(4,vec4(64,64,255,192))
+        Weapon = Tgt:weapon():toString():explode("[")[3,string]:sub(1,-2) #weapon
+        EGP:egpText(5,Weapon,vec2(ScrW*0.5,45))
+        EGP:egpAlign(5,1,2)
+        EGP:egpColor(5,vec4(255,255,255,192))
+        if (Tgt:weapon():clip1() != -1) { #takes primary ammo
+            AmmoCount = Tgt:ammoCount(Tgt:weapon():primaryAmmoType()) #primary ammo
+            EGP:egpText(6,Tgt:weapon():clip1():toString()+"/"+AmmoCount,vec2(ScrW*0.5-195,45))
+            EGP:egpAlign(6,0,2)
+            EGP:egpColor(6,vec4(255,255,255,192))
+        }
+        if (Tgt:weapon():clip2() != -1) { #takes secondary ammo
+            AmmoCount = Tgt:ammoCount(Tgt:weapon():secondaryAmmoType()) #secondary ammo
+            EGP:egpText(7,Tgt:weapon():clip2():toString()+"/"+AmmoCount,vec2(ScrW*0.5+195,45))
+            EGP:egpAlign(7,2,2)
+            EGP:egpColor(7,vec4(255,255,255,192))
+        }
+    }
+    
+}

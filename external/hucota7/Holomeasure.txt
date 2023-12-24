@@ -1,0 +1,42 @@
+@name Holomeasure
+@persist Phase Pos1:vector Pos2:vector
+
+runOnKeys(owner(),1)
+if (first()) {
+    Phase = 1
+    hint("Press \"M\" to place the first point, again for the second, and again to reset.",8)
+}
+if (owner():keyPressed("M"))
+{
+    switch (Phase) {
+        case 1,
+            Pos1 = owner():aimPos()
+            holoCreate(1,Pos1,vec(0.5,0.5,0.5))
+            holoModel(1,"hq_icosphere")
+            holoColor(1,vec4(255,64,64,128))
+            holoDisableShading(1,1)
+            Phase++
+            break
+        case 2,
+            Pos2 = owner():aimPos()
+            holoCreate(2,Pos2,vec(0.5,0.5,0.5))
+            holoModel(2,"hq_icosphere")
+            holoColor(2,vec4(64,255,64,128))
+            holoDisableShading(2,1)
+            Increments = int(Pos1:distance(Pos2))*(0.5/11.86)
+            for (I = 1, Increments) {
+                Mark = mix(Pos1,Pos2,I/Increments)
+                holoCreate(I+2,Mark,I%2==0 ? vec(0.3,0.3,0.3) : vec(0.15,0.15,0.15))
+                holoModel(I+2,"hq_icosphere")
+                holoColor(I+2,vec4(255,255,255,128))
+                holoDisableShading(I+2,1)
+            }
+            Phase++
+            break
+        case 3,
+            Pos1 = vec()
+            Pos2 = vec()
+            holoDeleteAll()
+            Phase = 1
+    }
+}
