@@ -6,3 +6,5 @@ https://github.com/AlexALX/wiremod_e2_os
 https://github.com/aemarkov/gmod_stuff
 https://gitlab.com/CardboardFace/e2-scripts
 https://github.com/Vurv78/expression2-public-e2s
+https://github.com/TwistedTail/Public-E2s
+https://github.com/Xevion/expression-2
