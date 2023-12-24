@@ -1,6 +1,7 @@
 # GmodE2Collection
 
-Expression2 Collection that includes all of my E2s and some other external E2s that I like - some are random, some are crappy but all of them will make you happy. 
+Expression2 Collection that includes all of my E2s and some other external E2s that I like - some are random, some are crappy but all of them will make you happy.
+This repository also has an action that will automatically download all external E2s repositories in this one repository every week just to keep them up to date.
 
 ## Structure
 

@@ -17,7 +17,7 @@ jobs:
 
       - name: Process Repositories
         run: |
-          while IFS= read -r repo; do
+          while IFS= read -r repo || [ -n "$repo" ]; do
             repo_name=$(basename -s .git "$repo")
             repo_author=$(basename $(dirname "$repo"))
             repo_path="./external/${repo_author}-${repo_name}"
@@ -30,14 +30,14 @@ jobs:
               mv "$repo_path/.git" "$repo_path/.gitoff"
             else
               echo "Cloning repository $repo"
-              git clone "$repo" "$repo_path"
+              git clone "$repo" "$repo_path" && echo "Cloned $repo_path" || echo "Failed to clone $repo"
             fi
           done < ./external/collections.txt
 
       - name: Commit and Push Changes
         run: |
-            git config --global user.name 'github-actions[bot]'
-            git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add .
-            git commit -m "Update external collections"
-            git push origin HEAD:${{ github.ref }}
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "Update external collections"
+          git push origin HEAD:${{ github.ref }}
