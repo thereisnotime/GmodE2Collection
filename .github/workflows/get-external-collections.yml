@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: '0 0 * * 0'  # Runs at 00:00 every Sunday
   workflow_dispatch:  # Allows manual trigger
+  push:
+    branches:
+      - master
+    paths:
+      - 'external/collections.txt'
 
 jobs:
   download-repos:
