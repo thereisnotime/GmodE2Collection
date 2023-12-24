@@ -1,0 +1,53 @@
+@name libArrayTable
+
+#Fast arraytable support functions
+
+function table newATFrom(Arg:array, Type:number) {
+    local T=table()
+    for(I=1,Arg:count()) {
+        T:pushNumber(Arg[I, number])
+    }
+    return T
+}
+
+function table newATFrom(Arg:array, Type:vector) {
+    local T=table()
+    for(I=1,Arg:count()) {
+        T:pushVector(Arg[I, vector])
+    }
+    return T
+}
+
+function table newATFrom(Arg:array, Type:string) {
+    local T=table()
+    for(I=1,Arg:count()) {
+        T:pushString(Arg[I, string])
+    }
+    return T
+}
+
+function table newATFrom(Arg:array, Type:entity) {
+    local T=table()
+    for(I=1,Arg:count()) {
+        T:pushEntity(Arg[I, entity])
+    }
+    return T
+}
+
+#Passthroughs for uncertain datatypes
+
+function table newATFrom(Arg:table, Type:number) {
+    return Arg
+}
+
+function table newATFrom(Arg:table, Type:vector) {
+    return Arg
+}
+
+function table newATFrom(Arg:table, Type:string) {
+    return Arg
+}
+
+function table newATFrom(Arg:table, Type:entity) {
+    return Arg
+}

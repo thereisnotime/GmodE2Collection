@@ -1,0 +1,122 @@
+#ifndef SELENE_STD
+#define SELENE_STD
+
+#pragma set OutputResolveListing true
+#pragma set NoUnreferencedLeaves false
+
+#define NULL 0
+
+#include <selene/cpu.txt>
+
+char bits_add(char v, char b) {
+    return v | b;
+}
+
+char bits_remove(char v, char b) {
+    BNOT b;
+    return v & b;
+}
+
+char to_int(float v) {
+    FINT v;
+    return v;
+}
+
+char strlen(char *s) {
+    char n = 0;
+    while(*s) {
+        s++;
+        n++;
+    }
+    return n;
+}
+
+void memcpy_mcopy(char *dst, char *src, char n) {
+    preserve ESI, EDI;
+    mov ESI, src;
+    mov EDI, dst;
+    mcopy n;
+    zap ESI, EDI;
+}
+
+void memcpy(char *dst, char *src, char n) {
+    char b;
+    if(n <= 0) return;
+    while(n > 0) {
+        b = insn_min(n, 8192);
+        memcpy_mcopy(dst, src, b);
+        dst += b;
+        src += b;
+        n -= b;
+    }
+}
+
+void itoa(char n, char *radix, char *result, char resz) {
+    char base = strlen(radix);
+    char *start = result;
+    char *end = result + resz - 2;
+    char tmp;
+    if(resz <= 2) return;
+    if(base <= 0) return;
+    if(n < 0) {
+        *result = '-';
+        result++;
+        start++;
+        n = -n;
+    }
+    n = to_int(n);
+    if(n == 0) {
+        *result = '0';
+        result++;
+    }
+    while(n > 0) {
+        *result = radix[n % base];
+        n = to_int(n / base);
+        result++;
+        if(result == end) break;
+    }
+    *result = 0;
+    result--;
+    while(start < result) {
+        tmp = *start;
+        *start = *result;
+        *result = tmp;
+        start++;
+        result--;
+    }
+}
+
+void ftoa(float n, char *radix, char prec, char *result, char resz) {
+    char base = strlen(radix);
+    char *end = result + resz - 2;
+    char *frac;
+    char tmp;
+    if(resz <= 3) return;
+    if(base <= 0) return;
+    itoa(n, radix, result, resz - 1);
+    if(n < 0) {
+        n = -n;
+    }
+    frac = result + strlen(result);
+    *frac = '.';
+    frac++;
+    tmp = insn_ffrac(n);
+    while(tmp > 0) {
+        if(prec <= 0) break;
+        if(frac >= end) break;
+        tmp *= base;
+        *frac = radix[to_int(tmp)];
+        frac++;
+        tmp = insn_ffrac(tmp)
+        prec--; 
+    }
+    *frac = 0;
+}
+
+string UHEX_RADIX, "0123456789ABCDEF";
+HEX_RADIX:
+string LHEX_RADIX, "0123456789abcdef";
+string DEC_RADIX, "0123456789";
+string OCT_RADIX, "01234567";
+string BIN_RADIX, "01";
+#endif

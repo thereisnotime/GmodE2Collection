@@ -1,0 +1,16 @@
+@name -Fast- Array ApplyForce
+@inputs Ents:array Pos:vector
+@outputs 
+@persist 
+@trigger 
+
+if(first()|duped()) {
+    runOnTick(1)
+}
+
+if(tickClk()) {
+    for(I=1,Ents:count()) {
+        local Ent=Ents[I, entity]
+        Ent:applyForce(((Pos-Ent:pos()))*Ent:mass()*100)
+    }
+}

@@ -1,0 +1,150 @@
+#ifndef SELENE_DEVTREE
+#define SELENE_DEVTREE
+
+#include <selene/dev.txt>
+#include <selene/pmalloc.txt>
+#include <selene/interrupt.txt>
+
+ram_sizes:
+    db 8, 64, 1024, 4096, 32768, 131072, 1048576, 0
+    
+char devtree_found_console;
+char devtree_init() {
+    char *ext = insn_cpuid(CPUID_RAMSIZE);
+    char sz;
+    debug_printkln("devtree_init\n");
+    printkln("(printk down until console is discovered)\n");
+    printk_set_console(0);
+    devtree_found_console = 0;
+    sz = devtree_scan_ebus(ext);
+    if(!devtree_found_console) {
+        MOV port3, -1;
+        printk_set_console(ext);
+        printkln("assuming console on root device\n");
+    }
+    printkln("mapped %p (%d) device bytes\n", sz, sz);
+    return sz + ext;
+}
+
+char devtree_scan_ebus(char *ebus) {
+    char i, devt, size;
+    char *handler;
+    char *next;
+    MOV port1, ebus;
+    debug_printkln("scan_ebus %p\n", ebus);
+    for(i = 0; i < EBUS_DEVICES; i++) {
+        ebus[2 * i] = 0;
+        ebus[2 * i + 1] = 0;
+    }
+    ebus[EBUS_REG_CDATA_SZ] = EBUS_SIZE;
+    ebus[EBUS_REG_RECURSE] = 0;
+    ebus[EBUS_REG_SCAN] = 1;
+    next = 1;
+    for(i = 0; i < EBUS_DEVICES; i++) {
+        MOV port3, i;
+        ebus[2 * i] = next;
+        ebus[2 * i + 1] = next + MAX_DEVICE_SIZE;
+        devt = ebus[EBUS_REG_DEVTYPE + i];
+        size = 0;
+        if(devt < EBUS_TYPES) {
+            handler = devtree_handlers[devt];
+            if(handler != 0) {
+                size = handler(ebus + EBUS_SIZE + next);
+            }
+        }
+        ebus[2 * i + 1] = next + size;
+        next += size + 1;
+    }
+    return next + EBUS_SIZE;
+}
+
+char probe_failed;
+void probe_ihdl_io() {
+    probe_failed = 1;
+}
+
+char probe_test_addr(char *gate, char addr) {
+    char old_val = gate[addr];
+    gate[addr] = -1;
+    if(gate[addr] != -1) return 1;
+    gate[addr] = 0xdeadbeef;
+    if(gate[addr] != 0xdeadbeef) return 1;
+    gate[addr] = old_val;
+    return probe_failed;
+}
+
+char devtree_scan_gate(char *gate) {
+    MOV port2, gate;
+    char *old_handler = interrupt_get(INT_IO);
+    char sz;
+    debug_printkln("scan_gate %p\n", gate);
+    interrupt_install(INT_IO, probe_ihdl_io);
+    probe_failed = 0;
+    sz = devtree_gate_size(gate);
+    interrupt_install(INT_IO, old_handler);
+    if(sz < PAGESIZE) {
+        printkln("memory to small, not going to try to page\n");
+    } else {
+        printkln("%d new pages added\n", pfreerange(gate, gate+sz));
+    }
+    return sz;
+}
+
+char devtree_gate_size(char *gate) {
+    char i = 0;
+    printkln("probing gate at %p\n", gate);
+    if(probe_test_addr(gate, 0)) {
+        printkln("%p: failed to read first byte, probably not memory\n", gate);
+        return 0;
+    }
+    while(ram_sizes[i]) {
+        if(probe_test_addr(gate, ram_sizes[i] - 1)) {
+            debug_printkln("%p: failed at %p\n", gate, ram_sizes[i]);
+            if(i == 0) {
+                printkln("%p: too small, probably not memory\n", gate);
+                return 0;
+            }
+            printkln("%p: size %d\n", gate, ram_sizes[i - 1]);
+            return ram_sizes[i - 1];
+        }
+        i++;
+    }
+    printkln("%p: assuming largest size (%d)\n", gate, ram_sizes[i - 1]);
+    return ram_sizes[i - 1];
+}
+
+char devtree_scan_console(char *cns) {
+    MOV port0, cns;
+    debug_printkln("scan_console %p\n", cns);
+    if(!devtree_found_console) {
+        printk_set_console(cns);
+        printkln("discovered and set printk console\n");
+        devtree_found_console = 1;
+    }
+    return CNS_SIZE;
+}
+
+devtree_handlers:
+    db 0;  // Disconnected
+    db 0;  // Unknown
+    db devtree_scan_ebus;
+    db 0;  // Address Bus
+    db 0;  // CPU
+    db 0;  // GPU
+    db 0;  // SPU
+    db 0;  // HDD
+    db 0;  // DHDD
+    db 0;  // DataBus
+    db 0;  // CD Ray
+    db devtree_scan_console;  // Console Screen
+    db 0;  // Digital Screen
+    db 0;  // Data Plug (disconnected)
+    db 0;  // Data Socket (disconnected)
+    db 0;  // Keyboard
+    db 0;  // Oscilloscope
+    db 0;  // Sound Emitter
+    db 0;  // Constant Value
+    db 0;  // Data Port
+    db devtree_scan_gate;  // Gate
+
+#endif

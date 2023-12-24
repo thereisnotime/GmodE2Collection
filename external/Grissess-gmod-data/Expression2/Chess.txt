@@ -1,0 +1,870 @@
+@name Chess
+@inputs Base:entity WhitePod:entity BlackPod:entity
+@outputs 
+@persist BOARD_HEIGHT SQ_SIZE ASCII_A BOARD_OFF:vector
+@persist HI_BOARD HI_NULL
+@persist HI_WAP HI_WBP HI_WCP HI_WDP HI_WEP HI_WFP HI_WGP HI_WHP
+@persist HI_WQR HI_WQK HI_WQB HI_WQ HI_WK HI_WKB HI_WKK HI_WKR
+@persist HI_BAP HI_BBP HI_BCP HI_BDP HI_BEP HI_BFP HI_BGP HI_BHP
+@persist HI_BQR HI_BQK HI_BQB HI_BQ HI_BK HI_BKB HI_BKK HI_BKR
+@persist PC_BPOS:array PC_TYPE:array PC_COLOR:array PC_MOVED:array
+@persist TP_PAWN TP_ROOK TP_KNIGHT TP_BISHOP TP_QUEEN TP_KING
+@persist ST_NORMAL ST_CHECK ST_CHECKMATE ST_STALEMATE
+@persist CL_WHITE CL_BLACK OUT:vector2
+@persist Turn White:entity Black:entity
+#[
+@persist BoardToWorld:function
+@persist PC_SetPos:function PC_GetPos:function
+@persist PC_FindAtPos:function PC_GetType:function
+@persist PC_GetWithType:function BoardToAN:function
+@persist ANToBoard:function PC_GetColor:function
+@persist PC_GetWithColor:function PC_GetMoved:function
+@persist PC_Attacked:function PC_Attacks:function
+@persist BoardValid:function PC_CanMove:function
+@persist TellWhite:function TellBlack:function
+@persist PC_Remove:function PC_IsOut:function
+@persist ReRender:function TestCheck:function
+@persist TestSmothered:function GameState:function
+@trigger 
+]#
+
+#E2 Holo Chess by Grissess
+#Uses holoModel anymodel function and the PHX2 chess models
+
+#SETUP PHASE: Functions
+function number pcIsOut(PCID) {
+    print(PC_BPOS[PCID, vector2], OUT)
+    return PC_BPOS[PCID, vector2]==OUT
+}
+function number pcGetType(PCID) { #-> PCTP (number)
+    return PC_TYPE[PCID, number]
+}
+function number pcGetColor(PCID) { #-> PCCL (number)
+    return PC_COLOR[PCID, number]
+}
+function void tellWhite(What:string) {
+    WhitePod:printColorDriver(vec(0, 0, 0), "(CHESS) ", vec(255, 255, 255), What)
+}
+function void tellBlack(What:string) {
+    BlackPod:printColorDriver(vec(0, 0, 0), "(CHESS) ", vec(255, 255, 255), What)
+}
+function vector boardToWorld(BPos:vector2) { #-> vec
+    return holoEntity(HI_BOARD):pos()+vec((BPos:x()-4)*SQ_SIZE, (BPos:y()-4)*SQ_SIZE, BOARD_HEIGHT)+BOARD_OFF
+}
+function void pcSetPos(PCID, BPos:vector2) {
+    if(pcIsOut(PCID)) {
+        print("Warning! Cannot move an out piece!")
+        return
+    }
+    PC_BPOS[PCID, vector2]=BPos
+    PC_MOVED[PCID, number]=1
+    holoPos(PCID, boardToWorld(BPos))
+}
+function vector2 pcGetPos(PCID) { #-> vec2
+    return PC_BPOS[PCID, vector2]
+}
+function number pcFindAtPos(BPos:vector2) { #-> PCID (number) !EXPENSIVE!
+    for(I=1, PC_BPOS:count()) {
+        if(PC_BPOS[I, vector2]==BPos) {
+            return I
+        }
+    }
+    return HI_NULL
+}
+function void pcRemove(PCID) {
+    if(pcGetType(PCID)==TP_KING) {
+        if(pcGetColor(PCID)==CL_WHITE) {
+            tellWhite("Your king was taken!")
+            WhitePod:killPod()
+        } else {
+            tellBlack("Your king was taken!")
+            BlackPod:killPod()
+        }
+    }
+    PC_BPOS[PCID, vector2]=OUT
+    holoDelete(PCID)
+}
+function array pcGetWithType(PCTP) { #-> array of PCIDs !EXPENSIVE!
+    Ret=array()
+    for(I=1, PC_TYPE:count()) {
+        if(PC_TYPE[I, number]==PCTP) {
+            Ret:pushNumber(I)
+        }
+    }
+    return Ret
+}
+function array pcGetWithColor(PCCL) { #-> array of PCID !EXPENSIVE!
+    Ret=array()
+    for(I=1, PC_COLOR:count()) {
+        if(PC_COLOR[I, number]==PCCL) {
+            Ret:pushNumber(I)
+        }
+    }
+    return Ret
+}
+function number pcGetMoved(PCID) {
+    return PC_MOVED[PCID, number]
+}
+function string boardToan(BPos:vector2) { #-> string
+    return toChar(BPos:x()+ASCII_A)+(BPos:y()+1):toString()
+}
+function vector2 anToBoard(AN:string) { #-> vec2
+    return vec2(toByte(AN[1])-ASCII_A, AN[2]:toNumber()-1)
+}
+function number boardValid(BPos:vector2) {
+    return BPos:x()>=0&BPos:x()<8&BPos:y()>=0&BPos:y()<8
+}
+function number pcCanMove(PCID, BPos:vector2) { #-> number !EXPENSIVE!
+    Type=pcGetType(PCID)
+    Color=pcGetColor(PCID)
+    Moved=pcGetMoved(PCID)
+    CPos=pcGetPos(PCID)
+    PCAt=pcFindAtPos(BPos)
+    print("PC_CanMove", PCID, BPos, "CPOS", CPos, "Moved", Moved)
+    if(pcIsOut(PCID)) {
+        #Can't move pieces that are out
+        print("Piece is out")
+        return 0
+    }
+    if(BPos==CPos) {
+        #A piece can't move unto itself
+        print("BPos==CPos")
+        return 0
+    }
+    if(!boardValid(BPos)) {
+        #Can't move to an invalid position
+        print("Position Invalid")
+        return 0
+    }
+    if(Type==TP_PAWN) {
+        print("Pawn")
+        if(Color==CL_WHITE) {
+            print("White")
+            if((BPos:y()-CPos:y())==1) {
+                print("deltay=1")
+                #One forward is always OK if it's empty
+                if(!PCAt&BPos:x()==CPos:x()) {
+                    return 1
+                }
+                #Diagonal is allowed only on captures
+                if(PCAt&abs(BPos:x()-CPos:x())==1) {
+                    return 1
+                }
+                #Otherwise...no
+                return 0
+            }
+            #Two forward is OK on the first move
+            if(!Moved&BPos:x()==CPos:x()&(BPos:y()-CPos:y())==2) {
+                print("deltay=2 and first move")
+                return 1
+            }
+            print("Fell off")
+            return 0
+        } else { #Negate Y for black pieces
+            if((BPos:y()-CPos:y())==-1) {
+                #One forward is always OK if it's empty
+                if(!PCAt&BPos:x()==CPos:x()) {
+                    return 1
+                }
+                #Diagonal is allowed only on captures
+                if(PCAt&abs(BPos:x()-CPos:x())==1) {
+                    return 1
+                }
+                #Otherwise...no
+                return 0
+            }
+            #Two forward is OK on the first move
+            if(!Moved&BPos:x()==CPos:x()&(BPos:y()-CPos:y())==-2) {
+                return 1
+            }
+            return 0
+        }
+    } elseif(Type==TP_ROOK) {
+        #One of the components must be the same
+        #The one that changes, every square between
+        #must be empty.
+        if(BPos:x()==CPos:x()) {
+            if(abs(BPos:y()-CPos:y())==1) {
+                return 1 #No squares between to check
+            }
+            for(Y=min(BPos:y(), CPos:y())+1, max(BPos:y(), CPos:y())-1) {
+                if(pcFindAtPos(vec2(BPos:x(), Y))) {
+                    #Interceding piece
+                    return 0
+                }
+            }
+            #OK, do it
+            return 1
+        }
+        #The other component changes
+        if(BPos:y()==CPos:y()) {
+            if(abs(BPos:x()-CPos:x())==1) {
+                return 1 #No squares between to check
+            }
+            for(X=min(BPos:x(), CPos:x())+1, max(BPos:x(), CPos:x())-1) {
+                if(pcFindAtPos(vec2(X, BPos:y()))) {
+                    #Interceding piece
+                    return 0
+                }
+            }
+            #OK, do it
+            return 1
+        }
+        #No other way to move
+        return 0
+    } elseif(Type==TP_KNIGHT) {
+        #Moves must have an absolute delta of 2,1 or 1,2
+        #Other than that, there are no restrictions,
+        #which makes this one nice
+        if(abs(BPos:x()-CPos:x())==1&abs(BPos:y()-CPos:y())==2) {
+            return 1
+        }
+        if(abs(BPos:x()-CPos:x())==2&abs(BPos:y()-CPos:y())==1) {
+            return 1
+        }
+        return 0 #There was no hway...
+    } elseif(Type==TP_BISHOP) {
+        #Delta-X and Delta-Y must be equal in magnitude
+        #and all squares between must be free
+        #which makes this one of the hardest procedures
+        if(abs(BPos:x()-CPos:x())==abs(BPos:y()-CPos:y())) {
+            #Checking the interceding squares here is interesting...
+            #it would be a little less so if E2 provided step size
+            Len=abs(BPos:x()-CPos:x())
+            RevX=(BPos:x()<CPos:x())
+            RevY=(BPos:y()<CPos:y())
+            for(Sq=1, Len-1) {
+                if(RevX) {
+                    X=CPos:x()-Sq
+                } else {
+                    X=CPos:x()+Sq
+                }
+                if(RevY) {
+                    Y=CPos:y()-Sq
+                } else {
+                    Y=CPos:y()+Sq
+                }
+                if(pcFindAtPos(vec2(X, Y))) {
+                    return 0 #Interceding piece
+                }
+            }
+            #A-OK
+            return 1
+        }
+        return 0 #Not diagonal
+    } elseif(Type==TP_QUEEN) {
+        #I'd say this was hard, but...it isn't
+        #The queen combines the move features of
+        #the rook and the bishop...so this is pretty
+        #much copypasta.
+        if(BPos:x()==CPos:x()) {
+            if(abs(BPos:y()-CPos:y())==1) {
+                return 1 #No squares between to check
+            }
+            for(Y=min(BPos:y(), CPos:y())+1, max(BPos:y(), CPos:y())-1) {
+                if(pcFindAtPos(vec2(BPos:x(), Y))) {
+                    #Interceding piece
+                    return 0
+                }
+            }
+            #OK, do it
+            return 1
+        }
+        #The other component changes
+        if(BPos:y()==CPos:y()) {
+            if(abs(BPos:x()-CPos:x())==1) {
+                return 1 #No squares between to check
+            }
+            for(X=min(BPos:x(), CPos:x())+1, max(BPos:x(), CPos:x())-1) {
+                if(pcFindAtPos(vec2(X, BPos:y()))) {
+                    #Interceding piece
+                    return 0
+                }
+            }
+            #OK, do it
+            return 1
+        }
+        if(abs(BPos:x()-CPos:x())==abs(BPos:y()-CPos:y())) {
+            #Checking the interceding squares here is interesting...
+            #it would be a little less so if E2 provided step size
+            Len=abs(BPos:x()-CPos:x())
+            RevX=(BPos:x()<CPos:x())
+            RevY=(BPos:y()<CPos:y())
+            for(Sq=1, Len-1) {
+                if(RevX) {
+                    X=CPos:x()-Sq
+                } else {
+                    X=CPos:x()+Sq
+                }
+                if(RevY) {
+                    Y=CPos:y()-Sq
+                } else {
+                    Y=CPos:y()+Sq
+                }
+                if(pcFindAtPos(vec2(X, Y))) {
+                    return 0 #Interceding piece
+                }
+            }
+            #A-OK
+            return 1
+        }
+        #Nope
+        return 0
+    } elseif(Type==TP_KING) {
+        #Something easy! Exactly one square at most along
+        #either vector, as long as there are no attacks
+        #on said square
+        #Unfortunately, attack calculation is pretty hardcore
+        if(abs(BPos:x()-CPos:x())<=1&abs(BPos:y()-CPos:y())<=1) {
+            #return !pcAttacked(BPos, (Color==CL_WHITE ? CL_BLACK : CL_WHITE))
+            return 1
+        }
+        #There's still hope! Maybe we're castling?
+        if(Color==CL_WHITE) {
+            if(Moved) {
+                return 0
+            }
+            if(BPos==vec2(2, 0)) {
+                for(X=1, 4) {
+                    if(pcFindAtPos(vec2(X, 0))) {
+                        return 0
+                    }
+                }
+                if(pcGetMoved(pcFindAtPos(vec2(0, 0)))) {
+                    return 0
+                }
+                return 1
+            }
+            if(BPos==vec2(6, 0)) {
+                for(X=5, 6) {
+                    if(pcFindAtPos(vec2(X, 0))) {
+                        return 0
+                    }
+                }
+                if(pcGetMoved(pcFindAtPos(vec2(7, 0)))) {
+                    return 0
+                }
+                return 1
+            }
+        } else {
+            if(Moved) {
+                return 0
+            }
+            if(BPos==vec2(2, 7)) {
+                for(X=1, 4) {
+                    if(pcFindAtPos(vec2(X, 7))) {
+                        return 0
+                    }
+                }
+                if(pcGetMoved(pcFindAtPos(vec2(0, 7)))) {
+                    return 0
+                }
+                return 1
+            }
+            if(BPos==vec2(6, 7)) {
+                for(X=5, 6) {
+                    if(pcFindAtPos(vec2(X, 7))) {
+                        return 0
+                    }
+                }
+                if(pcGetMoved(pcFindAtPos(vec2(7, 7)))) {
+                    return 0
+                }
+                return 1
+            }
+        }
+        return 0
+    }
+}
+function number pcAttacks(PCID, BPos:vector2) { #-> number
+    if(pcIsOut(PCID)) {
+        return 0
+    }
+    if(!boardValid(BPos)) {
+        return 0
+    }
+    Type=pcGetType(PCID)
+    CPos=pcGetPos(PCID)
+    Color=pcGetColor(PCID)
+    if(BPos==CPos) {
+        #A piece does not attack its own position
+        return 0
+    }
+    if(Type==TP_PAWN) {
+        if(Color==CL_WHITE) {
+            return (BPos:y()-CPos:y())==1&abs(BPos:x()-CPos:x())==1
+        } else {
+            return (BPos:y()-CPos:y())==-1&abs(BPos:x()-CPos:x())==1
+        }
+    } elseif(Type==TP_KING) {
+        #This prevents infinite recursion when called by PC_CanMove
+        return abs(BPos:x()-CPos:x())<=1&abs(BPos:y()-CPos:y())<=1
+    } else {
+        return pcCanMove(PCID, BPos)
+    }
+}
+function number pcAttacked(BPos:vector2, Color) { #-> PCID !DAYUM!
+    if(!boardValid(BPos)) {
+        return 0 #Just no
+    }
+    Pieces=pcGetWithColor(Color)
+    for(I=1, Pieces:count()) {
+        if(pcAttacks(I, BPos)) {
+            return I
+        }
+    }
+    return HI_NULL
+}
+function void reRender() {
+    for(PCID=1, PC_BPOS:count()) {
+        if(PCID==HI_BOARD) {
+            holoPos(HI_BOARD, (Base ? Base:pos() : entity():pos()))
+        } else {
+            holoPos(PCID, boardToWorld(pcGetPos(PCID)))
+        }
+    }
+}
+function number testCheck(Color) {
+    Pieces=pcGetWithColor(Color)
+    Piece=HI_NULL
+    for(PCID=1, Pieces:count()) {
+        print(pcGetType(PCID))
+        if(pcGetType(PCID)==TP_KING) {
+            print("Found the king!")
+            Piece=PCID
+        }
+    }
+    if(!Piece) {
+        print("Warning! No king!")
+        return 0
+    }
+    BPos=pcGetPos(Piece)
+    return pcAttacked(BPos, (Color==CL_WHITE ? CL_BLACK : CL_WHITE))
+}
+function number testSmothered(Color) {
+    Pieces=pcGetWithColor(Color)
+    Piece=HI_NULL
+    for(PCID=1, Pieces:count()) {
+        if(pcGetType(PCID)==TP_KING) {
+            Piece=PCID
+        }
+    }
+    if(!Piece) {
+        print("Warning! No king!")
+        return 0
+    }
+    BPos=pcGetPos(Piece)
+    for(X=-1, 1) {
+        for(Y=-1, 1) {
+            if(X==0&Y==0) {
+                continue
+            }
+            if(!pcAttacked(BPos+vec2(X, Y), (Color==CL_WHITE ? CL_BLACK : CL_WHITE))) {
+                return 0
+            }
+        }
+    }
+    return 1
+}
+function number gameState(Color) {
+    if(testSmothered(Color)) {
+        if(testCheck(Color)) {
+            return ST_CHECKMATE
+        }
+        return ST_STALEMATE
+    } elseif (testCheck(Color)) {
+        return ST_CHECK
+    }
+    return ST_NORMAL
+}
+
+if(first()|duped()) {
+    #SETUP PHASE: Constants
+    BOARD_HEIGHT=24
+    SQ_SIZE=32
+    BOARD_OFF=vec(16, 16, 0)
+    ASCII_A=toByte("A")
+    HI_NULL
+    HI_BOARD=1
+    HI_WAP=2
+    HI_WBP=3
+    HI_WCP=4
+    HI_WDP=5
+    HI_WEP=6
+    HI_WFP=7
+    HI_WGP=8
+    HI_WHP=9
+    HI_BAP=10
+    HI_BBP=11
+    HI_BCP=12
+    HI_BDP=13
+    HI_BEP=14
+    HI_BFP=15
+    HI_BGP=16
+    HI_BHP=17
+    HI_WQR=18
+    HI_WQK=19
+    HI_WQB=20
+    HI_WQ=21
+    HI_WK=22
+    HI_WKB=23
+    HI_WKK=24
+    HI_WKR=25
+    HI_BQR=26
+    HI_BQK=27
+    HI_BQB=28
+    HI_BQ=29
+    HI_BK=30
+    HI_BKB=31
+    HI_BKK=32
+    HI_BKR=33
+    PC_BPOS=array()
+    PC_TYPE=array()
+    PC_COLOR=array()
+    PC_MOVED=array()
+    TP_PAWN=1
+    TP_ROOK=2
+    TP_KNIGHT=3
+    TP_BISHOP=4
+    TP_QUEEN=5
+    TP_KING=6
+    CL_WHITE=1
+    CL_BLACK=2
+    OUT=vec2(-7, -7)
+    ST_NORMAL=0
+    ST_CHECK=1
+    ST_CHECKMATE=2
+    ST_STALEMATE=3
+    #SETUP PHASE: Holograms
+    holoCreate(HI_BOARD)
+    holoModel(HI_BOARD, "models/props_phx/games/chess/board.mdl")
+    if(Base) {
+        holoPos(HI_BOARD, Base:pos())
+        holoAng(HI_BOARD, ang(-90, 0, 0))
+    }
+    holoCreate(HI_WAP)
+    holoModel(HI_WAP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WBP)
+    holoModel(HI_WBP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WCP)
+    holoModel(HI_WCP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WDP)
+    holoModel(HI_WDP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WEP)
+    holoModel(HI_WEP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WFP)
+    holoModel(HI_WFP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WGP)
+    holoModel(HI_WGP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_WHP)
+    holoModel(HI_WHP, "models/props_phx/games/chess/white_pawn.mdl")
+    holoCreate(HI_BAP)
+    holoModel(HI_BAP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BBP)
+    holoModel(HI_BBP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BCP)
+    holoModel(HI_BCP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BDP)
+    holoModel(HI_BDP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BEP)
+    holoModel(HI_BEP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BFP)
+    holoModel(HI_BFP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BGP)
+    holoModel(HI_BGP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_BHP)
+    holoModel(HI_BHP, "models/props_phx/games/chess/black_pawn.mdl")
+    holoCreate(HI_WQR)
+    holoModel(HI_WQR, "models/props_phx/games/chess/white_rook.mdl")
+    holoCreate(HI_WKR)
+    holoModel(HI_WKR, "models/props_phx/games/chess/white_rook.mdl")
+    holoCreate(HI_WQK)
+    holoModel(HI_WQK, "models/props_phx/games/chess/white_knight.mdl")
+    holoCreate(HI_WKK)
+    holoModel(HI_WKK, "models/props_phx/games/chess/white_knight.mdl")
+    holoCreate(HI_WQB)
+    holoModel(HI_WQB, "models/props_phx/games/chess/white_bishop.mdl")
+    holoCreate(HI_WKB)
+    holoModel(HI_WKB, "models/props_phx/games/chess/white_bishop.mdl")
+    holoCreate(HI_WQ)
+    holoModel(HI_WQ, "models/props_phx/games/chess/white_queen.mdl")
+    holoCreate(HI_WK)
+    holoModel(HI_WK, "models/props_phx/games/chess/white_king.mdl")
+    holoCreate(HI_BQR)
+    holoModel(HI_BQR, "models/props_phx/games/chess/black_rook.mdl")
+    holoCreate(HI_BKR)
+    holoModel(HI_BKR, "models/props_phx/games/chess/black_rook.mdl")
+    holoCreate(HI_BQK)
+    holoModel(HI_BQK, "models/props_phx/games/chess/black_knight.mdl")
+    holoCreate(HI_BKK)
+    holoModel(HI_BKK, "models/props_phx/games/chess/black_knight.mdl")
+    holoCreate(HI_BQB)
+    holoModel(HI_BQB, "models/props_phx/games/chess/black_bishop.mdl")
+    holoCreate(HI_BKB)
+    holoModel(HI_BKB, "models/props_phx/games/chess/black_bishop.mdl")
+    holoCreate(HI_BQ)
+    holoModel(HI_BQ, "models/props_phx/games/chess/black_queen.mdl")
+    holoCreate(HI_BK)
+    holoModel(HI_BK, "models/props_phx/games/chess/black_king.mdl")
+    #SETUP PHASE: Placement
+    PC_BPOS[HI_WAP, vector2]=vec2(0, 1)
+    PC_BPOS[HI_WBP, vector2]=vec2(1, 1)
+    PC_BPOS[HI_WCP, vector2]=vec2(2, 1)
+    PC_BPOS[HI_WDP, vector2]=vec2(3, 1)
+    PC_BPOS[HI_WEP, vector2]=vec2(4, 1)
+    PC_BPOS[HI_WFP, vector2]=vec2(5, 1)
+    PC_BPOS[HI_WGP, vector2]=vec2(6, 1)
+    PC_BPOS[HI_WHP, vector2]=vec2(7, 1)
+    PC_BPOS[HI_BAP, vector2]=vec2(0, 6)
+    PC_BPOS[HI_BBP, vector2]=vec2(1, 6)
+    PC_BPOS[HI_BCP, vector2]=vec2(2, 6)
+    PC_BPOS[HI_BDP, vector2]=vec2(3, 6)
+    PC_BPOS[HI_BEP, vector2]=vec2(4, 6)
+    PC_BPOS[HI_BFP, vector2]=vec2(5, 6)
+    PC_BPOS[HI_BGP, vector2]=vec2(6, 6)
+    PC_BPOS[HI_BHP, vector2]=vec2(7, 6)
+    PC_BPOS[HI_WQR, vector2]=vec2(0, 0)
+    PC_BPOS[HI_WQK, vector2]=vec2(1, 0)
+    PC_BPOS[HI_WQB, vector2]=vec2(2, 0)
+    PC_BPOS[HI_WQ, vector2]=vec2(3, 0)
+    PC_BPOS[HI_WK, vector2]=vec2(4, 0)
+    PC_BPOS[HI_WKB, vector2]=vec2(5, 0)
+    PC_BPOS[HI_WKK, vector2]=vec2(6, 0)
+    PC_BPOS[HI_WKR, vector2]=vec2(7, 0)
+    PC_BPOS[HI_BQR, vector2]=vec2(0, 7)
+    PC_BPOS[HI_BQK, vector2]=vec2(1, 7)
+    PC_BPOS[HI_BQB, vector2]=vec2(2, 7)
+    PC_BPOS[HI_BQ, vector2]=vec2(3, 7)
+    PC_BPOS[HI_BK, vector2]=vec2(4, 7)
+    PC_BPOS[HI_BKB, vector2]=vec2(5, 7)
+    PC_BPOS[HI_BKK, vector2]=vec2(6, 7)
+    PC_BPOS[HI_BKR, vector2]=vec2(7, 7)
+    for(I=1, PC_BPOS:count()) {
+        PC_MOVED[I, number]=0
+    }
+    PC_COLOR[HI_WAP, number]=CL_WHITE
+    PC_COLOR[HI_WBP, number]=CL_WHITE
+    PC_COLOR[HI_WCP, number]=CL_WHITE
+    PC_COLOR[HI_WDP, number]=CL_WHITE
+    PC_COLOR[HI_WEP, number]=CL_WHITE
+    PC_COLOR[HI_WFP, number]=CL_WHITE
+    PC_COLOR[HI_WGP, number]=CL_WHITE
+    PC_COLOR[HI_WHP, number]=CL_WHITE
+    PC_COLOR[HI_WQR, number]=CL_WHITE
+    PC_COLOR[HI_WQK, number]=CL_WHITE
+    PC_COLOR[HI_WQB, number]=CL_WHITE
+    PC_COLOR[HI_WQ, number]=CL_WHITE
+    PC_COLOR[HI_WK, number]=CL_WHITE
+    PC_COLOR[HI_WKB, number]=CL_WHITE
+    PC_COLOR[HI_WKK, number]=CL_WHITE
+    PC_COLOR[HI_WKR, number]=CL_WHITE
+    PC_COLOR[HI_BAP, number]=CL_BLACK
+    PC_COLOR[HI_BBP, number]=CL_BLACK
+    PC_COLOR[HI_BCP, number]=CL_BLACK
+    PC_COLOR[HI_BDP, number]=CL_BLACK
+    PC_COLOR[HI_BEP, number]=CL_BLACK
+    PC_COLOR[HI_BFP, number]=CL_BLACK
+    PC_COLOR[HI_BGP, number]=CL_BLACK
+    PC_COLOR[HI_BHP, number]=CL_BLACK
+    PC_COLOR[HI_BQR, number]=CL_BLACK
+    PC_COLOR[HI_BQK, number]=CL_BLACK
+    PC_COLOR[HI_BQB, number]=CL_BLACK
+    PC_COLOR[HI_BQ, number]=CL_BLACK
+    PC_COLOR[HI_BK, number]=CL_BLACK
+    PC_COLOR[HI_BKB, number]=CL_BLACK
+    PC_COLOR[HI_BKK, number]=CL_BLACK
+    PC_COLOR[HI_BKR, number]=CL_BLACK
+    PC_TYPE[HI_WAP, number]=TP_PAWN
+    PC_TYPE[HI_WBP, number]=TP_PAWN
+    PC_TYPE[HI_WCP, number]=TP_PAWN
+    PC_TYPE[HI_WDP, number]=TP_PAWN
+    PC_TYPE[HI_WEP, number]=TP_PAWN
+    PC_TYPE[HI_WFP, number]=TP_PAWN
+    PC_TYPE[HI_WGP, number]=TP_PAWN
+    PC_TYPE[HI_WHP, number]=TP_PAWN
+    PC_TYPE[HI_BAP, number]=TP_PAWN
+    PC_TYPE[HI_BBP, number]=TP_PAWN
+    PC_TYPE[HI_BCP, number]=TP_PAWN
+    PC_TYPE[HI_BDP, number]=TP_PAWN
+    PC_TYPE[HI_BEP, number]=TP_PAWN
+    PC_TYPE[HI_BFP, number]=TP_PAWN
+    PC_TYPE[HI_BGP, number]=TP_PAWN
+    PC_TYPE[HI_BHP, number]=TP_PAWN
+    PC_TYPE[HI_WQR, number]=TP_ROOK
+    PC_TYPE[HI_WKR, number]=TP_ROOK
+    PC_TYPE[HI_BQR, number]=TP_ROOK
+    PC_TYPE[HI_BKR, number]=TP_ROOK
+    PC_TYPE[HI_WQK, number]=TP_KNIGHT
+    PC_TYPE[HI_WKK, number]=TP_KNIGHT
+    PC_TYPE[HI_BQK, number]=TP_KNIGHT
+    PC_TYPE[HI_BKK, number]=TP_KNIGHT
+    PC_TYPE[HI_WQB, number]=TP_BISHOP
+    PC_TYPE[HI_WKB, number]=TP_BISHOP
+    PC_TYPE[HI_BQB, number]=TP_BISHOP
+    PC_TYPE[HI_BKB, number]=TP_BISHOP
+    PC_TYPE[HI_WQ, number]=TP_QUEEN
+    PC_TYPE[HI_BQ, number]=TP_QUEEN
+    PC_TYPE[HI_WK, number]=TP_KING
+    PC_TYPE[HI_BK, number]=TP_KING
+    Turn=CL_WHITE
+    runOnChat(1)
+}
+
+if(chatClk()|inputClk()) {
+    reRender()
+}
+
+if(chatClk()) {
+    if(lastSaid()=="!white") {
+        White=lastSpoke()
+        tellWhite("Welcome to chess! You are white.")
+        exit()
+    }
+    if(lastSaid()=="!black") {
+        Black=lastSpoke()
+        tellBlack("Welcome to chess! You are black.")
+        exit()
+    }
+}
+
+if(!(White&Black)) {
+    tellWhite("Game cannot begin until all players are assigned")
+    tellBlack("Game cannot begin until all players are assigned")
+    exit()
+}
+
+if((White==Black ? Turn==CL_WHITE : chatClk(White))) {
+    if(White:lastSaid()=="!resign") {
+        tellBlack("White has resigned")
+        tellWhite("You have resigned")
+        WhitePod:killPod()
+        exit()
+    }
+    if(Turn!=CL_WHITE&White!=Black) {
+        tellWhite("It is not your turn")
+        exit()
+    }
+    Command=White:lastSaid()
+    if(Command:length()!=4) {
+        tellWhite("Please enter 4 characters (a source and destination, e.g. E2E4)")
+        exit()
+    }
+    print(Command, Command:left(2), Command:right(2))
+    Source=anToBoard(Command:left(2))
+    Destination=anToBoard(Command:right(2))
+    print(Source, Destination)
+    Piece=pcFindAtPos(Source)
+    if(!Piece) {
+        tellWhite("There is no piece at "+boardToan(Source))
+        exit()
+    }
+    if(pcGetColor(Piece)!=CL_WHITE) {
+        tellWhite("That is not your piece")
+        exit()
+    }
+    if(!pcCanMove(Piece, Destination)) {
+        tellWhite("The piece cannot be moved that way")
+        exit()
+    }
+    #NOW, we can move
+    DPiece=pcFindAtPos(Destination)
+    if(DPiece) {
+        pcRemove(DPiece)
+        tellBlack("A piece was removed!")
+    }
+    if(Command=="E1G1") {
+        pcSetPos(pcFindAtPos(vec2(7,0)), vec2(5,0))
+    }
+    if(Command=="E1C1") {
+        pcSetPos(pcFindAtPos(vec2(0,0)), vec2(3,0))
+    }
+    pcSetPos(Piece, Destination)
+    if(pcGetType(Piece)==TP_PAWN&Destination:y()==7) {
+        PC_TYPE[Piece, number]=TP_QUEEN #Promote
+        holoModel(Piece, "models/props_phx/games/chess/white_queen.mdl")
+        tellWhite("Your pawn was promoted!")
+        tellBlack("The pawn on "+boardToan(Destination)+" was promoteed!")
+    }
+    tellWhite("Moved")
+    tellBlack(Command+"; Your turn")
+    State=gameState(CL_BLACK)
+    if(State) {
+        if(State==ST_CHECK) {
+            tellBlack("Check!")
+        } elseif(State==ST_CHECKMATE) {
+            tellBlack("Checkmate!")
+            BlackPod:killPod()
+        } else { #Stalemate
+            tellBlack("Stalemate!")
+        }
+    }
+    Turn=CL_BLACK
+    exit()
+}
+
+if((White==Black ? Turn==CL_BLACK : chatClk(Black))) {
+    if(White:lastSaid()=="!resign") {
+        tellWhite("Black has resigned")
+        tellBlack("You have resigned")
+        BlackPod:killPod()
+        exit()
+    }
+    if(Turn!=CL_BLACK&White!=Black) {
+        tellBlack("It is not your turn")
+        exit()
+    }
+    Command=Black:lastSaid()
+    if(Command:length()!=4) {
+        tellBlack("Please enter 4 characters (a source and destination, e.g. E2E4)")
+        exit()
+    }
+    Source=anToBoard(Command:left(2))
+    Destination=anToBoard(Command:right(2))
+    Piece=pcFindAtPos(Source)
+    if(!Piece) {
+        tellBlack("There is no piece at "+boardToan(Source))
+        exit()
+    }
+    if(pcGetColor(Piece)!=CL_BLACK) {
+        tellBlack("That is not your piece")
+        exit()
+    }
+    if(!pcCanMove(Piece, Destination)) {
+        tellBlack("The piece cannot be moved that way")
+        exit()
+    }
+    #NOW, we can move
+    DPiece=pcFindAtPos(Destination)
+    if(DPiece) {
+        pcRemove(DPiece)
+        tellWhite("A piece was removed!")
+    }
+    if(Command=="E8G8") {
+        pcSetPos(pcFindAtPos(vec2(7,7)), vec2(5,7))
+    }
+    if(Command=="E8C8") {
+        pcSetPos(pcFindAtPos(vec2(0,7)), vec2(3,7))
+    }
+    pcSetPos(Piece, Destination)
+    if(pcGetType(Piece)==TP_PAWN&Destination:y()==0) {
+        PC_TYPE[Piece, number]=TP_QUEEN #Promote
+        holoModel(Piece, "models/props_phx/games/chess/black_queen.mdl")
+        tellBlack("Your pawn was promoted!")
+        tellWhite("The pawn on "+boardToan(Destination)+" was promoteed!")
+    }
+    tellBlack("Moved")
+    tellWhite(Command+"; Your turn")
+    State=gameState(CL_WHITE)
+    if(State) {
+        if(State==ST_CHECK) {
+            tellWhite("Check!")
+        } elseif(State==ST_CHECKMATE) {
+            tellWhite("Checkmate!")
+            WhitePod:killPod()
+        } else { #Stalemate
+            tellWhite("Stalemate!")
+        }
+    }
+    Turn=CL_WHITE
+    exit()
+}

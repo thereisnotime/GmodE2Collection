@@ -1,0 +1,53 @@
+#ifndef SELENE_PMALLOC
+#define SELENE_PMALLOC
+
+#include <selene/std.txt>
+#include <selene/cpu.txt>
+#include <selene/printk.txt>
+
+#define STACK_PAGES 4
+
+char *pg_round(char *addr) {
+    return PAGESIZE * to_int(addr >> PAGEBITS);
+}
+
+char *pg_roundup(char *addr) {
+    return PAGESIZE * to_int((addr + PAGESIZE - 1) >> PAGEBITS);
+}
+
+char *pmalloc_top = 0;
+char pmalloc_pages = 0;
+
+void pfree(char *addr) {
+    char *pg = pg_round(addr);
+    *pg = pmalloc_top;
+    pmalloc_top = pg;
+    pmalloc_pages++;
+}
+
+char pfreerange(char *start, char *end) {
+    char *cur = pg_round(start);
+    char *stop = pg_round(end);
+    if(cur != start) cur += PAGESIZE;
+    while(cur < stop) {
+        pfree(cur);
+        cur += PAGESIZE;
+    }
+}
+
+char *pmalloc() {
+    if(!pmalloc_top) return 0;
+    char *pg = pmalloc_top;
+    pmalloc_top = *pmalloc_top;
+    pmalloc_pages--;
+    return pg;
+}
+
+void pmalloc_init(char *endtext) {
+    char *emem = insn_cpuid(CPUID_RAMSIZE) - PAGESIZE * STACK_PAGES;
+    debug_printkln("pmalloc_init endtext=%p emem=%p\n", endtext, emem);
+    pfreerange(endtext, emem);
+    printkln("%d free pages in main memory\n", pmalloc_pages);
+}
+
+#endif

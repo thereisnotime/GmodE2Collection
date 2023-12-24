@@ -1,0 +1,25 @@
+@name -Fast- Impact Sounds
+@inputs 
+@outputs 
+@persist Sounds:table
+@trigger 
+
+if(first()|duped()) {
+    Sounds=table()
+    Sounds:pushString("physics/body/body_medium_impact_hard1.wav")
+    Sounds:pushString("physics/body/body_medium_impact_hard2.wav")
+    Sounds:pushString("physics/body/body_medium_impact_hard3.wav")
+    Sounds:pushString("physics/body/body_medium_impact_hard4.wav")
+    Sounds:pushString("physics/body/body_medium_impact_hard5.wav")
+    Sounds:pushString("physics/body/body_medium_impact_hard6.wav")
+    timer("Sound", 500)
+}
+
+if(clk("Sound")) {
+    local Idx=floor(random(1, Sounds:count()+1))
+    #print("Index: "+Idx:toString())
+    local Sound=Sounds[Idx, string]
+    #print("Playing: "+Sound)
+    soundPlay(1, 1, Sound)
+    timer("Sound", 500)
+}

@@ -1,0 +1,31 @@
+@name Mass Tool
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()|duped()) {
+    runOnChat(1)
+}
+
+if(chatClk(owner())) {
+    if(owner():lastSaid():left(9)=="!massall ") {
+        hideChat(1)
+        Arr=owner():aimEntity():getConstraints()
+        Num=owner():lastSaid():sub(10):toNumber()
+        owner():aimEntity():setMass(Num)
+        for(I=1,Arr:count()) {
+            Arr[I, entity]:setMass(Num)
+        }
+        print((Arr:count()+1):toString()+" entities mass set to "+Num:toString())
+    } elseif(owner():lastSaid():left(5)=="!mass") {
+        hideChat(1)
+        Parts=owner():lastSaid():explode(" ")
+        if(Parts:count()==1) {
+            print(owner():aimEntity():mass())
+        } else {
+            owner():aimEntity():setMass(Parts[2, string]:toNumber())
+            print("Mass set to "+Parts[2, string])
+        }
+    }
+}

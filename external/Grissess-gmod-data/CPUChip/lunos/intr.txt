@@ -1,0 +1,273 @@
+//LunOS -- Lunar Operating System
+//intr -- Interrupts
+
+//This module is responsible for providing facilities for controlling interrupts across the
+//system, as well as managing the interrupt vector. It IS NOT responsible for handling
+//faults; that is delegated out to other modules, particularly memory management and process
+//management.
+
+#ifndef LUNOS_INTR
+#define LUNOS_INTR
+
+#include <lunos/regs.txt>
+#include <lunos/error.txt>
+
+//There are some undocumented changes to the interrupt handling mechanism in the ZVM.
+//The third, reserved byte of this four-byte vector is now useful depending on two
+//additional undocumented flags:
+//2**7 (128) - Load the IVEC_PTBL byte into PTBL (setting the page table). PTBE is unaffected.
+//2**8 (256) - Load 1 into the PTBE (set the number of entries to 1). PTBL is unaffected.
+//These are mutually exclusive, but bit 7 is preferred. The behavior of bit 8 is probably
+//a bug.
+
+#define INT_RESET 0
+//Reset the processor. Only raised by code.
+#define INT_HALT 1
+//Halt the execution--doesn't necessarily work in debug environments. Only raised by code.
+#define INT_EOC 2
+//End of code--called to handle opcode 0. Parameter is 0.
+#define INT_DIV0 3
+//Division by 0. Parameter is 0 if this happened during DIV, or 1 if this happened during FINV.
+#define INT_OPCODE 4
+//Unknown opcode; parameter is the offending opcode.
+#define INT_INTERNAL 5
+//Raised when the processor encounters a VM inconsistency. Parameters are in the INTERR below.
+#define INT_STACK 6
+//Stack overflow/underflow; parameter is ESP pointing at a valid position.
+#define INT_IO 7
+//Memory read/write fault; raised when a page is disabled, or an external access is made.
+//The parameter is the offending address.
+#define INT_MEMBUS 8
+//Bus fault, never actually occurs in the VM.
+#define INT_PPWRITE 9
+//Write violation, called when a write attempt is made to a write-protected page. Parameter is
+//the offending address.
+#define INT_PORTBUS 10
+//IO bus fault, never actually occurs in the VM.
+#define INT_PPACCESS 11
+//Page access violation, called by instructions like CPG, SPG, etc., that modify the page table
+//entries, when the runlevel of the calling page is too low to affect that page. Parameter is
+//the PAGE NUMBER that failed to have an attribute set.
+#define INT_PPREAD 12
+//Page read violation, called when a read attempt is made to a read-protected page. Also, oddly
+//called by all ROM paging functions when the memory to be accessed is out of bounds. In the
+//former case, the parameter is the offending address; in the latter, it is 0.
+#define INT_GPF 13
+//General processor fault. Called under plenty of conditions; consult the GPF enum below for
+//parameter meanings.
+#define INT_PPEXEC 14
+//Page execute violation, called when an attempt is made to run code in a page that is marked
+//non-executable from a page with a runlevel other than 0. The parameter is the PAGE NUMBER
+//of the current page (oddly).
+#define INT_ADDR 15
+//Raised when an address is specified invalidly; according to the current implementation, this
+//occurs when the address is not between (-2^48+1, 2^48) (id est, it cannot fit in a signed
+//48-bit integer), when it is a floating point number, or if it simply isn't a number at all
+//(which should never happen). The parameter is the offending address.
+#define INT_MEMRD 29
+//Raised with a 0 parameter by the VM when the RQCAP (Request Capture) register is set and MEMRQ
+//is 2 (reading). Requests of this kind are generated when encountering pages with the MF_OVERRIDE
+//flag set.
+#define INT_MEMWR 30
+//Raised with the LADD register by the VM when the RQCAP (Request Capture) register is set and MEMRQ
+//is 3 (writing). Requests of this kind are generated when encountering pages with the MF_OVERRIDE
+//flag set.
+
+#define INTERR_PCALL 1
+//The ZVM has a Lua bug! A pcall failed to run the instruction.
+#define INTERR_INSTR 12
+//Raised when the ZVM encounters a read error trying to decode an instruction or associated RM.
+#define INTERR_IMM1 22
+//Raised when the ZVM encounters a read error trying to get the first immediate value.
+#define INTERR_IMM2 32
+//Raised when the ZVM encounters a read error trying to get the second immediate value.
+
+#define GPF_WRITECS 1
+//Running code attempted to write to the CS register. (Use JMPF/CALLF instead.)
+#define GPF_NOIVEC 2
+//An attempt was made to read the interrupt vector, but this attempt failed, so the interrupt cannot be called.
+#define GPF_BADINT 3
+//The interrupt number is out of bounds (not in [0, 255])
+#define GPF_EXTFAIL 4
+//An attempt was made to call a non-external interrupt as an external interrupt.
+#define GPF_NOMEM 5
+//The internal RAM has less than 512 bytes (4 pages) while the page flag is set.
+#define GPF_STACKFAIL 6
+//An error occured while trying to manipulate the stack during an interrupt.
+#define GPF_CALLFAIL 7
+//An error occured while trying to call the interrupt handler during an interrupt.
+#define GPF_NOPAGE 8
+//An attempt was made to read the page table, but this attempt failed, so the page is inaccessible.
+//--------------
+//The rest of these are runlevel-0 opcodes that conflict with the above namespace. Rest assured that these
+//won't be called for opcodes in the current ZVM condition. Rather, the following will:
+#define GPF_R0_RD 16
+//RD DST, PTR -- read a value directly from memory without paging, deference, or external access.
+#define GPF_R0_WD 17
+//WD PTR, SRC -- write a value directly to memory without paging, deference, or external access.
+#define GPF_R0_SPG 28
+//SPG PAGE -- make a page read-only
+#define GPF_R0_CPG 29
+//CPG PAGE -- make a page readable and writable
+#define GPF_R0_STI 42
+//STI -- enable interrupts
+#define GPF_R0_CLI 43
+//CLI -- disable interrupts
+#define GPF_R0_STP 44
+//STP -- enable protected mode
+#define GPF_R0_CLP 45
+//CLP -- disable protected mode
+#define GPF_R0_RESERVED1 46
+//An undefined, reserved opcode.
+#define GPF_R0_STEF 48
+//STEF -- enable extended mode
+#define GPF_R0_CLEF 49
+//CLEF -- disable extended mode
+#define GPF_R0_EXTINT 70
+//EXTINT INT -- external interrupt
+#define GPF_R0_ERPG 95
+//ERPG PAGE -- erase ROM page
+#define GPF_R0_WRPG 96
+//WRPG PAGE -- write ROM page
+#define GPF_R0_RDPG 97
+//RDPG PAGE -- read ROM page
+#define GPF_R0_LIDTR 99
+//LIDTR PTR -- load interrupt table
+#define GPF_R0_RESERVED2 100
+//Another reserved opcode.
+#define GPF_R0_RESERVED3 109
+//Yet another reserved opcode.
+#define GPF_R0_EXTRET 110
+//EXTRET -- return from an external interrupt
+#define GPF_R0_IDLE 111
+//IDLE -- skip some processor cycles (and give the VM a chance to catch up)
+#define GPF_R0_STD2 116
+//STD2 -- enable hardware debugging
+#define GPF_R0_STM 118
+//STM -- enable extended memory
+#define GPF_R0_CLM 119
+//CLM -- disable extended memory
+#define GPF_R0_CPUGET 120
+//CPUGET DST, I -- get an internal register
+#define GPF_R0_CPUSET 121
+//CPUSET I, SRC -- set an internal register
+#define GPF_R0_SPP 122
+//SPP PAGE, I -- set a page flag
+#define GPF_R0_CPP 123
+//CPP PAGE, I -- clear a page flag
+#define GPF_R0_SRL 124
+//SRL PAGE, I -- set page runlevel
+#define GPF_R0_CRL 125
+//CRL DST, PAGE -- get page runlevel
+#define GPF_R0_SMAP 131
+//SMAP PAGE, I -- map virtual to physical page
+#define GPF_R0_GMAP 132
+//GMAP DST, PAGE -- get virtual page map
+#define GPF_R0_IRETP 136
+//IRETP PTBL -- leave interrupt and set PTBL
+#define GPF_R0_EXTRETP 137
+//EXTRETP PTBL -- leave external interrupt and set PTBL
+
+#define IVEC_IP 0
+#define IVEC_CS 1
+#define IVEC_PTBL 2
+#define IVEC_FLAGS 3
+#define IVEC_SZ 4
+
+#define IF_CMPR 8
+//Set CMPR when the interrupt occurs.
+#define IF_NEAR 16
+//Do not set CS (it is still pushed onto the frame, but the value is unaffected).
+#define IF_ACTIVE 32
+//Interrupt enabled. (Affects all other functionality.)
+#define IF_EXT 64
+//Interrupt can be invoked externally. Note that it doesn't HAVE to be, but trying to
+//invoke an external interrupt without this flag raises interrupt 13:4 instead.
+#define IF_SETPTBL 128
+//Set PTBL to IVEC_PTBL's entry when invoked. PTBE is unaffected, and the old PTBL is
+//NOT restored on return.
+#define IF_SETPTBE 256
+//Set PTBE to 1 when invoked. PTBL is unaffected, and the old PTBE is NOT restored on
+//return. The use of 1 is probably a bug.
+
+char _IntrAtomicCount; //Number of nested levels of atomic sections. When 0, the code is not atomic.
+
+char _SetIVec(char *itbl, char inum, char _cs, char _ip, char _ptbl, char flags) {
+    char *entry;
+    char nidt;
+    CPUGET nidt, REG_NIDT;
+    if(inum<0||inum>=nidt) {
+        return EBADVAL;
+    }
+    flags=flags|IF_ACTIVE; //Activate it, to be sure.
+    entry=itbl+(inum*IVEC_SZ)
+    entry[IVEC_IP]=_ip;
+    entry[IVEC_CS]=_cs;
+    entry[IVEC_PTBL]=_ptbl;
+    entry[IVEC_FLAGS]=flags;
+    return ENONE;
+}
+
+char GetIntNum() {
+    char val;
+    CPUGET val, REG_LINT;
+    return val;
+}
+
+char GetIntParam() {
+    char val;
+    CPUGET val, REG_LADD;
+    return val;
+}
+
+void Interrupt(char inum) {
+    INT inum;
+}
+
+void ExternalInterrupt(char inum) {
+    EXTINT inum;
+}
+
+char IsAtomic() {
+    return _IntrAtomicCount>0;
+}
+
+void BeginAtomicSection() {
+    CLI;
+    INC _IntrAtomicCount;
+}
+
+void EndAtomicSection() {
+    if(!_IntrAtomicCount) {
+        return;
+    }
+    DEC _IntrAtomicCount;
+    if(!_IntrAtomicCount) {
+        STI;
+        RET;
+    }
+}
+
+#ifndef LUNOS_INTR_NOITBL
+
+#ifndef LUNOS_INTR_ITBL_SZ
+#define LUNOS_INTR_ITBL_SZ 256
+#endif
+
+char _IVecTbl[LUNOS_INTR_ITBL_SZ*IVEC_SZ];
+
+char SetIVec(char inum, char _cs, char _ip, char _ptbl, char flags) {
+    return _SetIVec(_IVecTbl, inum, _cs, _ip, _ptbl, flags);
+}
+
+#endif //!defined(LUNOS_INTR_NOITBL)
+
+void IntrInit() {
+    _IntrAtomicCount=0;
+#ifndef LUNOS_INTR_NOITBL
+    LIDTR _IVecTbl;
+    CPUSET REG_NIDT, LUNOS_INTR_ITBL_SZ;
+#endif
+}
+
+#endif

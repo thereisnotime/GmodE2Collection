@@ -1,0 +1,34 @@
+@name -Fast- Holographic Indicator
+@inputs Model:string
+@outputs 
+@persist Env:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    
+    function void hiSetModel(Args:table, Ret:table) {
+        holoModel(1, Args[1, string])
+    }
+    
+    holoCreate(1)
+    runOnTick(1)
+    runOnChat(1)
+    Env=newEnv()
+    Env:envAddCommand(newCommand("setmodel", "hiSetModel", "s"))
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if(~Model&Model) {
+    holoModel(1, Model)
+}
+
+if(tickClk()) {
+    holoPos(1, entity():pos()+entity():angles():up()*entity():angles():up():dot(holoEntity(1):boxSize())+vec(0, 0, 8*(1+sinr(curtime()*2))))
+    holoAng(1, ang(0, 90*curtime()%360, 0))
+}

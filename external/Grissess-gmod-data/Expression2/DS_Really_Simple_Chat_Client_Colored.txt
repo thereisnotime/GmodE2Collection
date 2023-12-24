@@ -1,0 +1,129 @@
+@name DS Really Simple Chat Client Colored
+@inputs 
+@outputs Glb
+@persist Global
+@trigger 
+@model models/props/pc_case02/pc_case02.mdl
+
+if(first()|duped()) {
+    runOnChat(1)
+    dsSetScope(2)
+    Global=0
+}
+
+if(chatClk(owner())) {
+    if(owner():lastSaid():left(6)=="/part ") {
+        Group=owner():lastSaid():sub(7)
+        printColor(vec(0,0,0), "["+Group+"] ", vec(255, 0, 0), "Parted!")
+        hideChat(1)
+        Tbl=table()
+        Tbl["Sender", entity]=owner()
+        Tbl["Message", string]=" parted"
+        Tbl["Special", number]=1
+        dsSend("Chat", Group, 2, Tbl)
+        dsLeaveGroup(Group)
+        exit()
+    }
+    if(owner():lastSaid():left(7)=="/probe ") {
+        hideChat(1)
+        Group=owner():lastSaid():sub(8)
+        Listeners=dsProbe(Group, 2)
+        printColor(vec(0, 0, 255), "===Start of probe result in "+Group+"===")
+        printTable(Listeners)
+        for(I=1,Listeners:count()) {
+            printColor(vec(0, 0, 255), Listeners[I, entity]:toString()+": ", Listeners[I, entity]:owner())
+        }
+        printColor(vec(0, 0, 255), "===End of probe result in "+Group+" ("+Listeners:count():toString()+" results)===")
+        exit()
+    }
+    if(owner():lastSaid()=="/global") {
+        hideChat(1)
+        Global=!Global
+        Glb=Global
+        if(Global) {
+            printColor(vec(255,0,0), "Global mode on temporarily...")
+        } else {
+            printColor(vec(0,255,0), "Global mode off...")
+        }
+        exit()
+    }
+    if(owner():lastSaid():left(5)=="/msg ") {
+        hideChat(1)
+        Split=owner():lastSaid():sub(6):explode(" ")
+        Group=Split:shiftString()
+        Msg=Split:concat(" ")
+        Tbl=table()
+        Tbl["Sender", entity]=owner()
+        Tbl["Message", string]=Msg
+        dsSend("Chat", Group, 2, Tbl)
+        printColor(vec(0,0,0), "["+Group+"] ", owner(), vec(255,255,255), ": "+Msg)
+        exit()
+    }
+    if(owner():lastSaid()=="/list") {
+        hideChat(1)
+        printColor(vec(0, 0, 255), "===Start of channel list===")
+        Groups=dsGetGroups()
+        for(I=1,Groups:count()) {
+            Group=Groups[I, string]
+            printColor(vec(0, 0, 255), "==="+Group+"===")
+            Listeners=dsProbe(Group, 2)
+            for(I=1,Listeners:count()) {
+                printColor(vec(0, 0, 255), Listeners[I, entity]:toString()+": ", Listeners[I, entity]:owner())
+            }
+        }
+        printColor(vec(0, 0, 255), "===End of channel list===")
+        exit()
+    }
+    if(owner():lastSaid()=="/clear") {
+        hideChat(1)
+        Groups=dsGetGroups()
+        for(I=1,Groups:count()) {
+            Group=Groups[I, string]
+            Tbl=table()
+            Tbl["Sender", entity]=owner()
+            Tbl["Message", string]=" parted"
+            Tbl["Special", number]=1
+            dsSend("Chat", Group, 2, Tbl)
+            dsLeaveGroup(Group)
+        }
+        printColor(vec(255,0,0), "Parted all, you are now global.")
+        exit()
+    }
+    if(owner():lastSaid():left(6)=="/join ") {
+        hideChat(1)
+        Group=owner():lastSaid():sub(7)
+        dsJoinGroup(Group)
+        printColor(vec(0,0,0), "["+Group+"] ", vec(0, 255, 0), "Joined!")
+        Tbl=table()
+        Tbl["Sender", entity]=owner()
+        Tbl["Message", string]=" joined"
+        Tbl["Special", number]=1
+        dsSend("Chat", Group, 2, Tbl)
+        exit()
+    }
+    if(dsGetGroups():count()>0) {
+        if(Global) {
+            exit()
+        }
+        hideChat(1)
+        Groups=dsGetGroups()
+        for(I=1,Groups:count()) {
+            Group=Groups[I, string]
+            printColor(vec(0,0,0), "["+Group+"] ", owner(), vec(255, 255, 255), ": "+owner():lastSaid())
+            Tbl=table()
+            Tbl["Sender", entity]=owner()
+            Tbl["Message", string]=owner():lastSaid()
+            dsSend("Chat", Group, 2, Tbl)
+        }
+        exit()
+    }
+}
+
+if(dsClk("Chat")) {
+    Tbl=dsGetTable()
+    if(Tbl["Special", number]) {
+        printColor(vec(0,0,0), "["+dsGetGroup()+"] ", Tbl["Sender", entity], vec(0, 255, 255), ": "+Tbl["Message", string])
+    } else {
+        printColor(vec(0,0,0), "["+dsGetGroup()+"] ", Tbl["Sender", entity], vec(255, 255, 255), ": "+Tbl["Message", string])
+    }
+}

@@ -1,0 +1,54 @@
+@name -Test- Walking Slender
+@inputs 
+@outputs 
+@persist N WALK JOG RUN SPRINT NUM Players:array
+@trigger 
+
+if(first()) {
+    WALK=5
+    JOG=15
+    RUN=16
+    SPRINT=17
+    Players=players()
+    #NUM=Players:count()
+    NUM=10
+    for(I=1,NUM) {
+        holoCreate(I, entity():pos(), vec(1, 1, 1), ang(), vec(255, 255, 255), "models/gman.mdl")
+        lightCreate(I, entity():pos()+vec(0, 0, 64), vec(255, 0, 0), 64, 2)
+        lightParent(I, holoEntity(I))
+        holoAlpha(I, 1)
+        #holoRenderFX(1, N)
+        N=0
+        holoAnim(I, JOG)
+    }
+    runOnTick(1)
+    timer("Inc", 3000)
+    timer("Reorient", 2000)
+}
+
+if(tickClk()) {
+    for(I=1,NUM) {
+        holoPos(I, holoEntity(I):pos()+holoEntity(I):angles():forward()*1.25)
+    }
+}
+
+if(clk("Inc")) {
+    N=N+1
+    #holoAnim(1, N)
+    #print(N:toString())
+    timer("Inc", 1500)
+}
+
+if(clk("Reorient")) {
+    findByClass("player")
+    for(I=1,NUM) {
+        if(random()<0.25) {
+            findSortByDistance(holoEntity(1):pos())
+            local Tbl=findToTable()
+            local Ply=Tbl[randint(1, min(5, Tbl:count())), entity]
+            holoPos(I, holoEntity(I):pos():setZ(Ply:pos():z()))
+            holoAng(I, (Ply:pos()-holoEntity(I):pos()):toAngle())
+        }
+    }
+    timer("Reorient", 250)
+}

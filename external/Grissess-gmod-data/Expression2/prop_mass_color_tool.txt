@@ -1,0 +1,60 @@
+@name Prop Mass Color Tool
+@inputs 
+@outputs 
+@persist Mode Color:vector
+@persist MODE_FLASHING MODE_NORMAL
+@trigger 
+
+if(first()|duped()) {
+    runOnTick(1)
+    runOnChat(1)
+    MODE_NORMAL=0
+    MODE_FLASHING=1
+    Mode=MODE_NORMAL
+    Color=vec(0, 0, 0)
+}
+
+if(chatClk(owner())) {
+    if(owner():lastSaid():left(7)=="!color ") {
+        hideChat(1)
+        Parts=owner():lastSaid():explode(" ")
+        if(Parts:count()==2) {
+            if(Parts[2, string]=="rand"|Parts[2, string]=="random") {
+                Color=vec(-1, -1, -1)
+            } else {
+                print("Invalid argument.")
+                exit()
+            }
+        } elseif(Parts:count()==4) {
+            Color=vec(Parts[2, string]:toNumber(), Parts[3, string]:toNumber(), Parts[4, string]:toNumber())
+        } else {
+            print("Invalid affinity.")
+            exit()
+        }
+        Mode=MODE_NORMAL
+        Ents=entity():getConstraints()
+        for(I=1,Ents:count()) {
+            if(Color==vec(-1, -1, -1)) {
+                Ents[I, entity]:setColor(vec(random(255), random(255), random(255)))
+            } else {
+                Ents[I, entity]:setColor(Color)
+            }
+        }
+    } elseif(owner():lastSaid()=="!flash") {
+        hideChat(1)
+        Mode=MODE_FLASHING
+    }
+}
+
+if(tickClk()) {
+    if(Mode==MODE_FLASHING) {
+        Ents=entity():getConstraints()
+        for(I=1,Ents:count()) {
+            if(Color==vec(-1, -1, -1)) {
+                Ents[I, entity]:setColor(vec(random(255), random(255), random(255)))
+            } else {
+                Ents[I, entity]:setColor(Color)
+            }
+        }
+    }
+}

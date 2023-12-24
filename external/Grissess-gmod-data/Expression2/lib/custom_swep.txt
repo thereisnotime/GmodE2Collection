@@ -1,0 +1,46 @@
+@name Custom SWEPs
+@persist Data:table
+
+#include "lib/table"
+
+function number table:swepIsHolding() {
+    return Data["Weapon", string] == This["Weapon", string] &
+           Data["Tool", string] == This["Tool", string]
+}
+
+function void table:swepThink() {
+    local Owner = owner()
+    Data:update("Use", Owner:keyUse())
+    Data:update("Reload", Owner:keyReload())
+    Data:update("Attack1", Owner:keyAttack1())
+    Data:update("Attack2", Owner:keyAttack2())
+    Data:update("Weapon", Owner:weapon():type())
+    Data:update("Tool", Owner:tool())
+
+    if( !This:swepIsHolding() ) { return }
+    
+    local Keys = This:keys()
+    local I = 0
+    while( I < Keys:count() & perf(99) ) {
+        local Key = Keys[I, string]
+        if( Key == "Weapon") { continue }
+        
+        local Action = This[Key, string]
+        if( Action & Data:hasRisen(Key) ) { Action(This) }
+        
+        I++
+    }
+}
+
+function void table:swepSetAction(Name:string, Function:string) {
+    This[Name, string] = Function
+}
+
+function table newSWEP(Weapon:string, Tool:string) {
+    local T = table()
+    
+    T["Weapon", string] = Weapon
+    T["Tool", string] = Tool
+    
+    return T
+}

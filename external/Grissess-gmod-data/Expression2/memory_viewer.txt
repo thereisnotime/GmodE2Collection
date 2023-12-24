@@ -1,0 +1,48 @@
+@name Memory Viewer
+@inputs Dev:wirelink Cns:wirelink
+@outputs 
+@persist Interval Basis CWidth
+@trigger 
+
+if(first()|duped()) {
+    Interval=1000
+    Basis=0
+    CWidth=4
+    timer("Update", Interval)
+    print(Cns[2032])
+    print(Cns[2034])
+    runOnChat(1)
+}
+
+if(clk("Update")) {
+    I=Basis
+    Y=1
+    while
+}
+
+if(chatClk(owner())) {
+    if(owner():lastSaid():left(6)=="!view ") {
+        hideChat(1)
+        Parts=owner():lastSaid():explode(" ")
+        Start=Parts[2, string]:toNumber()
+        Size=Parts[3, string]:toNumber()
+        if(Size<1) {
+            Size=1
+        }
+        for(I=Start,Start+Size) {
+            print("["+Dev:entity():toString()+"@"+I:toString()+"] "+Dev[I]:toString())
+        }
+    } elseif(owner():lastSaid():left(7)=="!write ") {
+        hideChat(1)
+        Parts=owner():lastSaid():explode(" ")
+        Entnum=Parts[2, string]:toNumber()
+        if(Entnum!=Dev:entity():id()) {
+            exit()
+        }
+        Addr=Parts[3, string]:toNumber()
+        for(I=4,Parts:count()) {
+            Dev[Addr]=Parts[I, string]:toNumber()
+            Addr=Addr+1
+        }
+    }
+}

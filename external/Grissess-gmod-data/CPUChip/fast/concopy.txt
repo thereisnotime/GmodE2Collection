@@ -1,0 +1,47 @@
+jmp main;
+
+#define CURSOR_RATE       2043
+#define CURSOR_SIZE       2044
+#define CURSOR_POSITION   2045
+#define CURSOR_VISIBLE    2046
+#define LOW_SHIFT_COL     2031
+#define HIGH_SHIFT_COL    2032
+#define LOW_SHIFT_ROW     2033
+#define HIGH_SHIFT_ROW    2034
+#define SHIFT_ROWS        2038
+#define SHIFT_CELLS       2037
+#define CLEAR_SCREEN      2041
+#define BACKGROUND_COLOR  2042
+#define SCREEN_ACTIVE     2047
+#define SCREEN_ROTATION   2024
+#define SCREEN_BRIGHTNESS 2036
+
+char *membase = 1065536;
+char *conbase = 2065536;
+
+void main() {
+    char buf, index, conidx;
+    char sz;
+    conidx = 0;
+    index = 0;
+    sz = conbase[HIGH_SHIFT_ROW] * conbase[HIGH_SHIFT_COL];
+    port3 = sz;
+    if(sz <= 0) {
+        int 64;
+    }
+    while(1) {
+        buf = membase[index];
+        mov port0, index;  // Working
+        mov port4, conidx;
+        port1 = 255;
+        port2 = buf;
+        conbase[conidx] = buf;
+        conbase[conidx+1] = 999;
+        index += 1;
+        conidx += 2;
+        if(conidx >= sz) {
+            conidx = 0;
+            index = 0;
+        }
+    }
+}

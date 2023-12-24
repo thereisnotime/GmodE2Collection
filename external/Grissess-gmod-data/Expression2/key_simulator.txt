@@ -1,0 +1,11 @@
+@name Key Simulator
+@inputs In
+@outputs 
+@persist 
+@trigger 
+
+if(In) {
+    concmd("+zoom")
+} else {
+    concmd("-zoom")
+}

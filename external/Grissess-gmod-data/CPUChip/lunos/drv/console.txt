@@ -1,0 +1,362 @@
+//LunOS -- Lunar Operating System
+//driver -- Driver Framework
+//console -- Console Screen Driver
+
+//This driver controls all console screens attached to a LunOS system.
+
+//#pragma set OutputDebugListing true
+//#pragma set OutputBinaryListing true
+//#pragma set OutputTokenListing true
+//#pragma set OutputCodeTree true
+//#pragma set OutputFinalListing true
+#pragma set OutputResolveListing true
+#pragma set NoUnreferencedLeaves false
+
+//[DEFINE] LUNOS_DRV_CNS
+#ifndef LUNOS_DRV_CNS
+#define LUNOS_DRV_CNS
+
+#include <lunos/driver.txt>
+#include <lunos/list.txt>
+#include <lunos/math.txt>
+#include <lunos/io.txt>
+#include <lunos/error.txt>
+
+//Copypasta inbound (SUE ME :D)
+//Console screen registers
+#define CNS_CURSOR_RATE       2043
+#define CNS_CURSOR_SIZE       2044
+#define CNS_CURSOR_POSITION   2045
+#define CNS_CURSOR_VISIBLE    2046
+#define CNS_LOW_SHIFT_COL     2031
+#define CNS_HIGH_SHIFT_COL    2032
+#define CNS_LOW_SHIFT_ROW     2033
+#define CNS_HIGH_SHIFT_ROW    2034
+#define CNS_SHIFT_ROWS        2038
+#define CNS_SHIFT_CELLS       2037
+#define CNS_CLEAR_SCREEN      2041
+#define CNS_BACKGROUND_COLOR  2042
+#define CNS_SCREEN_ACTIVE     2047
+#define CNS_SCREEN_ROTATION   2024
+#define CNS_SCREEN_BRIGHTNESS 2036
+
+#define CA_FG_BLUE 1
+#define CA_FG_BLUE_MID 5
+#define CA_FG_BLUE_MAX 9
+#define CA_FG_GREEN 10
+#define CA_FG_GREEN_MID 50
+#define CA_FG_GREEN_MAX 90
+#define CA_FG_RED 100
+#define CA_FG_RED_MID 500
+#define CA_FG_RED_MAX 900
+#define CA_FG_BLACK 0
+#define CA_FG_GRAY 555
+#define CA_FG_WHITE 999
+#define CA_BG_BLUE 1000
+#define CA_BG_BLUE_MID 5000
+#define CA_BG_BLUE_MAX 9000
+#define CA_BG_GREEN 10000
+#define CA_BG_GREEN_MID 50000
+#define CA_BG_GREEN_MAX 90000
+#define CA_BG_RED 100000
+#define CA_BG_RED_MID 500000
+#define CA_BG_RED_MAX 900000
+#define CA_BG_BLACK 0
+#define CA_BG_GRAY 555000
+#define CA_BG_WHITE 999000
+#define CA_FLASH 1000000
+#define CA_MID 5
+#define CA_MAX 9
+#define CA_NOCHANGE -1
+
+#define CNS_CELLSZ 2
+#define CNS_SIZE 2048
+#define CNS_IOBUF_SZ 16
+
+string drvCnsCharNewLine, "\n";
+string drvCnsCharTab, "\t";
+string drvCnsCharCarriageReturn, "\r";
+string drvCnsCharFormFeed, "\f";
+string drvCnsCharBackSpace, "\b";
+
+char drvCnsTabWidth=5;
+
+char *_DrvCnsList[DRV_LIST_SZ];
+
+char DrvCnsNumConsoles() {
+    return ListSize(_DrvCnsList);
+}
+
+char *DrvCnsAddress(char cnsnum) {
+    return ListElement(_DrvCnsList, cnsnum);
+}
+
+char *DrvCnsRoot(char *cnsaddr) {
+    return cnsaddr;
+}
+
+char DrvCnsGetWidth(char *cnsaddr) {
+    return cnsaddr[CNS_HIGH_SHIFT_COL]-cnsaddr[CNS_LOW_SHIFT_COL]+1;
+}
+
+char DrvCnsGetHeight(char *cnsaddr) {
+    return cnsaddr[CNS_HIGH_SHIFT_ROW]-cnsaddr[CNS_LOW_SHIFT_ROW]+1;
+}
+
+void DrvCnsSetCursorVisible(char *cnsaddr, char visible) {
+    cnsaddr[CNS_CURSOR_VISIBLE]=visible;
+}
+
+void DrvCnsSetCursorPos(char *cnsaddr, char x, char y) {
+    char width;
+    width=DrvCnsGetWidth(cnsaddr);
+    cnsaddr[CNS_CURSOR_POSITION]=(y*width+x)*CNS_CELLSZ;
+}
+
+char DrvCnsGetCursorX(char *cnsaddr) {
+    char width;
+    char cell;
+    width=DrvCnsGetWidth(cnsaddr);
+    cell=FTrunc(cnsaddr[CNS_CURSOR_POSITION]/CNS_CELLSZ);
+    return cell%width;
+}
+
+char DrvCnsGetCursorY(char *cnsaddr) {
+    char width;
+    char line;
+    width=DrvCnsGetWidth(cnsaddr);
+    line=FTrunc(cnsaddr[CNS_CURSOR_POSITION]/(CNS_CELLSZ*width));
+    return line-(cnsaddr[CNS_LOW_SHIFT_ROW]);
+}
+
+void DrvCnsNewLine(char *cnsaddr) {
+    DrvCnsSetCursorPos(cnsaddr, 0, DrvCnsGetCursorY(cnsaddr)+1);
+}
+
+void DrvCnsBackLine(char *cnsaddr) {
+    DrvCnsSetCursorPos(cnsaddr, 0, DrvCnsGetCursorY(cnsaddr)-1);
+}
+
+void DrvCnsBackSpace(char *cnsaddr) {
+    cnsaddr[CNS_CURSOR_POSITION]--;
+}
+
+void DrvCnsClear(char *cnsaddr) {
+    cnsaddr[CNS_CLEAR_SCREEN]=1;
+    cnsaddr[CNS_CURSOR_POSITION]=0;
+}
+
+void DrvCnsFormFeed(char *cnsaddr) {
+    cnsaddr[CNS_CURSOR_POSITION]=0;
+}
+
+char DrvCnsGetTabWidth() {
+    return drvCnsTabWidth;
+}
+
+void DrvCnsSetTabWidth(char width) {
+    drvCnsTabWidth=width;
+}
+
+void DrvCnsShift(char *cnsaddr, char amount) {
+    char width, newcp;
+    width=DrvCnsGetWidth(cnsaddr);
+    newcp=cnsaddr[CNS_CURSOR_POSITION]-amount*width*CNS_CELLSZ;
+#ifdef DEBUG_CNS
+    preserve ECX;
+    ECX=cnsaddr[CNS_CURSOR_POSITION];
+    mov port2, ecx;
+    ECX=newcp;
+    mov port3, ecx;
+    zap ECX;
+#endif
+    cnsaddr[CNS_CURSOR_POSITION]=newcp;
+    cnsaddr[CNS_SHIFT_ROWS]=amount;
+}
+
+char DrvCnsWrite(char *cnsaddr, char *s, char attrib) {
+    char *p;
+    char pos;
+    char lastpos;
+    char width;
+    char height;
+    p=s;
+    pos=cnsaddr[CNS_CURSOR_POSITION];
+    width=DrvCnsGetWidth(cnsaddr);
+    height=DrvCnsGetHeight(cnsaddr);
+    lastpos=width*height*CNS_CELLSZ;
+    while(*p) {
+        if(pos>=lastpos) {
+            DrvCnsShift(cnsaddr, 1);
+            pos=cnsaddr[CNS_CURSOR_POSITION];
+        }
+        //Special character handling
+        if(*p==drvCnsCharNewLine[0]) {
+            DrvCnsNewLine(cnsaddr);
+            pos=cnsaddr[CNS_CURSOR_POSITION];
+        } else if(*p==drvCnsCharTab[0]) {
+            DrvCnsSetCursorPos(cnsaddr, FTrunc(DrvCnsGetCursorX(cnsaddr)/drvCnsTabWidth), DrvCnsGetCursorY(cnsaddr));
+            pos=cnsaddr[CNS_CURSOR_POSITION];
+        } else if(*p==drvCnsCharCarriageReturn[0]) {
+            DrvCnsSetCursorPos(cnsaddr, 0, DrvCnsGetCursorY(cnsaddr));
+            pos=cnsaddr[CNS_CURSOR_POSITION];
+        } else if(*p==drvCnsCharFormFeed[0]) {
+            DrvCnsClear(cnsaddr);
+            pos=cnsaddr[CNS_CURSOR_POSITION];
+        } else if(*p==drvCnsCharBackSpace[0]) {
+            DrvCnsBackSpace(cnsaddr);
+            pos=cnsaddr[CNS_CURSOR_POSITION];
+        } else {
+            cnsaddr[pos++]=*p;
+            if(attrib!=CA_NOCHANGE) {
+                cnsaddr[pos++]=attrib;
+            }
+        }
+        p++;
+    }
+    cnsaddr[CNS_CURSOR_POSITION]=pos;
+#ifdef DEBUG_CNS
+    //DEBUG: Write out cursor positions to IO ports.
+    preserve ECX;
+    ECX=DrvCnsGetCursorX(cnsaddr);
+    mov port0, ecx;
+    ECX=DrvCnsGetCursorY(cnsaddr);
+    mov port1, ecx;
+    zap ECX;
+#endif
+    return p-s; //Number of characters parsed.
+}
+
+char DrvCnsEntry(char op, char *devptr) {
+    if(op==DRV_OP_CLEAR) {
+        ListClear(_DrvCnsList);
+    }
+    if(op==DRV_OP_INIT) {
+        if(!ListContains(_DrvCnsList, devptr)) {
+            ListAppend(_DrvCnsList, devptr);
+        }
+        return CNS_SIZE;
+    }
+    if(op==DRV_OP_STOP) {
+        ListRemove(_DrvCnsList, devptr);
+    }
+    if(op==DRV_OP_SCAN) {
+        return 0;
+    }
+    return 0;
+}
+
+char DrvCnsControlEntry(char ioctl, char *buffer) {
+    char *dev;
+    char temp;
+    if(ioctl==IOCTL_CAN_READ||ioctl==IOCTL_CAN_WRITE||ioctl==IOCTL_CAN_SEEK) {
+        if(ListSize(buffer)<1) {
+            return ENOMEM;
+        }
+        ListSet(buffer, 0, 1);
+        return 0;
+    } else if(ioctl==IOCTL_CAN_BLOCK) {
+        if(ListSize(buffer)<1) {
+            return ENOMEM;
+        }
+        ListSet(buffer, 0, 0);
+        return 0;
+    } else if(ioctl==IOCTL_READ_AVAIL) {
+        if(ListSize(buffer)<1) {
+            return ENOMEM;
+        }
+        dev=ListElement(buffer, 0);
+        if(!dev) {
+            return EBADVAL;
+        }
+        temp=DrvCnsGetWidth(dev);
+        temp*=DrvCnsGetHeight(dev)*CNS_CELLSZ;
+        ListSet(buffer, 0, dev[CNS_CURSOR_POSITION]-temp);
+        return 0;
+    } else if(ioctl==IOCTL_WRITE_AVAIL) {
+        if(ListSize(buffer)<1) {
+            return ENOMEM;
+        }
+        ListSet(buffer, 0, AVAIL_MAX);
+        return 0;
+    } else if(ioctl==IOCTL_GET_POS) {
+        if(ListSize(buffer)<1) {
+            return ENOMEM;
+        }
+        dev=ListElement(buffer, 0);
+        if(!dev) {
+            return EBADVAL;
+        }
+        temp=FTrunc(dev[CNS_CURSOR_POSITION]/CNS_CELLSZ);
+        ListSet(buffer, 0, temp);
+        return 0;
+    } else if(ioctl==IOCTL_SET_POS) {
+        if(ListSize(buffer)<2) {
+            return ENOMEM;
+        }
+        dev=ListElement(buffer, 0);
+        if(!dev) {
+            return EBADVAL;
+        }
+        temp=ListElement(buffer, 1);
+        dev[CNS_CURSOR_POSITION]=temp*CNS_CELLSZ;
+        return 0;
+    }
+    //Not implemented.
+    return 0;
+}
+
+char _drvCnsIOBuffer[CNS_IOBUF_SZ];
+
+char DrvCnsIOEntry(char *dev, char op, char *buffer) {
+    char temp;
+    char count;
+    char maxpos;
+    char *p;
+    if(op==IO_READ) {
+        count=0;
+        maxpos=DrvCnsGetWidth(dev);
+        maxpos*=DrvCnsGetHeight(dev)*CNS_CELLSZ;
+        if(dev[CNS_CURSOR_POSITION]<maxpos) {
+            temp=ListAppend(buffer, dev[dev[CNS_CURSOR_POSITION]]);
+            while(temp&&(dev[CNS_CURSOR_POSITION]<maxpos)) {
+                count++;
+                dev[CNS_CURSOR_POSITION]=dev[CNS_CURSOR_POSITION]+CNS_CELLSZ;
+                temp=ListAppend(buffer, dev[dev[CNS_CURSOR_POSITION]]);
+            }
+        }
+        return count;
+    } else if(op==IO_WRITE) {
+        //Kill me for this tomfoolery :P
+        //Then again, why reinvent the wheel?
+        count=0;
+        while(ListSize(buffer)) {
+            p=ListAddress(buffer, 0);
+            maxpos=ListSize(buffer);
+            for(temp=0; (temp<CNS_IOBUF_SZ-1)&&temp<maxpos; temp++) {
+                _drvCnsIOBuffer[temp]=*p;
+                p++;
+                count++;
+            }
+            DrvCnsWrite(dev, _drvCnsIOBuffer, CA_NOCHANGE);
+            ListShift(buffer, temp);
+        }
+        return count;
+    }
+    return 0;
+}
+        
+        
+//[INITFUNC] DrvCnsInit();
+//[INITTIME] DRIVERS_BASIC 1
+void DrvCnsInit() {
+    ListInit(_DrvCnsList, DRV_LIST_SZ-LST_LIST);
+    DrvSetDriverEntry(DRV_TYPE_CONSOLE, DrvCnsEntry);
+    DrvSetCountEntry(DRV_TYPE_CONSOLE, DrvCnsNumConsoles);
+    DrvSetAddressEntry(DRV_TYPE_CONSOLE, DrvCnsAddress);
+    DrvSetRootEntry(DRV_TYPE_CONSOLE, DrvCnsRoot);
+    DrvSetIOEntry(DRV_TYPE_CONSOLE, DrvCnsIOEntry);
+    DrvSetControlEntry(DRV_TYPE_CONSOLE, DrvCnsControlEntry);
+}
+
+#endif

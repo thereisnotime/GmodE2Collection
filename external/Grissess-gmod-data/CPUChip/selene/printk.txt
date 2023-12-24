@@ -1,0 +1,190 @@
+#ifndef SELENE_PRINTK
+#define SELENE_PRINTK
+
+#include <selene/dev.txt>
+#include <selene/cpu.txt>
+#include <selene/std.txt>
+#include <selene/port.txt>
+
+char *printk_console = 0;
+char printk_width = 0;
+char printk_height = 0;
+
+void printk_set_console(char *con) {
+    if(con != printk_console) {
+        printk_console = con;
+        if(printk_console) {
+            printk_reset();
+        }
+    }
+}
+
+void printk_init() {
+    printk_find();
+}
+
+void printk_reset() {
+    printk_console[CNS_CLEAR_SCREEN] = 1;
+    printk_console[CNS_CURSOR_POSITION] = 0;
+    printk_width = printk_console[CNS_HIGH_SHIFT_COL] - printk_console[CNS_LOW_SHIFT_COL] + 1;
+    printk_height = printk_console[CNS_HIGH_SHIFT_ROW] - printk_console[CNS_LOW_SHIFT_ROW] + 1;
+}
+
+void printk_find() {
+    char *root = insn_cpuid(CPUID_RAMSIZE);
+    char i;
+    
+    root[EBUS_REG_CDATA_SZ] = EBUS_SIZE;
+    root[EBUS_REG_RECURSE] = 0;
+    root[EBUS_REG_SCAN] = 1;
+    for(i = 0; i < EBUS_DEVICES; i++) {
+        root[2 * i] = 0;
+        root[2 * i + 1] = 0;
+    }
+    for(i = 0; i < EBUS_DEVICES; i++) {
+        if(root[EBUS_REG_DEVTYPE + i] == EBUS_TYPE_CONSOLE) {
+            root[2 * i] = 1;
+            root[2 * i + 1] = 1 + CNS_SIZE;
+            printk_console = root + EBUS_SIZE + 1;
+            printk_reset();
+            printk("early printk on device %d @%p\n", i, printk_console);
+            return;
+        }
+    }
+    
+    printk_console = root;
+    printk_reset();
+    printk("early printk assumed on root device\n");
+}
+
+char printk_is_ready() {
+    return printk_console != 0;
+}
+
+void putck(char c) {
+    char pos;
+    iolog_putc(c);
+    if(!printk_is_ready()) return;
+    pos = to_int(printk_console[CNS_CURSOR_POSITION] / 2);
+    if(c == '\n') {
+        pos += printk_width;
+        // XXX || operator is bugged, but this should be merged below
+        pos = to_int(pos / printk_width);
+        pos *= printk_width;
+    } else if(c == '\r') {
+        pos = to_int(pos / printk_width);
+        pos *= printk_width;
+    } else if(c == '\b') {
+        pos--;
+    } else {
+        printk_console[pos * 2] = c;
+        printk_console[pos * 2 + 1] = 999;
+        pos++;
+    }
+    if(pos >= printk_width * printk_height) {
+        printk_console[CNS_SHIFT_ROWS] = 1;
+        pos -= printk_width;
+    }
+    printk_console[CNS_CURSOR_POSITION] = pos * 2;
+}
+
+void putsk(char *s) {
+    while(*s) {
+        putck(*s);
+        s++;
+    }
+}
+
+char printk_xtoa_buffer[32];
+void putik(char n, char *radix) {
+    itoa(n, radix, printk_xtoa_buffer, 32);
+    putsk(printk_xtoa_buffer);
+}
+
+void putfk(float n, char *radix, char prec) {
+    ftoa(n, radix, prec, printk_xtoa_buffer, 32);
+    putsk(printk_xtoa_buffer);
+}
+
+void printk(char *str, ...) {
+    char *s = str;
+    char *arg = EBP + 3;
+    while(*s) {
+        if(*s == '%') {
+            s++;
+            if(*s == 'p') {
+                putsk("0x");
+                putik(*arg, HEX_RADIX);
+                arg++;
+            } else if(*s == 'x') {
+                putik(*arg, LHEX_RADIX);
+                arg++;
+            } else if(*s == 'X') {
+                putik(*arg, UHEX_RADIX);
+                arg++;
+            } else if(*s == 'd') {
+                putik(*arg, DEC_RADIX);
+                arg++;
+            } else if(*s == 'o') {
+                putik(*arg, OCT_RADIX);
+                arg++;
+            } else if(*s == 'b') {
+                putik(*arg, BIN_RADIX);
+                arg++;
+            } else if(*s == 'f') {
+                putfk(*arg, DEC_RADIX, 6);
+                arg++;
+            } else if(*s == 'c') {
+                putck(*arg);
+                arg++;
+            } else if(*s == 's') {
+                putsk(*arg);
+                arg++;
+            } else {
+                putck(*s);
+            }
+        } else {
+            putck(*s);
+        }
+        s++;
+    }
+}
+
+char printk_debugging = 0;
+void printk_set_debug(char val) {
+    printk_debugging = val;
+}
+char printk_get_debug() {
+    return printk_debugging;
+}
+
+string printkln_header, "[%f](%p;%d) ";
+
+printkln:
+    PUSHA;
+    MOV EAX, [ESP:9];
+    PUSH EAX;
+    PUSH EAX;
+    TIMER EAX;
+    PUSH EAX;
+    PUSH printkln_header;
+    MOV ECX, 4;
+    CALL printk;
+    ADD ESP, 4;
+    POPA;
+    JMP printk;
+
+debug_printk:
+    CMP printk_debugging, 0
+    JE debug_ret;
+    JMP printk;
+
+debug_printkln:
+    CMP printk_debugging, 0
+    JE debug_ret;
+    JMP printkln;
+    
+debug_ret:
+    RET;
+
+#endif

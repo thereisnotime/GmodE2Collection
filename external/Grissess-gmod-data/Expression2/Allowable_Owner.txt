@@ -1,0 +1,17 @@
+@name Allowable Owner
+@persist O:entity Use
+
+if( first() ) {
+    runOnTick(1)
+    O = owner()
+}
+
+Last = Use
+Use = O:keyUse()
+
+if( Use & Use != Last ) {
+    P = O:aimEntity()
+    if( P:isPlayer() ) {
+        P["Allowed", number] = !P["Allowed", number]
+    }
+}

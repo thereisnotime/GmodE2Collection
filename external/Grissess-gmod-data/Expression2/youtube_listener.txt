@@ -1,0 +1,47 @@
+@name Youtube Listener
+@inputs 
+@outputs URL:string Open StartAt
+@persist Patterns:array WarnPatterns:array
+@trigger 
+
+if(first()|duped()) {
+    runOnChat(1)
+    Patterns=array("http://youtube.com/watch?", "http://www.youtube.com/watch?")
+    WarnPatters=array("https://youtube.com/watch?", "https://www.youtube.com/watch?")
+}
+
+if(chatClk()) {
+    LastSaid=lastSaid()
+    for(I=1,Patterns:count()) {
+        Pattern=Patterns[I, string]
+        if(LastSaid:left(Pattern:length())==Pattern) {
+            Parts=LastSaid:explode(" ")
+            if(Parts:count()>1) {
+                StartAtS=Parts[2, string]
+                StartAtP=StartAtS:explode(":")
+                if(StartAtP:count()>1) {
+                    StartAt=StartAtP[1, string]:toNumber()*60+StartAtP[2, string]:toNumber()
+                } else {
+                    StartAt=StartAtS:toNumber()
+                }
+            } else {
+                StartAt=0
+            }
+            URL=LastSaid
+            Open=1
+            timer("Close", 250)
+            exit()
+        }
+    }
+    for(I=1,WarnPatterns:count()) {
+        Pattern=Patterns[I, string]
+        if(LastSaid:left(Pattern:length())==Pattern) {
+            concmd("say That looks like it might have been a youtube link--please make sure you're not using the http:, not https:--PlayX doesn't understand it.")
+            exit()
+        }
+    }
+}
+
+if(clk("Close")) {
+    Open=0
+}

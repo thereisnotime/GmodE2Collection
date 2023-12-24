@@ -1,0 +1,49 @@
+[Info]
+Type:AdvDupe File
+Creator:"Nikinor"
+Date:02/03/13
+Description:"none"
+Entities:2
+Constraints:1
+[More Information]
+FileVersion:0.84
+AdvDupeVersion:1.85
+AdvDupeToolVersion:1.9
+AdvDupeSharedVersion:1.72
+SerialiserVersion:1.4
+WireVersion:Not Installed
+Time:11:18 PM
+Head:426
+HoldAngle:0,-45.4209,0
+HoldPos:8.28673,0.958563,-64.5107
+StartPos:1231.23,-1883.52,64.0313
+[Save]
+Entities:0x3991a008{Y:10=T:0x3991a030;Y:11=N:0;Y:12=N:0;}0x3b2c9a80{Y:1=N:0;Y:5=T:0x3942e208;Y:2=A:0.883647,145.132,0.00103447;Y:7=Y:6;Y:3=V:6.53064,-3.38062,64.6308;Y:9=Y:19;Y:18=T:0x3b2c9c10;}H0x394fe5e0{N:504=T:0x39919e38;N:426=T:0x3b2c9a80;}0x3991a030{S:"r"=N:60;S:"b"=N:82;S:"a"=N:255;S:"g"=N:118;}0x39919fb8{Y:13=T:0x3991a008;Y:16=T:0x3991a0f8;Y:17=N:0;}0x3942e208{N:0=T:0x2fa3ba90;}0x3991a0f8{Y:15=Y:14;}0x3b2c9c98{Y:15=Y:14;}0x3b2c9c10{Y:16=T:0x3b2c9c98;Y:17=N:0;}0x39919e38{Y:1=N:0;Y:5=T:0x2fbb4a60;Y:2=A:-81.3736,-55.0349,163.672;Y:7=Y:6;Y:3=V:8.50171,-3.5752,140.818;Y:9=Y:8;Y:18=T:0x39919fb8;}0x2fbb4a60{N:0=T:0x2fbb4ab0;}0x2fbb4ab0{Y:2=A:-81.3736,-55.0349,163.672;Y:3=V:8.50171,-3.5752,140.818;Y:4=B:t;}0x2fa3ba90{Y:2=A:0.883647,145.132,0.00103447;Y:3=V:6.53064,-3.38062,64.6308;Y:4=B:t;}
+Constraints:H0x3bf905f0{T:0x28a027d8;}0x28a028f0{Y:22=N:0;Y:23=N:426;}0x28a027d8{Y:21=Y:20;Y:24=T:0x28a02838;Y:25=N:0;}0x28a02838{T:0x28a028f0;T:0x28a02980;}0x28a02980{Y:22=N:0;Y:23=N:504;}
+[Dict]
+1:"Skin"
+2:"LocalAngle"
+3:"LocalPos"
+4:"Frozen"
+5:"PhysicsObjects"
+6:"prop_physics"
+7:"Class"
+8:"models/props_vehicles/apc_tire001.mdl"
+9:"Model"
+10:"Color"
+11:"RenderFX"
+12:"RenderMode"
+13:"colour"
+14:"models/antlion/antlion_innards"
+15:"MaterialOverride"
+16:"material"
+17:"CollisionGroupMod"
+18:"EntityMods"
+19:"models/props_docks/dock01_pole01a_128.mdl"
+20:"Weld"
+21:"Type"
+22:"Bone"
+23:"Index"
+24:"Entity"
+25:"forcelimit"
+Saved:19

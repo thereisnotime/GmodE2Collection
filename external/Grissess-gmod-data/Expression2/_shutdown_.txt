@@ -1,0 +1,62 @@
+@name -Fast- Memory Viewer
+@inputs Device:wirelink Cns:wirelink
+@outputs 
+@persist Base Width Env:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    #include "lib/cns_tty"
+    
+    function void mvSetBase(Args:table, Ret:table) {
+        Base=Args[1, number]
+    }
+    
+    function void mvSetWidth(Args:table, Ret:table) {
+        Width=Args[1, number]
+    }
+    
+    function void mvWrite(Args:table, Ret:table) {
+        local Position=Args[1, number]
+        local Values=Args[2, string]:explode(" ")
+        while(Values:count()>0) {
+            Device[Position]=Values:shiftString():toNumber()
+            Position++
+        }
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("mvsetbase", "mvSetBase", "n"))
+    Env:envAddCommand(newCommand("mvsetwidth", "mvSetWidth", "n"))
+    Env:envAddCommand(newCommand("mvwrite", "mvWrite", "nr"))
+    
+    Base=0
+    Width=4
+    timer("Display", 250)
+    runOnChat(1)
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if(clk("Display")) {
+    Cns:cnClear()
+    local ScrW=Cns:cnWidth()
+    local ScrH=Cns:cnHeight()
+    local X=0
+    local Y=0
+    local I=Base
+    while(Y<=ScrH&perf()) {
+        Cns:writeString(Device[I]:toString(), X, Y)
+        I++
+        X+=Width
+        if(X>ScrW) {
+            X=0
+            Y=Y+1
+        }
+    }
+    timer("Display", 250)
+}

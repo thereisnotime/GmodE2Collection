@@ -1,0 +1,53 @@
+@name libupatch
+
+#uPatch (or Micropatch) -- A wire-inside-wire library
+
+function table newEndpoint(Wirelink:wirelink, Port:string) {
+    local RetT=table()
+    RetT["Wirelink", wirelink]=Wirelink
+    RetT["Port", string]=Port
+    return RetT
+}
+
+function table newEndpoint(Wirelink:wirelink, Cell:number) {
+    local RetT=table()
+    RetT["Wirelink", wirelink]=Wirelink
+    RetT["Cell", number]=Cell
+    return RetT
+}
+
+function number table:epIsHiSpeed() {
+    return !This:exists("Port")
+}
+
+function wirelink table:epWirelink() {
+    return This["Wirelink", wirelink]
+}
+
+function string table:epPort() {
+    return This["Port", string]
+}
+
+function number table:epCell() {
+    return This["Cell", number]
+}
+
+function void table:epSetWirelink(Wirelink:wirelink) {
+    This["Wirelink", wirelink]=Wirelink
+}
+
+function void table:epSetPort(Port:string) {
+    This["Port", string]=Port
+}
+
+function void table:epSetCell(Cell:number) {
+    This["Cell", number]=Cell
+}
+
+function number table:epGetValue() {
+    local Wirelink=This:epWirelink()
+    if(This:epIsHiSpeed()) {
+        return Wirelink[This:epCell()]
+    }
+    return Wirelink[This:epPort(), number]
+}

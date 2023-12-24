@@ -1,0 +1,33 @@
+@name -Hooks- Player Identifier
+@inputs EGP:wirelink
+@outputs 
+@persist NextHID
+@trigger 
+
+if(first()|duped()) {
+    runOnHook(1)
+    registerHook("PlayerTick")
+    
+    NextHID=1
+    
+    function gmPlayerTick(Args:array) {
+        #local Player=Args[1, entity]
+        #local TID=Player["TrackerID", number]
+        #print(Player:toString()+" moved")
+        #[if(TID) {
+            EGP:egpPos(TID, Player:pos()+vec(0, 0, Player:height()))
+        } else {
+            EGP:egp3DTracker(NextHID, Player:pos()+vec(0, 0, Player:height()))
+            Player["TrackerID", number]=NextHID
+            TID=NextHID
+            NextHID++
+            EGP:egpText(NextHID, Player:name(), vec2())
+            EGP:egpParent(NextHID, TID)
+            NextHID++
+        }]#
+    }
+}
+
+if(getHook()) {
+    ("gm"+getHook())(getHookArgs())
+}

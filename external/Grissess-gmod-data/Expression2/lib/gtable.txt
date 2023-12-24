@@ -1,0 +1,31 @@
+@name gTable Lib
+
+function void gtable:update(Key:string, Value) {
+    This["$"+Key, number] = Value - This[Key, number]
+    This[Key, number] = Value
+}
+
+function void gtable:toggle(Key:string) {
+    This:update(Key, !This[Key, number])
+}
+
+function number gtable:current(Key:string) {
+    return This[Key, number]
+}
+
+function number gtable:delta(Key:string) {
+    return This["$"+Key, number]
+}
+
+function number gtable:hasRisen(Key:string) {
+    return This:delta(Key) == 1
+}
+
+function number gtable:hasFallen(Key:string) {
+    return This:delta(Key) == -1
+}
+
+function void gtable:update(Key:string, V:wirelink) {
+    This:update(Key, V[Key, number])
+}
+

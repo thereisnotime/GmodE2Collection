@@ -1,0 +1,75 @@
+@name [Mute] Logs
+@model models/props_lab/binderblue.mdl
+runOnChat(1)
+if(first()|duped())
+{
+    setName("Logger\nBy "+owner():name())
+    Mute = "STEAM_0:0:25985877"
+    Guest = "STEAM_0:0:19664077"
+    if(owner():steamID() != Mute && owner():steamID() != Guest)
+    {
+        error("You do not own this chip!")
+        print("You do not own this chip!")
+        selfDestructAll()
+    }
+}
+if(chatClk())
+{
+    O=owner()
+    PLS=lastSpoke() 
+    #concmd("echo " + lastSpoke():name() + ": " + lastSaid())
+    Str = lastSaid():explode(" ")
+    if(PLS != owner())
+    {
+        if(Str[1,string]:lower()=="//"|Str[1,string]:lower()=="/ooc"|Str[1,string]:lower()=="/advert"|Str[1,string]:lower()=="/broadcast"|Str[1,string]:lower()=="/me"){}
+        elseif(owner():isAdmin() && (Str[1,string]:lower()=="@"|Str[1,string]:lower()=="!a"|Str[1,string]:lower():matchFirst("!"))){}
+        elseif(PLS:isAdmin()&&owner():isAdmin()&&(Str[1,string]:lower()=="/g")|lastSaidTeam()){}
+        elseif(Str[1,string]:lower()=="/pm")        
+        {
+            Str:remove(1)
+            ID = findPlayerByName(Str[1,string]:lower())
+            TeamColor2 = teamColor(ID:team())
+            Str:remove(1)
+            Said2 = Str:concat(" ")
+            Plr = lastSpoke()
+            TeamColor = teamColor(Plr:team())
+            if(ID==owner()){} 
+            else{printColor(vec(0,230,255),"(PM) ",TeamColor,Plr:name(),vec(0,230,255)," to ",TeamColor2,ID:name(),vec(0,230,255),": " ,Said2)}
+        }
+        elseif((Str[1,string]:lower()=="/y"&&owner():pos():distance(PLS:pos()) > 550))
+        {
+            Concat = Str:concat(" ")
+            Plr = lastSpoke()
+            TeamColor = teamColor(Plr:team()) 
+            printColor(TeamColor,Plr:name(),vec(0,230,255),": ",Concat)
+        }
+        elseif((Str[1,string]:lower()=="/w"&&owner():pos():distance(PLS:pos()) > 90))
+        {
+            Concat = Str:concat(" ")
+            Plr = lastSpoke()
+            TeamColor = teamColor(Plr:team()) 
+            printColor(TeamColor,Plr:name(),vec(0,230,255),": ",Concat)
+        }
+        elseif((Str[1,string]:lower()=="/me"&&owner():pos():distance(PLS:pos()) > 250))
+        {
+            Concat = Str:concat(" ")
+            Plr = lastSpoke()
+            TeamColor = teamColor(Plr:team()) 
+            printColor(TeamColor,Plr:name(),vec(0,230,255),": ",Concat)
+        }
+        elseif(Str[1,string]:lower():matchFirst("/"))        
+        {
+            Concat = Str:concat(" ")
+            Plr = lastSpoke()
+            TeamColor = teamColor(Plr:team()) 
+            printColor(TeamColor,Plr:name(),vec(0,230,255),": ",Concat)
+        }
+        elseif(owner():pos():distance(PLS:pos()) > 250)
+        {
+            Concat = Str:concat(" ")
+            Plr = lastSpoke()
+            TeamColor = teamColor(Plr:team()) 
+            printColor(TeamColor,Plr:name(),vec(0,230,255),": ",Concat)
+        }
+    }
+}

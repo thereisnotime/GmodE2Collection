@@ -1,0 +1,41 @@
+[Info]
+Type:AdvDupe File
+Creator:"*ISK* One shot fail [LP]"
+Date:03/21/13
+Description:"none"
+Entities:3
+Constraints:2
+[More Information]
+FileVersion:0.84
+AdvDupeVersion:1.85
+AdvDupeToolVersion:1.9
+AdvDupeSharedVersion:1.72
+SerialiserVersion:1.4
+WireVersion:Not Installed
+Time:06:45 PM
+Head:176
+HoldAngle:0,28.0816,0
+HoldPos:-8.17614,95.3207,2.72907
+StartPos:-9259.19,1350.93,-11136
+[Save]
+Entities:0x3ceb73f0{N:0=T:0x3ca47d78;}0x3ca7b780{Y:1=N:0;Y:5=T:0x3c9c4238;Y:2=A:2.014,-96.6913,-95.8407;Y:7=Y:6;Y:3=V:-100.563,26.4652,95.9063;Y:9=Y:8;Y:11=T:0x4340f2e0;}0x4378cab0{N:0=T:0x2a3d8db8;}0x3ca47d78{Y:2=A:-0.218671,-5.34672,71.8108;Y:3=V:-55.1777,114.28,90.4678;Y:4=B:t;}0x47b069c0{Y:10=N:0;}0x2a3d8db8{Y:2=A:-0.0322279,96.3162,270.547;Y:3=V:2.72266,8.47351,95.2949;Y:4=B:t;}0x359a3568{Y:1=N:0;Y:5=T:0x4378cab0;Y:2=A:-0.0322279,96.3162,-89.4534;Y:7=Y:6;Y:3=V:2.72266,8.47351,95.2949;Y:9=Y:8;Y:11=T:0x47b069c0;}0x4340f2e0{Y:10=N:0;}0x3c9c4238{N:0=T:0x3b664870;}0x3b664870{Y:2=A:2.014,-96.6913,264.159;Y:3=V:-100.563,26.4652,95.9063;Y:4=B:t;}0x3c54d7b0{Y:10=N:0;}H0x3325bb08{N:176=T:0x359a3568;N:264=T:0x3598dcb8;N:238=T:0x3ca7b780;}0x3598dcb8{Y:1=N:0;Y:5=T:0x3ceb73f0;Y:2=A:-0.218671,-5.34672,71.8108;Y:7=Y:6;Y:3=V:-55.1777,114.28,90.4678;Y:9=Y:8;Y:11=T:0x3c54d7b0;}
+Constraints:0x4fb78710{Y:14=N:0;Y:15=N:264;}0x3cd0dbd8{Y:14=N:0;Y:15=N:264;}0x3cd0dbb0{Y:14=N:0;Y:15=N:238;}H0x339428c8{T:0x3c1fc938;T:0x48ce7ec8;}0x3c1fc960{T:0x3cd0dbb0;T:0x3cd0dbd8;}0x48ce7ec8{Y:13=Y:12;Y:16=T:0x3b8aa618;Y:17=N:0;}0x3c1fc938{Y:13=Y:12;Y:16=T:0x3c1fc960;Y:17=N:0;}0x3b8aa618{T:0x4fb78710;T:0x4fb78738;}0x4fb78738{Y:14=N:0;Y:15=N:176;}
+[Dict]
+1:"Skin"
+2:"LocalAngle"
+3:"LocalPos"
+4:"Frozen"
+5:"PhysicsObjects"
+6:"prop_physics"
+7:"Class"
+8:"models/props_phx/construct/plastic/plastic_panel1x4.mdl"
+9:"Model"
+10:"CollisionGroupMod"
+11:"EntityMods"
+12:"Weld"
+13:"Type"
+14:"Bone"
+15:"Index"
+16:"Entity"
+17:"forcelimit"
+Saved:38

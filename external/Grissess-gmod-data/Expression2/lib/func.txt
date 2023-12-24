@@ -1,0 +1,432 @@
+#Function Library
+
+#This encapsulates all sorts of interpolating functions for various purposes.
+
+function void xInsert(Table:table, Point:vector2) {
+    local Found=0
+    for(J=Table:minIndex(),Table:maxIndex()) {
+        if(Point:x()<Table[J, vector2]:x()) {
+            Table:insertVector2(J, Point)
+            Found=1
+            break
+        }
+    }
+    if(!Found) {
+        Table:pushVector2(Point)
+    }
+}
+
+function table xSort(Points:table) {
+    #Using a moderately quick insertion sort algorithm.
+    local Ret=table()
+    if(!Points:count()) {
+        return Ret
+    }
+    Ret:pushVector2(Points:popVector2())
+    for(I=Points:minIndex(),Points:maxIndex()) {
+        xInsert(Ret, Points[I, vector2])
+    }
+    return Ret
+}
+
+function table newFunction(Points:table, Type:number) {
+    local Ret=table()
+    Ret["Points", table]=xSort(Points)
+    Ret["Type", number]=Type
+    Ret["ExMode", number]=1 #EX_LINEAR -- See below.
+    return Ret
+}
+
+function table newInterval(LBound:vector2, UBound:vector2,) {
+    local Ret=table()
+    Ret["LBound", vector2]=LBound
+    Ret["UBound", vector2]=UBound
+    return Ret
+}
+
+function table newInterval(LBound:vector2, LIndex:number, UBound:vector2, UIndex:number) {
+    local Ret=table()
+    Ret["LBound", vector2]=LBound
+    Ret["UBound", vector2]=UBound
+    Ret["LIndex", number]=LIndex
+    Ret["UIndex", number]=UIndex
+    return Ret
+}
+
+function table newIntervalAtPivot(Previous:vector2, Point:vector2, Next:vector2) {
+    local Ret=newInterval(Previous, Next)
+    Ret["Pivot", vector2]=Point
+    return Ret
+}
+
+function table newIntervalAtPivot(Previous:vector2, LIndex:number, Point:vector2, PIndex:number, Next:vector2, UIndex:number) {
+    local Ret=newInterval(Previous, LIndex, Next, UIndex)
+    Ret["Pivot", vector2]=Point
+    Ret["PIndex", number]=PIndex
+    return Ret
+}
+
+function table newUnboundedLowInterval(UBound:vector2) {
+    local Ret=table()
+    Ret["UBound", vector2]=UBound
+    return Ret
+}
+
+function table newUnboundedLowInterval(UBound:vector2, UIndex:number) {
+    local Ret=table()
+    Ret["UBound", vector2]=UBound
+    Ret["UIndex", number]=UIndex
+    return Ret
+}
+
+function table newUnboundedHighInterval(LBound:vector2) {
+    local Ret=table()
+    Ret["LBound", vector2]=LBound
+    return Ret
+}
+
+function table newUnboundedHighInterval(LBound:vector2, LIndex:number) {
+    local Ret=table()
+    Ret["LBound", vector2]=LBound
+    Ret["LIndex", number]=LIndex
+    return Ret
+}
+
+function table newInvalidInterval() {
+    return table()
+}
+
+function table table:fnPoints() {
+    return This["Points", table]
+}
+
+function number table:fnType() {
+    return This["Type", number]
+}
+
+function number table:fnExtrapolationMode() {
+    return This["ExMode", number]
+}
+
+function void table:fnSetExtrapolationMode(Mode:number) {
+    This["ExMode", number]=Mode
+}
+
+function number table:ivIsBounded() {
+    return This:exists("LBound")&This:exists("UBound")
+}
+
+function number table:ivIsBoundedLow() {
+    return This:exists("LBound")
+}
+
+function number table:ivIsBoundedHigh() {
+    return This:exists("UBound")
+}
+
+function number table:ivIsValid() {
+    return This:exists("LBound")|This:exists("UBound")
+}
+
+function number table:ivIsOnPivot() {
+    return This:exists("Pivot")
+}
+
+function number table:ivHasIndices() {
+    return This:exists("LIndex")|This:exists("UIndex")|This:exists("PIndex")
+}
+
+function vector2 table:ivLBound() {
+    return This["LBound", vector2]
+}
+
+function number table:ivLIndex() {
+    return This["LIndex", number]
+}
+
+function vector2 table:ivUBound() {
+    return This["UBound", vector2]
+}
+
+function number table:ivUIndex() {
+    return This["UIndex", number]
+}
+
+function vector2 table:ivPivot() {
+    return This["Pivot", vector2]
+}
+
+function number table:ivPIndex() {
+    return This["PIndex", number]
+}
+
+function number table:ivSpan() {
+    return This:ivUBound():x()-This:ivLBound():x()
+}
+
+function void table:fnAddPoint(Pt:vector2) {
+    xInsert(This:fnPoints(), Pt)
+}
+
+function vector2 table:fnPointAt(Index:number, Default:vector2) {
+    local Points=This:fnPoints()
+    if(Points:exists(Index)) {
+        return Points[Index, vector2]
+    }
+    return Default
+}
+
+function table table:fnIntervalAt(X:number) {
+    local Points=This:fnPoints()
+    #Test if we're beyond an extreme
+    if(X<Points[Points:minIndex(), vector2]:x()) {
+        return newUnboundedLowInterval(Points[Points:minIndex(), vector2], Points:minIndex())
+    }
+    if(X>Points[Points:maxIndex(), vector2]:x()) {
+        return newUnboundedHighInterval(Points[Points:maxIndex(), vector2], Points:maxIndex())
+    }
+    for(I=Points:minIndex(),Points:maxIndex()) {
+        local Pt=Points[I, vector2]
+        #Test if there is actually a point at this position
+        if(Pt:x()==X) {
+            #Weirdisms: if this point (a pivot) is at an extreme,
+            #we'll set one of the bounds to be equal to the pivot.
+            #That should keep behavior deterministic so long as
+            #evaluators can expect this.
+            local Low=vec2()
+            local LI=0
+            local High=vec2()
+            local HI=0
+            if(I==Points:minIndex()) {
+                LI=I
+                Low=Pt
+            } else {
+                LI=I-1
+                Low=Points[LI, vector2]
+            }
+            if(I==Points:maxIndex()) {
+                HI=I
+                High=Pt
+            } else {
+                HI=I+1
+                High=Points[HI, vector2]
+            }
+            return newIntervalAtPivot(Low, LI, Pt, I, High, HI)
+        }
+        #Test if we're in an interval...
+        if(X<Pt:x()) {
+            #Since we've covered the minIndex extreme already, we don't need to worry
+            #about this being true for I==minIndex.
+            return newInterval(Points[I-1, vector2], I-1, Pt, I)
+        }
+    }
+    print("WARNING! Invalid interval!")
+    return newInvalidInterval() #Something went horrendously wrong to get to here.
+}
+
+function table table:fnLowestInterval() {
+    local Points=This:fnPoints()
+    return newInterval(Points[Points:minIndex(), vector2], Points[Points:minIndex()+1, vector2])
+}
+
+function table table:fnHighestInterval() {
+    local Points=This:fnPoints()
+    return newInterval(Points[Points:maxIndex()-1, vector2], Points[Points:maxIndex(), vector2])
+}
+
+#function vector2 table:fnEval(X:number) --Defined below.
+
+#Since we can't use "constant variables" here, due to (1) inability to
+#@persist, and (2) scoping issues, I'm just going to put the registry of
+#types right here, and relevant comments throughout.
+#1 - FN_LINEAR - A linear interpolating function.
+#2 - FN_BEZIER - A single, continuous Bezier function.
+#3 - FN_BEZ_SEG - Multiple discrete Bezier segments of a fixed order sharing endpoints.
+
+#All of these functions (so far) support linear extrapolation of the last two points.
+#Because this is the first/last endpoint and corresponding tangent for a Bezier curve,
+#this causes the curve to be differentiable. This can be set on these functions to
+#the following modes:
+#0 - EX_CONSTANT - Outside the defined interval, hold the value of the nearest extreme.
+#1 - EX_LINEAR - Outside the defined interval, perform linear interpolation on the
+#  nearest extreme interval.
+
+#The Bezier evaluator can't map X coordinates directly to the same Y coordinate
+#because Bezier curves are parametric. However, because we can be sure that control
+#points are X-sorted (to keep our promise that the function is...a function), we can
+#use a binary search on the parametric curve to evaluate a point. Bezier functions have special
+#solver modes to give results of varying accuracy and efficiency. The limiting variable,
+#BzLimit, is interpreted according to BzMode:
+#1 - BZ_ITER - Perform no more than BzLimit iterations. This has the best worst-case
+#  performance, but can be highly inaccurate for Bezier curves that have large slopes.
+#2 - BZ_RELDIST - Iterate until the relative error is no more than BzLimit (in (0, 1)).
+#  "Relative error" is defined to be delta-X (the error in the evaluation point and the
+#  current coordinate X) over the X-axis span of the interval. A value of 1 indicates
+#  that the error covers the entire span; a value of 0 is perfect (but inadvisable).
+#3 - BZ_ABSDIST - Iterate until the absolute error is no more than BzLimit (>=0).
+#  This can be used to gather points to high accuracy, but can cause huge amounts of
+#  iterations for large intervals.
+
+function vector2 vector2:lerp(Other:vector2, U:number) {
+    return Other*U+This*(1-U)
+}
+
+function vector2 bzEvalU(Points:table, U:number) {
+    #Implements de Casteljau's Algorithm.
+    local P=Points:clone()
+    while(P:count()>1) {
+        for(I=P:minIndex(),P:maxIndex()-1) {
+            P[I, vector2]=P[I, vector2]:lerp(P[I+1, vector2], U)
+        }
+        P:pop()
+    }
+    return P[P:minIndex(), vector2]
+}
+
+function vector2 bzEvalX(Points:table, X:number, Mode:number, Limit:number) {
+    local Iters=1
+    local Span=Points[Points:maxIndex(), vector2]:x()-Points[Points:minIndex(), vector2]:x()
+    local Min=0
+    local Max=1
+    local Pivot=0.5
+    local Pt=bzEvalU(Points, Pivot)
+    while(1) {
+        #All tests, in order.
+        if((Mode==1&Iters>Limit)|(Mode==2|(abs(Pt:x()-X)/Span)<Limit)|(Mode==3&abs(Pt:x()-X)<Limit)) {
+            return Pt
+        }
+        if(Pt:x()<X) {
+            Min=Pivot
+        } else {
+            Max=Pivot
+        }
+        Pivot=(Min+Max)/2
+        Pt=bzEvalU(Points, Pivot)
+    }
+}
+
+function table newLinearFunction(Points:table) {
+    return newFunction(Points, 1)
+}
+
+function table newBezierFunction(Points:table) {
+    return newFunction(Points, 2)
+}
+
+function table newBezierSegmentFunction(Points:table) {
+    return newFunction(Points, 3)
+}
+
+function number table:bzMode() {
+    if(!This:exists("BzMode")) {
+        This["BzMode", number]=1 #BZ_ITER
+    }
+    return This["BzMode", number]
+}
+
+function number table:bzLimit() {
+    if(!This:exists("BzLimit")) {
+        if(This:bzMode()==1) { #BZ_ITER
+            This["BzLimit", number]=8
+        } else {
+            #XXX No sensible default for BZ_ABSDIST...will this do?
+            This["BzLimit", number]=0.2
+        }
+    }
+    return This["BzLimit", number]
+}
+
+function void table:bzSetMode(Mode:number) {
+    This["BzMode", number]=Mode
+}
+
+function void table:bzSetLimit(Limit:number) {
+    This["BzLimit", number]=Limit
+}
+
+function vector2 table:lnEval(X:number) {
+    local Interval=This:fnIntervalAt(X)
+    if(Interval:ivIsOnPivot()) {
+        return Interval:ivPivot()
+    }
+    if(!Interval:ivIsBounded()) {
+        if(Interval:ivIsBoundedLow()) {
+            Interval=This:fnHighestInterval()
+            if(This:fnExtrapolationMode()==0) {
+                return vec2(X, Interval:ivUBound():y())
+            }
+        } else {
+            Interval=This:fnLowestInterval()
+            if(This:fnExtrapolationMode()==0) {
+                return vec2(X, Interval:ivLBound():y())
+            }
+        }
+    }
+    return Interval:ivLBound():lerp(Interval:ivUBound(), (X-Interval:ivLBound():x())/Interval:ivSpan())
+}
+
+function vector2 table:bzcEval(X:number) {
+    return bzEvalX(This:fnPoints(), X, This:bzMode(), This:bzLimit())
+}
+
+function number table:bzsOrder() {
+    if(!This:exists("BzsOrder")) {
+        This["BzsOrder", number]=3
+    }
+    return This["BzsOrder", number]
+}
+
+function void table:bzsSetOrder(Order:number) {
+    This["BzsOrder", number]=Order
+}
+
+function vector2 table:bzsEval(X:number) {
+    local EndPoints=table()
+    local Points=This:fnPoints()
+    local Order=This:bzsOrder()
+    #Generate the endpoints--these will be our intervals.
+    for(I=Points:minIndex(),Points:maxIndex(),Order) {
+        EndPoints:pushVector2(Points[I, vector2])
+    }
+    #Run an interval query on a throw-away Function
+    local Interval=newFunction(EndPoints, 0):fnIntervalAt(X)
+    if(Interval:ivIsOnPivot()) { #Trivial case
+        return Interval:ivPivot()
+    }
+    #Handle extrapolation...
+    if(!Interval:ivIsBounded()) {
+        if(Interval:ivIsBoundedLow()) {
+            Interval=This:fnHighestInterval()
+            if(This:fnExtrapolationMode()==0) {
+                return vec2(X, Interval:ivUBound():y())
+            }
+        } else {
+            Interval=This:fnLowestInterval()
+            if(This:fnExtrapolationMode()==0) {
+                return vec2(X, Interval:ivLBound():y())
+            }
+        }
+        return Interval:ivLBound():lerp(Interval:ivUBound(), (X-Interval:ivLBound():x())/Interval:ivSpan())
+    }
+    #Set up the segment...
+    local Segment=table()
+    local Start=Points:minIndex()+Order*(Interval:ivLIndex()-EndPoints:minIndex())
+    for(I=Start,Start+Order) {
+        Segment:pushVector2(Points[I, vector2])
+    }
+    #Evaluate.
+    return bzEvalX(Segment, X, This:bzMode(), This:bzLimit())
+}
+
+#And, finally...
+
+function vector2 table:fnEval(X:number) {
+    local Type=This:fnType()
+    if(Type==1) { #FN_LINEAR
+        return This:lnEval(X)
+    } elseif(Type==2) { #FN_BEZIER
+        return This:bzcEval(X)
+    } elseif(Type==3) { #FN_BEZ_SEG
+        return This:bzsEval(X)
+    }
+}
