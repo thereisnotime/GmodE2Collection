@@ -24,3 +24,7 @@ To update the collection, just run the following command:
 ```powershell
 git pull
 ```
+
+## Development
+
+You might want to check this nice extension for VSCode - <https://github.com/Vurv78/Expression-LS>.
