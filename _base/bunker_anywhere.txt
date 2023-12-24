@@ -1,0 +1,155 @@
+@name Bunker Anywhere Service Chip
+@persist Bunker:vector Box:vector RanBefore1 RanBefore3 RanBefore2 Runs4 Runs5 RunBefore CraneArm:vector CraneArmAngle:angle CraneAngle:angle CraneBaseAngle:angle Runs2 Runs1 Stage SoundList:array SoundBoot Plane:vector Runs3 Crane:vector CraneBase:vector Doot:vector
+
+
+#Made by Furycoat in an hour at 3 am.
+#Extremely long and unnecessary way to make a bunker prop. Needs PropCore enabled and holoModelAny set to 1.
+#Fury's Steam link: https://steamcommunity.com/id/Superj223/
+
+if(first() | duped()){
+SoundList = array(
+"ambient/machines/engine4.wav",
+"ambient/machines/engine4.wav",
+"ambient/machines/engine4.wav",
+"ambient/machines/engine4.wav",
+"ambient/machines/engine4.wav",
+"ambient/machines/engine4.wav",
+"ambient/machines/engine4.wav"
+)
+    holoCreate(2)
+    holoModel(2, "models/props_phx/construct/metal_wire2x2x2b.mdl")
+    holoPos(2, entity():pos() - vec(70,-100,0))
+    holoScale(2, vec(4,4,2))
+    holoCreate(5)
+    holoModel(5, "models/props_wasteland/buoy01.mdl")
+    holoScale(5, vec(1,1,5))
+    holoCreate(4)
+    holoModel(4, "models/props_wasteland/cranemagnet01a.mdl")
+    holoScale(4, vec(0.5,0.5,0.5))
+    holoCreate(6)
+    holoModel(6, "models/props_phx/construct/metal_wire1x1x2.mdl")
+    holoScale(6, vec(5,0.5,0.5))
+    
+    Crane = entity():pos() - vec(220, -20, -600)
+    holoAng(4, CraneAngle)
+    Stage = 4
+    soundPlay("JetFlight", 30, "ambient/machines/aircraft_distant_flyby3.wav")
+    timer("Jet", 10000)
+    holoAng(2, entity():angles())
+    }
+
+interval(100)
+
+if(Stage == 4){
+    holoCreate(3)
+    holoModel(3, "models/xqm/jetbody3.mdl")
+    holoAng(3, entity():angles())
+    Plane = entity():pos() + vec(0,80000,5000)
+    Stage = 5
+    }
+
+if(Stage == 5){
+    Runs3++
+    if(Runs3 == 110){
+        Stage = 1
+        }
+    }
+
+if(Stage == 1){
+    holoCreate(1)
+    holoModel(1, "models/props_phx/misc/bunker01.mdl")
+    holoAng(1, entity():angles())
+    Bunker = entity():pos() - vec(0,0,-5000)
+    Stage = 2
+    soundPlay(1, 11, "thrusters/hover01.wav")
+    }
+
+if(Stage == 2){
+    Bunker = Bunker - Doot
+    Runs1++
+    if(Runs1 <= 100){
+        Doot = vec(0,0,50)
+    }else{Doot = vec(0,0,10)}
+    if(Runs1 >= 110){
+        Stage = 3
+        }
+    }
+
+if(clk("Building") | SoundBoot == 1){
+    soundPlay("RandomSound", 3, SoundList[randint(1, SoundList:count()), string])
+    }
+
+if(Stage == 3){
+    if(RanBefore1 == 0){
+        RanBefore1 = 1
+        soundPlay(69, 4.5, "ambient/machines/engine4.wav")
+        }
+    CraneBaseAngle = CraneBaseAngle + ang(0,1,0)
+    CraneArm = CraneArm + vec(2,0,0)
+    CraneArmAngle = CraneBaseAngle + ang(0,-90,0)
+    Crane = Crane + vec(4,0,0)
+    Runs4++
+    if(Runs4 >= 45){
+        Stage = 8
+        
+        }
+    }
+    
+if(Stage == 8){
+    if(RanBefore2 == 0){
+        RanBefore2 = 1
+        soundPlay(16, 3, "ambient/machines/wall_move5.wav")
+        timer("Jet", 3000)
+        }
+    Crane = Crane - vec(0,0,10)
+    Runs5++
+    if(Runs5 >= 52){
+        Stage = 10
+        SoundBoot = 1
+        }
+    }
+
+if(Stage == 10){
+
+SoundBoot = 0
+
+Bunker = Bunker + vec(0,0,1)
+Crane = Crane + vec(0,0,1)
+
+holoPos(1, Bunker)
+
+Runs2++
+
+if(RanBefore3 == 0){
+    RanBefore3 = 1
+    soundPlay(6426, 8.7, "ambient/machines/engine4.wav")
+    }
+
+#timer("Building", 3000)
+
+if(Runs2 >= 87){
+    propSpawnEffect(0)
+    propSpawn("models/props_phx/misc/bunker01.mdl", Bunker + vec(0,0,0.125), 1)
+    holoDelete(2)
+    selfDestruct()
+    }
+}
+holoPos(1, Bunker)
+Plane = Plane - vec(0,700,0)
+holoPos(3, Plane)
+holoPos(4, Crane)
+CraneAngle = CraneBaseAngle
+holoAng(4, CraneAngle)
+holoPos(5, CraneBase)
+holoAng(5, CraneBaseAngle)
+holoPos(6, CraneArm)
+holoAng(6, CraneArmAngle)
+if(clk("Jet")){
+    soundPlay(2, 2.2, "ambient/machines/wall_move5.wav")
+}
+if(RunBefore == 1){
+         CraneBase = Crane - vec(0,-200,380)
+         CraneArm = CraneBase + vec(0,-100,400)
+        CraneArmAngle = CraneBaseAngle + ang(0,-90,0)
+        RunBefore = 2
+}elseif(RunBefore == 0){RunBefore = 1}

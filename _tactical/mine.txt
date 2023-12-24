@@ -1,0 +1,40 @@
+@name Mine
+@persist On
+
+interval(1)
+entity():propNotSolid(1)
+entity():propDraw(0)
+
+findExcludePlayer(owner())
+findExcludeEntities(owner():steamFriends())
+
+if(first()|duped()){On = 0}
+if(first()|duped()){
+    timer("On",2500)
+    holoCreate(1,entity():toWorld(vec(0,0,0)),vec(1.5,1.5,0.1),entity():toWorld(ang(0,0,0)),vec(255,255,255))
+    holoModel(1,"models/holograms/hq_cylinder.mdl")
+    holoMaterial(1,"models/gibs/metalgibs/metal_gibs")
+    holoCreate(2,entity():toWorld(vec(0,0,0.5)),vec(1,1,0.1),entity():toWorld(ang(0,0,0)),vec(255,0,0))
+    holoModel(2,"models/holograms/hq_cylinder.mdl")   
+}
+if(On == 0){
+    holoColor(2,vec(255,0,0))   
+}
+if(clk("On")){
+    On = 1   
+}
+
+if(On == 1){
+    holoColor(2,vec(0,255,0))
+    findIncludeClass("player")
+    findIncludeClass("npc")
+    findInSphere(entity():pos(),50)
+    if(findToArray():count() > 0) {
+        propSpawn("models/props_c17/oildrum001_explosive.mdl",entity():pos(),1):propBreak()
+        On = 0
+        timer("Reset",10000)
+    }
+}
+if(clk("Reset")){
+    On = 1   
+}
