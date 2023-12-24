@@ -1,0 +1,52 @@
+@name Door Controler
+@persist E:entity E1:entity
+@inputs Open Open2
+
+####################
+# Made by that1nub #
+####################
+
+if(first()) {
+    propSpawnUndo(0)
+    findIncludePlayer(owner())
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findIncludePlayer("YOUR FRIEND'S NAME HERE")
+    findByClass("player")
+    A = findToArray()
+    foreach(X,Ply:entity = A) {
+        runOnKeys(Ply,1)
+    }
+    Open = 0
+    Open2 = 0
+}
+if(first()|duped()){
+    E = propSpawn("models/hunter/blocks/cube2x2x05.mdl",entity():pos()+vec(-47.25,0,47),1)
+    E:setAng(ang(90,0,90))
+    E1 = propSpawn("models/hunter/blocks/cube2x2x05.mdl",entity():pos()+vec(47.25,0,47),1)
+    E1:setAng(ang(90,0,90))   
+}
+
+if((keyClkPressed() == "pad_0") & keyClk():keyPressed("pad_0")){
+    E:setPos(entity():pos()+vec(-94.5,0,47))
+    E1:setPos(entity():pos()+vec(94.5,0,47))
+    timer("Close",5000)   
+}   
+if(Open == 1){
+    E:setPos(entity():pos()+vec(-94.5,0,47))
+    E1:setPos(entity():pos()+vec(94.5,0,47))
+    timer("Close",5000)   
+}
+if(Open2 == 1){
+    E:setPos(entity():pos()+vec(-94.5,0,47))
+    E1:setPos(entity():pos()+vec(94.5,0,47))
+    timer("Close",5000)   
+}
+if(clk("Close")){
+    E:setPos(entity():pos()+vec(-47.25,0,47))   
+    E1:setPos(entity():pos()+vec(47.25,0,47))   
+}

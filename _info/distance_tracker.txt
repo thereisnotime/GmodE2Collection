@@ -1,0 +1,26 @@
+@name player tracker
+@outputs Out
+@persist T:entity
+
+if(first()) {
+T = findPlayerByName("PLAYER NAME")
+}
+
+runOnTick(1)
+
+Mi = toUnit("mi",T:pos():distance(owner():pos()))
+Ft = toUnit("ft",T:pos():distance(owner():pos()))
+
+if(Mi >= 1) {
+Out = round(Mi,0)
+}
+else {
+Out = round(Ft,0)
+}
+
+
+# HOW TO USE:
+#
+# 1. Spawn e2
+# 2. Spawn a screen with one value
+# 3. Wire value A on screen to Out on e2

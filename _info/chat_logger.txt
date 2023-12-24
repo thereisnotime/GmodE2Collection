@@ -1,0 +1,7 @@
+@name Chat Logger
+runOnChat(1)
+if(chatClk()) {
+    entity():remoteSetCode(getCode()+"\n ["+time("month")+"/"+time("day")+"/"+time("year")+" "+time("hour")+":"+time("min")+":"+time("sec")+"] "+lastSpoke():name()+": "+lastSaid())
+}
+# NOTE: Time will show in server's time, not your time
+#[[/code]

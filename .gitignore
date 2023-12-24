@@ -1,6 +1,16 @@
-# locals
+# Locals
 _local/
 tests/
+_temp/
+_tmp/
+_test/
+test/
+
+# Editor
+./_autosave_.txt
+./_helloworld_.txt
+./_shutdown_.txt
+./_tabs_.txt
 
 # Compiled Lua sources
 luac.out
