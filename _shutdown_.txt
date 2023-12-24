@@ -1,17 +1,15 @@
-@name Player Killer
-@inputs
-@outputs
-@persist E:entity Ar:array F:vector Ents:entity Counter T
-@model models/props_phx/construct/metal_plate1.mdl
-interval(10)
-if (duped()) {reset()}
-if (first()) {E:setMass(50000)}
-findByClass("player")
-T++
-if (T > 100) {T=0,Counter++}
-if (Counter > findToArray():count()) {Counter = 1}
+@name Warp E2
 
-E = entity()
-Ents = findToArray():entity(Counter)
-F = Ents:pos() + vec(0,0,60) - E:pos()
-E:applyForce((F + $F * 5) * 50000)
+# Say "/warp e2" to teleport your e2
+# Say "/warp" to teleport to your aimpos (CAN GET STUCK IF DONE ON WALLS)
+
+runOnChat(1)
+
+if((owner():lastSaid()=="/warp e2")&chatClk(owner())){
+    hideChat(1)
+    owner():teleport(entity():pos()+vec(0,0,0))   
+}
+if((owner():lastSaid()=="/warp")&chatClk(owner())){
+    hideChat(1)
+    owner():teleport(owner():aimPos()+owner():aimNormal()*owner():height())   
+}

@@ -1,0 +1,189 @@
+──────▄▀▄─────▄▀▄
+─────▄█░░▀▀▀▀▀░░█▄
+─▄▄──█░░░░░░░░░░░█──▄▄
+█▄▄█─█░░▀░░┬░░▀░░█─█▄▄█
+╔══╗─────╔╦╦═╗──╔╦═╗╔╗────╔╗─────╔══╗─────╔╗─╔╗╔╗
+║╔═╬══╦═╦╝╠╣═╬══╣║═╣║╚╦═╦╦╣╚╗╔══╗║╔╗╠╗╔═╦═╣╠╗║╚╝╠═╦╗╔═╦═╦╦╗
+║╚╗║║║║╬║╬║╠═║║║╠╬═║║╔╣╩╬║╣╔╣╚══╝║╔╗║╚╣╬║═╣═╣║╔╗║╩╣╚╣╬║╩╣╔╝
+╚══╩╩╩╩═╩═╩╩═╩╩╩╝╚═╝╚═╩═╩╩╩═╝────╚══╩═╩═╩═╩╩╝╚╝╚╩═╩═╣╔╩═╩╝
+────────────────────────────────────────────────────╚╝
+
+USEFULL ALTCODE LIST:
+•
+◘
+○
+◙
+►
+◄
+↕
+↑
+↓
+▬
+↔
+→
+←
+■
+Ω
+╪ 	
+╤
+╫
+┬
+«
+»
+░
+▒
+▓ 	
+┴
+≡
+♥
+█
+▌
+▐
+▀
+▄
+▲
+◊
+◙
+◘
+
+
+— WIDEST LINE CHARACTER———————————
+Ǆ Widest Character Generally! (28pts)
+
+<style>f=2,c=#5dff00</style>
+ǄǄǄǄǄǄǄǄǄ
+(this line coveres a full display module)
+
+[ ] EM super wide space character (22pts)
+[        ] 8 EM space
+[ ] Normal space character (7pts)
+
+<style>f=2,c=#00FF00</style> 
+<style>f=1,c=#5dff00</style> 
+<style>f=2,c=#FF4500</style>
+<style>f=0,c=#32CD32</style>
+
+red		#ff0000
+green		#5dff00
+blue		#0036ff
+sky blue	#009eff
+light blue	#00fff7
+firey		#ff7400 
+purple		#a600ff
+
+/destroy_entity_dock
+
+
+
+<style>f=2,c=#5dff00</style>
+ǄǄǄǄǄǄǄǄǄ              FACTORIES ONLINE
+
+ǄǄǄǄǄǄǄǄǄ              Factories U1: Singular
+ǄǄǄǄǄǄǄǄǄ              Factories D2: 3X
+ǄǄǄǄǄǄǄǄǄ              MicroAssembler:
+ǄǄǄǄǄǄǄǄǄ              Capsure Refinery:
+
+This is a HUD aim, place display module diagonally. 
+2nd block in front of core 3rd to the left.
+<style>f=2,c=#00FF00</style>
+
+
+
+ǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄll-l-       
+ǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄll-l-       
+ǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄll-l-       ╪ ——————————» ╤ «—————————— ╪
+ǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄll-l-       
+ǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄǄll-l-       
+
+
+
+<style>f=1,c=#009eff</style>
+
+
+ǄǄǄǄǄǄǄǄǄ             ╔═╦╗
+ǄǄǄǄǄǄǄǄǄ             ║═╣╚╦═╦╦╦═╗╔═╦═╗
+ǄǄǄǄǄǄǄǄǄ             ╠═║╔╣╬║╔╣╬╚╣╬║╩╣
+ǄǄǄǄǄǄǄǄǄ             ╚═╩═╩═╩╝╚══╬╗╠═╝
+ǄǄǄǄǄǄǄǄǄ             ───────────╚═╝
+
+
+<style>f=2,c=#00fff7</style>
+————————————             ╔══╗────╔╗
+————————————             ║═╦╬═╗╔═╣╚╦═╦╦╦╦╗
+————————————             ║╔╝║╬╚╣═╣╔╣╬║╔╣║║
+————————————             ╚╝─╚══╩═╩═╩═╩╝╠╗║
+————————————             ──────────────╚═╝
+
+<style>f=2,c=#ff7400</style>
+ǄǄǄǄǄǄǄǄǄ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+ǄǄǄǄǄǄǄǄǄ ▒███████▌▐█████▒
+ǄǄǄǄǄǄǄǄǄ ▒██▒▒▒▒▒▒▒▒██▒▒▒
+ǄǄǄǄǄǄǄǄǄ ░██░░░░░░░░██
+ǄǄǄǄǄǄǄǄǄ ░██░░███▌░░██
+ǄǄǄǄǄǄǄǄǄ ▒██▒▒▒▒█▌▒▒██▒▒▒
+ǄǄǄǄǄǄǄǄǄ ▒███████▌▐█████▒
+ǄǄǄǄǄǄǄǄǄ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+
+
+
+<style>f=2,c=#ff00fb</style>
+ǄǄǄǄǄǄǄǄǄ             ──────▄▀▄─────▄▀▄
+ǄǄǄǄǄǄǄǄǄ             ─────▄█░░▀▀▀▀▀░░█▄
+ǄǄǄǄǄǄǄǄǄ             ─▄▄──█░░░░░░░░░░░█──▄▄
+ǄǄǄǄǄǄǄǄǄ             █▄▄█─█░░▀░░┬░░▀░░█─█▄▄█
+ǄǄǄǄǄǄǄǄǄ             ♥———————————————♥
+
+
+
+<style>f=2,c=#ff7400</style>
+ǄǄǄǄǄǄǄǄǄ   ░█▀▀█ ▒█▀▀▄ ▒█▀▀█ ░█▀▀█ ▒█▀▄▀█ ░█▀▀█ ▒█░░░ ▒█▀▀▀ ▒█░▄▀ 
+ǄǄǄǄǄǄǄǄǄ   ▒█▄▄█ ▒█░▒█ ▒█▄▄▀ ▒█▄▄█ ▒█▒█▒█ ▒█▄▄█ ▒█░░░ ▒█▀▀▀ ▒█▀▄░ 
+ǄǄǄǄǄǄǄǄǄ   ▒█░▒█ ▒█▄▄▀ ▒█░▒█ ▒█░▒█ ▒█░░▒█ ▒█░▒█ ▒█▄▄█ ▒█▄▄▄ ▒█░▒█ 
+
+
+<style>f=2,c=#ff7400</style>
+ǄǄǄǄǄǄǄǄǄ ▀▀█▀▀ █ ▀▀█▀▀ ░█▀▀█ ▒█▄░▒█ 　 █▀▀█ ▒█░░░ ░█▀▀█ ▒█▀▀▀█ ▒█▀▀▀█
+ǄǄǄǄǄǄǄǄǄ ░▒█░░ █ ░▒█░░ ▒█▄▄█ ▒█▒█▒█ 　 █░░░ ▒█░░░ ▒█▄▄█ ░▀▀▀▄▄ ░▀▀▀▄▄
+ǄǄǄǄǄǄǄǄǄ ░▒█░░ █ ░▒█░░ ▒█░▒█ ▒█░░▀█ 　 █▄▄█ ▒█▄▄█ ▒█░▒█ ▒█▄▄▄█ ▒█▄▄▄█
+
+
+LIST OF COMMANDS FOR TEXT MODULES:
+
+[name]	 		Displays the current name of the entity.
+[mass] 			Displays the current mass of the entity.
+[blockCount] 		Displays the total number of blocks that make up the entity.
+[armorHp] 		Displays the current Armor HP of the entity.
+[armorHpCap] 		Displays the maximum Armor HP of the entity. Best used in conjunction with [armorHp].
+[armorHpPercent] 	Displays the percentage of Armor HP remaining on the entity.
+[structureHp] 		Displays the current Structure HP of the entity.
+[structureHpCap] 	Displays the maximum Structure HP of the entity. Best used in conjunction with [structureHp]
+[structureHpPercent] 	Displays the percentage of Structure HP remaining on the entity.
+[power] 		Displays the current amount of energy in the entity.
+[powerCap] 		Displays the maximum amount of energy in the entity. Best used in conjunction with [power]
+[powerPercent] 		Displays the percentage of energy remaining in the entity.
+[auxPower] 		Displays the current auxiliary power in the entity.
+[auxPowerCap] 		Displays the maximum auxiliary power of the entity. Best used in conjunction with [auxPower]
+[auxPowerPercent] 	Displays the percentage of auxiliary power remaining in the entity.
+[shield] 		Displays the current shield capacity of the entity.
+[shieldCap] 		Displays the maximum shield capacity of the entity. Best used in conjunction with [shield]
+[shieldPercent] 	Displays the percentage of shield capacity of the entity.
+[speed] 		Displays the current speed of the entity.
+[sector] 		Displays the map coordinates of the current sector the entity resides in.
+[system] 		Displays the map coordinates of the current system the entity resides in.
+[docked] 		Displays the docking status of the entity.
+[cloaked] 		Displays whether or not the entity is currently cloaked.
+[jamming] 		Displays whether or not the entity is currently radar jamming.
+
+ USEFULL WEBB ASSETS:
+
+ Small Capital Letter Gen:		 http://fsymbols.com/generators/smallcaps/
+ StarMade's MS Paint Basically:		 http://fsymbols.com/text-art/blocky/
+ Holografitti:				 http://fsymbols.com/text-art/twitter/#all_cats
+ Vertical Signs Text Gen:		 http://fsymbols.com/generators/stripy/
+ Block Text Gen:			 http://fsymbols.com/generators/tarty/
+ Awesome compact text gen:		 http://fsymbols.com/generators/carty/ (you have to set it to "doubble lines", and probably "small")
+ Fancy Text Gen:			 http://patorjk.com/software/taag/#p=display&h=3&v=3&f=Doom&t=Gmodism
+ HAAAXXXX!!! colour picker:		 http://htmlcolorcodes.com/
+
+
+Enjoy!/G
