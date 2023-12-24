@@ -1,8 +1,0 @@
-@name Quaternionic Angle Generator
-@inputs Forward:vector Up:vector
-@outputs Angles:angle
-@persist 
-@trigger 
-
-Q=quat(Forward, Up)
-Angles=Q:toAngle()

@@ -1,7 +1,0 @@
-@name libMove
-
-#Fast and easy routines for moving physical things around
-
-function void entity:moveTo(Position:vector) {
-    This:applyForce((10*(Position-This:pos())+vec(0, 0, 10))*This:mass()-10*This:vel())
-}

@@ -1,9 +1,0 @@
-@name Pluggable Administration Console
-@inputs 
-@outputs 
-@persist 
-@trigger 
-
-if(first()|duped()) {
-    #include "lib/cns_tty"
-    

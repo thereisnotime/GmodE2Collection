@@ -1,1 +1,0 @@
-cpuchip/selene/mm.txt;cpuchip/selene/std.txt;cpuchip/selene/cpu.txt;cpuchip/selene/printk.txt;cpuchip/selene/dev.txt;cpuchip/test.txt;cpuchip/selene/main.txt;cpuchip/selene/interrupt.txt;cpuchip/selene/panic.txt;cpuchip/selene/uvm.txt;cpuchip/selene/devtree.txt;cpuchip/selene/pmalloc.txt;cpuchip/selene/port.txt
