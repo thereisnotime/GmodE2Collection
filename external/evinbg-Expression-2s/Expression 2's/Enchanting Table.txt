@@ -1,0 +1,189 @@
+# Description: A scalable enchanting table from Minecraft
+
+@name Enchanting Table
+@inputs 
+@outputs 
+@persist Scale DistChange
+@trigger 
+
+if(first()){
+    Scale = 1
+    
+    DistChange = 0
+
+    holoCreate(0)
+    holoPos(0, entity():pos())
+    holoParent(0, entity())
+    holoAlpha(0, 0)
+    
+    # Obsidian
+    holoCreate(1)
+    holoPos(1, holoEntity(0):pos() + vec(0,0, (13.5 * Scale)))
+    holoParent(1, holoEntity(0))
+    holoScale(1, vec(3 * Scale, 3 * Scale, 2.25 * Scale))
+    holoColor(1, vec(5, 3, 16))
+    holoMaterial(1, "phoenix_storms/roadside")
+    
+    # Red Cloth
+    holoCreate(2)
+    holoPos(2, holoEntity(0):pos() + vec(0,0, (27.02 * Scale)))
+    holoParent(2, holoEntity(0))
+    holoScale(2, vec(3 * Scale, 3 * Scale, 0.02 * Scale))
+    holoColor(2, vec(161, 35, 34))
+    holoMaterial(2, "phoenix_storms/concrete1")
+    
+    holoCreate(3)
+    holoPos(3, holoEntity(0):pos() + vec(0,0, (22.65 * Scale)))
+    holoParent(3, holoEntity(0))
+    holoModel(3, "prism")
+    holoScale(3, vec(1.5 * Scale, 3.02 * Scale, 0.75 * Scale))
+    holoAng(3, ang(180, 0, 0))
+    holoColor(3, vec(161, 35, 34))
+    holoMaterial(3, "phoenix_storms/concrete1")
+    
+    holoCreate(4)
+    holoPos(4, holoEntity(0):pos() + vec(0,0, (22.65 * Scale)))
+    holoParent(4, holoEntity(0))
+    holoModel(4, "prism")
+    holoScale(4, vec(1.5 * Scale, 3.02 * Scale, 0.75 * Scale))
+    holoAng(4, ang(180, 90, 0))
+    holoColor(4, vec(161, 35, 34))
+    holoMaterial(4, "phoenix_storms/concrete1")
+    
+    # Corners
+    holoCreate(5)
+    holoPos(5, holoEntity(0):pos() + vec((13.60 * Scale), (13.60 * Scale), (22.75 * Scale)))
+    holoParent(5, holoEntity(0))
+    holoScale(5, vec(0.75 * Scale, 0.75 * Scale, 0.75 * Scale))
+    holoColor(5, vec(162, 241, 229))
+    holoDisableShading(5, 1)
+    holoMaterial(5, "phoenix_storms/mat/mat_phx_metallic")
+    
+    holoCreate(6)
+    holoPos(6, holoEntity(0):pos() + vec(-(13.60 * Scale), (13.60 * Scale), (22.75 * Scale)))
+    holoParent(6, holoEntity(0))
+    holoScale(6, vec(0.75 * Scale, 0.75 * Scale, 0.75 * Scale))
+    holoColor(6, vec(162, 241, 229))
+    holoDisableShading(6, 1)
+    holoMaterial(6, "phoenix_storms/mat/mat_phx_metallic")
+    
+    holoCreate(7)
+    holoPos(7, holoEntity(0):pos() + vec((13.60 * Scale), -(13.60 * Scale), (22.75 * Scale)))
+    holoParent(7, holoEntity(0))
+    holoScale(7, vec(0.75 * Scale, 0.75 * Scale, 0.75 * Scale))
+    holoColor(7, vec(162, 241, 229))
+    holoDisableShading(7, 1)
+    holoMaterial(7, "phoenix_storms/mat/mat_phx_metallic")
+    
+    holoCreate(8)
+    holoPos(8, holoEntity(0):pos() + vec(-(13.60 * Scale), -(13.60 * Scale), (22.75 * Scale)))
+    holoParent(8, holoEntity(0))
+    holoScale(8, vec(0.75 * Scale, 0.75 * Scale, 0.75 * Scale))
+    holoColor(8, vec(162, 241, 229))
+    holoDisableShading(8, 1)
+    holoMaterial(8, "phoenix_storms/mat/mat_phx_metallic")
+    
+    # Book
+    holoCreate(9)
+    holoParent(9, holoEntity(0))
+    holoScale(9, vec(0.25 * Scale, 1.5 * Scale, 0.05 * Scale))
+    holoColor(9, vec(166, 110, 40))
+    
+    holoCreate(10)
+    holoParent(10, holoEntity(9))
+    holoScale(10, vec(1 * Scale, 1.5 * Scale, 0.05 * Scale))
+    holoColor(10, vec(166, 110, 40))
+    
+    holoCreate(11)
+    holoParent(11, holoEntity(9))
+    holoScale(11, vec(1 * Scale, 1.5 * Scale, 0.05 * Scale))
+    holoColor(11, vec(166, 110, 40))
+    
+    holoCreate(12)
+    holoParent(12, holoEntity(10))
+    holoScale(12, vec(0.84375 * Scale, 1.2 * Scale, 0.15 * Scale))
+    holoColor(12, vec(241, 231, 189))
+    
+    holoCreate(13)
+    holoParent(13, holoEntity(11))
+    holoScale(13, vec(0.843755 * Scale, 1.2 * Scale, 0.15 * Scale))
+    holoColor(13, vec(241, 231, 189))
+    
+    holoPos(9, holoEntity(0):pos() + vec(0, 0, (35.6 * Scale)))
+    holoAng(9, ang(0, 0, 0))
+    
+    holoPos(10, holoEntity(0):pos() + vec(-(1.5 * Scale), 0, (41.5 * Scale)))
+    holoAng(10, ang(90, 0, 0))
+    
+    holoPos(11, holoEntity(0):pos() + vec((1.5 * Scale), 0, (41.5 * Scale)))
+    holoAng(11, ang(-90, 0, 0))
+    
+    holoPos(12, holoEntity(0):pos() + vec(-(0.75 * Scale), 0, (41 * Scale)))
+    holoAng(12, ang(90, 0, 0))
+    
+    holoPos(13, holoEntity(0):pos() + vec((0.75 * Scale), 0, (41 * Scale)))
+    holoAng(13, ang(-90, 0, 0))
+}
+
+interval(100)
+runOnChat(1)
+
+findByClass("player")
+TempPlayer = findClosest(holoEntity(2):pos())
+
+if(TempPlayer:pos():distance(holoEntity(2):pos()) <= 100 * Scale){
+    Dist = 1
+}
+else{
+    Dist = 0
+}
+
+if(Dist == 1){
+    if(DistChange == 0){
+        holoPos(9, holoEntity(0):pos() + vec(0, 0, (35.6 * Scale)))
+        
+        holoPos(10, holoEntity(0):pos() + vec(-(6.5 * Scale), 0, (38.5 * Scale)))
+        holoAng(10, ang(30, 0, 0))
+        
+        holoPos(11, holoEntity(0):pos() + vec((6.5 * Scale), 0, (38.5 * Scale)))
+        holoAng(11, ang(-30, 0, 0))
+        
+        holoPos(12, holoEntity(0):pos() + vec(-(4.75 * Scale), 0, (39 * Scale)))
+        holoAng(12, ang(30, 0, 0))
+        
+        holoPos(13, holoEntity(0):pos() + vec((4.75 * Scale), 0, (39 * Scale)))
+        holoAng(13, ang(-30, 0, 0))
+        
+        DistChange++
+    }
+    
+    Dir = TempPlayer:pos() - holoEntity(9):pos()
+    holoAng(9, ang(0, Dir:toAngle():yaw() + 90, 30))
+}
+
+if(Dist == 0){
+    if(DistChange == 1){
+        holoPos(9, holoEntity(0):pos() + vec(0, 0, (35.6 * Scale)))
+        holoAng(9, ang(0, 0, 0))
+    
+        holoPos(10, holoEntity(0):pos() + vec(-(1.5 * Scale), 0, (41.5 * Scale)))
+        holoAng(10, ang(90, 0, 0))
+    
+        holoPos(11, holoEntity(0):pos() + vec((1.5 * Scale), 0, (41.5 * Scale)))
+        holoAng(11, ang(-90, 0, 0))
+    
+        holoPos(12, holoEntity(0):pos() + vec(-(0.75 * Scale), 0, (41 * Scale)))
+        holoAng(12, ang(90, 0, 0))
+    
+        holoPos(13, holoEntity(0):pos() + vec((0.75 * Scale), 0, (41 * Scale)))
+        holoAng(13, ang(-90, 0, 0))
+        
+        DistChange = 0
+    }
+}
+
+Speed = 100
+Length = 3
+Sin = sin(curtime() * Speed) * Length
+
+holoPos(9, holoEntity(0):pos() + vec(0, 0, (35.6 * Scale) + Sin * Scale))

@@ -1,0 +1,226 @@
+# Description: Enhances your ability to move around, allows teleporting and faster noclipping
+
+@name Movement
+@inputs 
+@outputs 
+@persist Target:entity E:entity Solid Invis Free Sit Speed SetSpeed Pos:vector Antispam
+@trigger 
+@model models/hunter/blocks/cube025x025x025.mdl
+
+if(first()){
+    printColor(vec(255,0,255),"[Movement] ",vec(255,255,255),"Commands:
+- Sit on the E2 for it to enable it
+- /sit <name>
+- /speed <number>
+- Press 'G' to toggle invis
+- Press 'H' to toggle nocolide
+- Press 'R' to teleport to your aim pos")
+
+    holoCreate(1)
+    holoAlpha(1, 0)
+
+    Target = entity()
+    E = entity()
+    Pos = entity():pos() + vec(0,0,20)
+    E:setPos(Pos)
+    holoPos(1, Pos)
+    E:setMaterial("models/debug/debugwhite")
+    E:setAlpha(0)
+    noCollideAll(E, 1)
+    Solid = 0
+    SetSpeed = 10
+    Speed = SetSpeed
+    Free = 0
+    Sit = 0
+    Antispam = 0
+    
+    timer("initial", 100)
+}
+
+interval(20)
+runOnChat(1)
+runOnLast(1)
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(clk("initial")){
+    E:parentTo(holoEntity(1))
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/sit"){
+        hideChat(1)
+        Temp = findPlayerByName(LS[2,string])
+        if(Temp:isPlayer()){
+            Target = Temp
+            Pos = Target:pos() + vec(0,0,Target:boxSize():z() + 2)
+            holoPos(1, Pos)
+            E:setPos(Pos)
+            timer("parent",50)
+            Solid = 1
+            Sit = 1
+            Free = 0
+            printColor(vec(255,0,255),"[Movement] ",vec(255,255,255),"Targeting: "+Target:name()+"")
+        }
+        else {
+            printColor(vec(255,0,255),"[Movement] ",vec(255,0,0),"Couldn't find a player")
+        }
+    }
+    if(LS[1,string] == "/speed"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 1){
+            printColor(vec(255,0,255),"[Movement] ",vec(255,0,0),"Please enter a valid speed")
+        }
+        else{
+            SetSpeed = LS[2,string]:toNumber()
+            printColor(vec(255,0,255),"[Movement] ",vec(255,255,255),"Speed: "+LS[2,string]:toNumber()+"")
+        }
+    }
+    if(LS[1,string] == "/bring"){
+        hideChat(1)
+        holoUnparent(1)
+        Free = 1
+        Sit = 0
+        Target = noentity()
+        Pos = owner():pos() + vec(0,0,40)
+        holoPos(1, Pos)
+        E:setPos(Pos)
+        printColor(vec(255,0,255),"[Movement] ",vec(255,255,255),"Brought back to you")
+    }
+}
+
+if(clk("parent")){
+    holoPos(1, Target:pos() + vec(0,0,Target:boxSize():z() + 2))
+    E:setPos(Target:pos() + vec(0,0,Target:boxSize():z() + 2))
+    E:setAng(ang(0,0,0))
+    holoParent(1, Target)
+    E:parentTo(holoEntity(1))
+}
+
+if(owner():inVehicle()){
+    E:setAlpha(0)
+}
+else{
+    E:setAlpha(255)
+    Free = 0
+    #Solid = 2
+}
+
+if(owner():inVehicle() & (owner():keyPressed("w") | owner():keyPressed("a") | owner():keyPressed("s") | owner():keyPressed("d")
+ | owner():keyPressed("space") | owner():keyPressed("lalt") | owner():keyPressed("lshift"))){
+    holoUnparent(1)
+    Free = 1
+    Sit = 0
+    Target = noentity()
+}
+
+if(Free == 1){
+    #entity():setPos(Pos)
+    holoPos(1, Pos)
+    if(owner():keyPressed("i") | owner():keyPressed("w")){
+        Pos = Pos + owner():eyeAngles():forward() * Speed
+    }
+    if(owner():keyPressed("k") | owner():keyPressed("s")){
+        Pos = Pos - owner():eyeAngles():forward() * Speed
+    }
+    if(owner():keyPressed("j") | owner():keyPressed("a")){
+        Pos = Pos - owner():eyeAngles():right() * Speed
+    }
+    if(owner():keyPressed("l") | owner():keyPressed("d")){
+        Pos = Pos + owner():eyeAngles():right() * Speed
+    }
+    if(owner():keyPressed("space")){
+        Pos = Pos + vec(0,0,1 * Speed)
+    }
+    if(owner():keyPressed("lalt") | owner():keyPressed("ralt")){
+        Pos = Pos - vec(0,0,1 * Speed)
+    }
+    if(owner():keyPressed("lshift") | owner():keyPressed("rshift")){
+        Speed = SetSpeed * 5
+    }
+    else{
+        Speed = SetSpeed
+    }
+    #holoAng(1, ang(0, owner():eyeAngles():yaw(), owner():eyeAngles():roll()))
+}
+
+if(Sit == 1){
+    Pos = Target:pos() + vec(0,0,Target:boxSize():z() + 2)
+}
+
+G = owner():keyPressed("G")
+H = owner():keyPressed("H")
+R = owner():keyPressed("R")
+
+if(owner():inVehicle() & R & Antispam == 0){
+    holoUnparent(1)
+    Free = 1
+    Sit = 0
+    Target = noentity()
+    Pos = owner():aimPos()
+    Antispam = 1
+    timer("antispam",500)
+}
+
+if(clk("antispam")){
+    Antispam = 0
+}
+
+if(changed(G) & G == 1){
+    Invis++
+}
+
+if(changed(Invis) & Invis == 1){
+    printColor(vec(255,0,255),"[Movement] ",vec(0,255,0),"Invis")
+}
+
+if(changed(Invis) & Invis == 2){
+    printColor(vec(255,0,255),"[Movement] ",vec(255,0,0),"Visible")
+    Invis = 0
+}
+
+if(Invis == 1){
+    owner():setMaterial("models/effects/vol_light001")
+    owner():setColor(0,0,0,0)
+    owner():weapon():setAlpha(0)
+}
+
+if(Invis == 0){
+    owner():weapon():setAlpha(255)
+    owner():setMaterial("")
+    owner():setColor(255,255,255,255)
+}
+
+if(changed(H) & H == 1){
+    Solid++
+}
+
+if(changed(Solid) & Solid == 1){
+    printColor(vec(255,0,255),"[Movement] ",vec(255,0,0),"Prop not solid")
+    E:propNotSolid(1)
+}
+
+if(changed(Solid) & Solid == 2){
+    printColor(vec(255,0,255),"[Movement] ",vec(0,255,0),"Prop solid")
+    E:propNotSolid(0)
+    Solid = 0
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/stop"){
+        hideChat(1)
+        Target = noentity()
+        holoUnparent(1)
+        #E:parentTo(noentity())
+        Solid = 0
+        Sit = 0
+        printColor(vec(255,0,255),"[Movement] ",vec(255,0,0),"Stopped")
+    }
+}
+
+if(last()){
+    owner():weapon():setAlpha(255)
+    owner():setMaterial("")
+    owner():setColor(255,255,255,255)
+    E:propDelete()
+}

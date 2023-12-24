@@ -1,0 +1,18 @@
+@inputs Overide:number
+@outputs Door:number
+@autoupdate
+
+interval(180)
+
+
+if (first() | dupefinished()) {
+    setName("PD only door
+    Hold 'USE' to open
+    Written by CardboardFace")
+    findIncludeClass("player")
+}
+
+findInSphere(entity():pos(),40)
+
+local Target = find()
+Door = Overide | ((Target:isAuthorisedPersonnel() | Target:owner()) & Target:isAlive() & Target:keyUse())

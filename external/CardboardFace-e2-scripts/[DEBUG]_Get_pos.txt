@@ -1,0 +1,18 @@
+@name Pos finder
+@model models/props_trainstation/trainstation_post001.mdl
+if (!clk("selfDestruct")) {
+    local E2Pos = entity():pos()
+    local TagColor = vec(255, 90, 20)
+    local TextColor = vec(255, 255, 255)
+    local Tag = "[POS]: "
+    printColor(TagColor, Tag, TextColor, "You shot " + E2Pos)
+    printColor(TagColor, Tag, TextColor, "At a distance of " + round(E2Pos:distance(owner():pos()))+ "cm away")
+    printColor(TagColor, Tag, TextColor, "Pos - your pos: [" +
+        round(E2Pos:x() - owner():pos():x()) + "," +
+        round(E2Pos:y() - owner():pos():y()) + "," +
+        round(E2Pos:z() - owner():pos():z()) + "]")
+        
+    timer("selfDestruct", 2000)
+} else {
+    selfDestruct()
+}

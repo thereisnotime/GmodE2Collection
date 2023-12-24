@@ -1,0 +1,23 @@
+@name Library and cinema sign
+@inputs  A:wirelink
+#Made by Antonabcd, ByB#4
+
+if(first() | duped()){
+printColor(vec(255,40,130), "Made By Anton.")}
+
+interval(500)
+A:egpClear()
+A:egpCircle(1,vec2(250,350),vec2(150,150)) 
+A:egpColor(1,vec4(120,120,120,170))
+A:egpMaterial(1,"console/background_mvm")
+
+A:egpSize(2,65)
+A:egpText(1,"The WireShop",vec2(256,190))
+A:egpFont(1,"Coolvetica",35)
+A:egpColor(1,vec(210,210,210))
+A:egpAlign(1,2)
+
+A:egpText(2,"                Get your E2 chips here",vec2(256,223))
+A:egpFont(2,"Coolvetica",35)
+A:egpColor(2,vec(210,210,210))
+A:egpAlign(2,2)

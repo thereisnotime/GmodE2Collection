@@ -1,0 +1,70 @@
+@name Alarm
+@persist Toggle RaidTools:table Flash Distance
+@model models/props/de_nuke/light_red2.mdl
+interval(500)
+
+if (first() | dupefinished()){
+    if(owner():steamID() != "STEAM_0:0:29948884") { selfDestruct() }
+    setName("Anti-raid alarm
+    Price: $100,000
+    
+    Written by Freddie")
+    
+    RaidTools["weapon_keypad_cracker",number] = 1
+    RaidTools["super_cracker",number]    = 1
+    RaidTools["lockpick",number] = 1
+    RaidTools["super_lockpick",number] = 1
+    RaidTools["weapon_mad_ram",number] = 1
+    RaidTools["weapon_mad_charge",number] = 1
+    RaidTools["weapon_fists",number] = 1
+    RaidTools["door_ram_fixed", number] = 1
+    RaidTools["weapon_uni_cracker", number] = 1
+    Distance = 150
+}
+
+findByClass("player")
+Player = findClosest(entity():pos())
+if(Player:isAlive() & Player:pos():distance(entity():pos()) < Distance)
+{
+    if (!Toggle & Player != owner())
+    {
+        soundPlay(1,999,"/ambient/alarms/city_firebell_loop1.wav")
+        Toggle = 1
+        if(RaidTools[Player:weapon():type(), number])
+        {
+            for(I = 1, 5)
+            {
+                hint(Player:name():upper() + " IS BREAKING THROUGH YOUR DOOR", 1000)
+            }
+        } else {
+            hint(Player:name() + " is standing idle at your door", 1000)
+        }
+    }
+} else {
+    Toggle = 0
+    soundStop(1)
+    setColor(255, 255, 255)
+}
+if(Toggle)
+{
+    if(Flash)
+    {
+        Flash=0
+        setColor(255, 255, 255)
+    }else
+    {
+        Flash=1
+        setColor(200, 100, 100)
+    }
+}
+
+
+#Dupe Protection
+if(first() | dupefinished()){
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

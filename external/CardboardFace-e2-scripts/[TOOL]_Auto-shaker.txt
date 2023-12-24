@@ -1,0 +1,33 @@
+@name Auto-shaker
+@inputs ButtonToggle:number
+@outputs HydrolicLength:number
+@persist DirectionIsUp:number
+@trigger none
+interval(100)
+
+if(ButtonToggle)
+{
+    if(DirectionIsUp & HydrolicLength >= 35)
+    {
+        DirectionIsUp = 0
+    } elseif(!DirectionIsUp & HydrolicLength <= 5) {
+        DirectionIsUp = 1
+    }
+    
+    if(DirectionIsUp)
+    {
+        HydrolicLength += 5
+    } else {
+        HydrolicLength -= 5
+    }
+} else {
+    HydrolicLength = 35
+    interval(500)
+}
+
+if(first())
+{    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:1:53854692"){
+        selfDestructAll()
+        selfDestruct()
+    }
+}

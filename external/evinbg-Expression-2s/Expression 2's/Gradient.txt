@@ -1,0 +1,175 @@
+# Description: Creates a holo of the prop with the color vectors as a gradient
+
+@name Gradient
+@inputs 
+@outputs 
+@persist Count P C I G Time Start Scale GradientCount
+@persist StartColor:vector EndColor:vector MiddleColor:vector Model:string
+@trigger 
+
+#[
+Models that work well:
+- models/props_interiors/Furniture_Lamp01a.mdl
+- models/props_trainstation/payphone001a.mdl
+- models/props_c17/FurnitureSink001a.mdl
+- models/props_c17/gravestone002a.mdl
+- models/props_junk/Shovel01a.mdl
+- models/props_trainstation/clock01.mdl
+- models/props_trainstation/TrackSign03.mdl
+- models/props_wasteland/controlroom_filecabinet002a.mdl
+- models/props_lab/lockerdoorleft.mdl
+- models/props_c17/Lockers001a.mdl
+- models/props_borealis/borealis_door001a.mdl
+- models/props_c17/FurnitureWashingmachine001a.mdl
+- models/props_c17/FurnitureFridge001a.mdl
+- models/props_c17/FurnitureDresser001a.mdl
+- models/props_interiors/Furniture_Couch02a.mdl
+]#
+
+if(first()){
+    GradientCount = 3 # Make this either 2 or 3
+    
+    StartColor = vec(255, 255, 255)
+    MiddleColor = vec(155, 0, 255) # Middle is disregarded if GradientCount = 2
+    EndColor = vec(0, 0, 0)
+    
+    Model = "models/props_c17/gravestone002a.mdl"
+    Count = 50 # Essentially the number of frames (Higher = Smoother)
+    Time = 20 # Time it takes to generate the holograms
+    Scale = 1 # Changes the scale of the holos
+    
+    printColor(vec(255,0,255),"[Gradient] ",vec(255,255,255),"Commands:")
+    
+    Start = 0
+    P = 2
+    C = 1 + Count
+    I = 1
+    G = 1
+    
+    if((Count * 2) + 1 >= holoMaxAmount()){
+        printColor(vec(255,0,255),"[Gradient] ",vec(255,0,0),"You need to lower the holo count because it exceeds the server maximum.")
+    }
+    elseif(GradientCount < 2 | GradientCount > 3 | GradientCount % 1 != 0){
+        printColor(vec(255,0,255),"[Gradient] ",vec(255,0,0),"Invalid input for GradientCount.")
+    }
+    else{
+        holoCreate(0)
+        holoPos(0, entity():pos() + vec(0, 0, 0))
+        holoAng(0, entity():toWorld(ang(0, 0, 0)))
+        holoParent(0, entity())
+        holoModel(0, Model)
+        holoDisableShading(0, 1)
+        holoClipEnabled(0, 1)
+        holoVisible(0, owner(), 0)
+        holoVisible(0, players(), 0)
+    
+        holoCreate(1)
+        holoPos(1, entity():pos() + vec(0, 0, (holoEntity(0):boxSize():z() / 2) * Scale))
+        holoAng(1, entity():toWorld(ang(0, 0, 0)))
+        holoModel(1, Model)
+        holoScale(1, vec(Scale, Scale, Scale))
+        holoMaterial(1, "models/debug/debugwhite")
+        holoColor(1, StartColor)
+        #holoColor(1, hsv2rgb((360 / Count) * 1,1,1))
+        holoDisableShading(1, 1)
+        holoClipEnabled(1, 1)
+    
+        LoadTime = round((Time / 1000) * Count * 3 + (Time / 1000) * 4, 2)
+    
+        printColor(vec(255,0,255),"[Gradient] ",vec(255,255,255),"Approximate Loading Time: "+LoadTime+"s")
+    
+        timer("create_clip", Time)
+    }
+}
+
+if(Start == 1){
+    if(GradientCount == 2){
+        entity():setName("Gradient\nStart: "+StartColor:toString()+"\nEnd: "+EndColor:toString()+"")
+    }
+    if(GradientCount == 3){
+        entity():setName("Gradient\nStart: "+StartColor:toString()+"\nMiddle: "+MiddleColor:toString()+"\nEnd: "+EndColor:toString()+"")
+    }
+}
+else{
+    Percent = round((((C - Count) / Count) * 100) / 3 + ((P / Count) * 100) / 3 + ((I / Count) * 100) / 3, 1)
+    entity():setName("Gradient\nLoading... "+Percent+"%")
+}
+
+interval(100)
+runOnChat(1)
+
+if(clk("create_clip")){
+    holoCreate(C)
+    holoScale(C, vec(0.05,10,0.05))
+    holoPos(C, holoEntity(1):pos() - vec(0,0,(holoEntity(0):boxSize():z() / 2) * Scale) + vec(0,0,(holoEntity(0):boxSize():z() / Count) * Scale * (C - Count)))
+    holoDisableShading(C,1)
+    holoVisible(C, owner(), 0)
+    holoVisible(C, players(), 0)
+    C++
+    if(C <= (Count * 2)){
+        timer("create_clip", Time)
+    }
+    if(C > (Count * 2)){
+        timer("create_prop", Time)
+        printColor(vec(255,0,255),"[Gradient] ",vec(0,255,0),"Done with clip holos")
+    }
+}
+
+if(clk("create_prop")){
+    holoCreate(P)
+    holoPos(P, holoEntity(1):pos() + vec(0,0,0))
+    holoModel(P, Model)
+    holoScale(P, vec(Scale, Scale, Scale))
+    holoMaterial(P, "models/debug/debugwhite")
+    if(GradientCount == 2){
+        X = StartColor:x() + ((EndColor:x() - StartColor:x()) / Count) * P
+        Y = StartColor:y() + ((EndColor:y() - StartColor:y()) / Count) * P
+        Z = StartColor:z() + ((EndColor:z() - StartColor:z()) / Count) * P
+        #print(X:toString()+","+Y:toString()+","+Z:toString())
+    }
+    if(GradientCount == 3){
+        if(P / Count < 0.5){
+            X = StartColor:x() + ((MiddleColor:x() - StartColor:x()) / (Count / 2)) * P
+            Y = StartColor:y() + ((MiddleColor:y() - StartColor:y()) / (Count / 2)) * P
+            Z = StartColor:z() + ((MiddleColor:z() - StartColor:z()) / (Count / 2)) * P
+            #print("1: "+X:toString()+","+Y:toString()+","+Z:toString())
+        }
+        if(P / Count >= 0.5){
+            X = MiddleColor:x() + ((EndColor:x() - MiddleColor:x()) / (Count / 2)) * G
+            Y = MiddleColor:y() + ((EndColor:y() - MiddleColor:y()) / (Count / 2)) * G
+            Z = MiddleColor:z() + ((EndColor:z() - MiddleColor:z()) / (Count / 2)) * G
+            G++
+            #print("2: "+X:toString()+","+Y:toString()+","+Z:toString())
+        }
+    }
+    holoColor(P, vec(X, Y, Z))
+    #holoColor(P, hsv2rgb((360 / Count) * P,1,1))
+    holoDisableShading(P,1)
+    holoClipEnabled(P, 1, 1)
+    holoClipEnabled(P, 2, 1)
+    P++
+    if(P <= Count){
+        timer("create_prop", Time)
+    }
+    if(P > Count){
+        timer("clip", Time)
+        printColor(vec(255,0,255),"[Gradient] ",vec(0,255,0),"Done with prop holos")
+    }
+}
+
+if(clk("clip")){
+    holoClip(I, 1, vec(0, 0, 0), vec(0, 0, -1), holoEntity(Count + I))
+    holoParent(I, holoEntity(0))
+    holoParent(Count + I, holoEntity(I))
+    if(I > 1){
+        holoClip(I, 2, vec(0,0,0), vec(0,0,1), holoEntity((Count + I) - 1))
+    }
+    I++
+    if(I <= Count){
+        timer("clip", Time)
+    }
+    if(I > Count){
+        Start = 1
+        printColor(vec(255,0,255),"[Gradient] ",vec(0,255,0),"Done with clipping")
+    }
+}

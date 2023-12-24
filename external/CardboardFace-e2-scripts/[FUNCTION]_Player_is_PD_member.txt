@@ -1,0 +1,14 @@
+function number playerisPD(Player:entity)
+{
+    findByClass("weapon_*")
+    findInSphere(Player:pos(), 1)
+    local Items = findToArray()
+    for (X = 1,Items:count()) {
+        if (Items[X,entity]:type() == "arrest_stick") #Detect if a player is undercover, because they still have the baton
+        { return 1 }
+    }
+    if(Player:isAuthorisedPersonnel() | Player:isMayorAssistant() | Player:isPoliceDeputy()) #Detect if a player is CP and had their weapons kidnapped
+    { return 1 }
+    
+    return 0
+}

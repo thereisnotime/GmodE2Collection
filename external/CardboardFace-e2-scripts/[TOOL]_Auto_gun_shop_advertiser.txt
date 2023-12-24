@@ -1,0 +1,13 @@
+@name Auto gun shop advertiser
+@persist TimeInMinutes:number
+@trigger none
+
+if(first() | dupefinished())
+{
+    TimeInMinutes = 3
+}
+
+
+interval((TimeInMinutes * 1000) * 60)
+concmd("say /ad Visit Cpt. Lenny's BIG RANGE today! Get the best and biggest guns around LEGALLY at unbeatable prices!")
+

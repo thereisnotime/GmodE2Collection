@@ -1,0 +1,103 @@
+@outputs Door:number
+@persist Allow:array [Pos TagColor TextColor]:vector Tag:string Distance:number
+@trigger none
+@autoupdate
+
+if (clk("check")) {
+    local FadingDoor = 0
+    foreach(K,V:entity = Allow)
+    {
+        if(V:weapon():type() == "weapon_physcannon" & (Pos - V:pos()):length() < Distance)
+        {
+            FadingDoor = 1
+            break
+        }
+    }
+    
+    Door = FadingDoor
+    timer("check", 150)
+    
+} elseif(first() | dupefinished()) {
+    setName("AutoDoor - equip GRAVGUN to open
+    Written by CardboardFace")
+    
+    runOnChat(1)
+    Tag = "[AUTO-DOOR]: "
+    TagColor = vec(60, 110, 160)
+    TextColor = vec(255,255,255)
+    Distance = 85
+    Allow:pushEntity(owner()) #Add owner to the door
+    Pos = round(entity():pos())
+
+    printColor(TagColor, Tag, TextColor, "Commands: .add .rem .removeall .list")
+    printColor(TagColor, Tag, TextColor, "You can also use \".add\" while looking at a player to add them")
+    
+    
+    function addplayer(Player:entity)
+    {
+        for(I=1,Allow:count())
+        {
+            if(Player == Allow[I,entity])
+            {
+                printColor(TagColor, Tag, TextColor, Player:name() + " is already added!")
+                return
+            }
+        }
+        
+        Allow:pushEntity(Player)
+        printColor(TagColor, Tag, TextColor, "Added " + Player:name() + " to allow list")
+    }
+    
+    timer("check", 150)
+    
+
+} elseif(chatClk(owner())) {
+    LS = owner():lastSaid():explode(" ")
+    if(LS[1,string] == ".add") {
+        hideChat(1)
+        TargetPlayer = findPlayerByName(LS[2,string])
+        
+        if(ops() < 70)
+        {
+            if(TargetPlayer:isPlayer() & owner():lastSaid() != ".add")
+            {
+                addplayer(TargetPlayer)
+
+            } elseif(owner():aimEntity():isPlayer()) {
+                addplayer(owner():aimEntity())
+
+            } else {
+                printColor(TagColor, Tag, TextColor, "Player not found!")
+            }
+        } else { printColor(TagColor, Tag, TextColor, "Too full to add more players!") }
+        
+    } elseif(LS[1,string] == ".rem") {
+        hideChat(1)
+        TargetPlayer = findPlayerByName(LS[2,string])
+        if(TargetPlayer:isPlayer())
+        {
+            for(I = 1, Allow:count())
+            {
+                if(Allow[I, entity] == TargetPlayer)
+                {
+                    Allow:remove(I)
+                    printColor(TagColor, Tag, TextColor, "Removed " + TargetPlayer:name() + " from whitelist")
+                }
+            }
+            
+        } else { printColor(TagColor, Tag, TextColor, "Player not found!") }
+        
+    } elseif(LS[1,string] == ".removeall") {
+        hideChat(1)
+        Allow:clear()
+        Allow:pushEntity(owner())
+        printColor(TagColor, Tag, TextColor, "Cleared everybody but you!")  
+    
+    } elseif(LS[1,string] == ".list") {
+        hideChat(1)
+        printColor(TagColor, Tag, TextColor, "Players added to your auto-door:")
+        foreach(K,V:entity = Allow) {
+            printColor(vec(80,80,120), V:name())
+        }
+    }
+}

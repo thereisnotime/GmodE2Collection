@@ -1,0 +1,91 @@
+@name E2 finder
+@inputs CS:wirelink
+@outputs Page TrackMode TrackNumber
+@persist Page TrackMode TrackNumber
+@trigger 
+interval(500)
+runOnChat(1)
+
+
+A = owner():lastSaid():explode(" ")
+if(first()){
+    CS[2041] = 1
+    Page = 1
+    TrackMode = 0
+    timer("1",5000)
+    findByClass("gmod_wire_expression2")
+    All = findToArray()
+    print("E2 finder:")
+    print(".page <number> to change page")
+    print(".track <chip index> to track a chip")
+    print(".off to stop tracking a chip")
+}
+
+if(clk("1")){
+    timer("1",5000)
+    CS[2041] = 1
+    findByClass("gmod_wire_expression2")
+    All = findToArray()
+}
+if(Page == 1){
+CS:writeString("          E2 owners:          ",0,0,999,18)
+}elseif(Page == 2){
+CS:writeString("          Chip name:          ",0,0,999,18)
+}
+for(I=1,All:count()){
+    if(Page == 1){
+    CS:writeString(I+". "+All[I,entity]:owner():name(),0,I,999)
+    }elseif(Page == 2){
+    CS:writeString(I+". "+All[I,entity]:getName(),0,I,999)
+    } 
+}
+if(A[1,string] == ".page" & A[2,string] & chatClk(owner())){
+    Number = A[2,string]:toNumber()
+    if(Number > 2){
+        hint("There are only 2 pages !",10)
+    }elseif(Number < 0){
+       hint("Please Put a number higher then 0 !",10)
+    }else{
+    Page = Number
+    hideChat(1)
+    hint("Page turned to "+Number,10)
+    }
+    hideChat(1)
+}
+
+
+if(A[1,string] == ".track" & A[2,string] & chatClk(owner())){
+    Number = A[2,string]:toNumber()
+    TrackNumber = Number
+    TrackMode = 1
+    if(Number > All:count()){
+        hint("Please enter a number lower then "+All:count(),10)
+    }elseif(Number < 0){
+        hint("Please Put a number higher then 0 !",10)
+    }else{
+        hint("Tracking "+All[Number,entity]:owner():name()+"'s "+All[Number,entity]:getName()+" E2 !",10)
+    }
+    hideChat(1)
+}
+if(A[1,string] == ".off" & chatClk(owner())){
+    TrackMode = 0
+    TrackNumber = 0
+    hint("Turned off Tacking !",10)
+    hideChat(1)
+}
+
+
+if(TrackMode){
+    Distance = owner():pos():distance(All[TrackNumber,entity]:pos()) 
+    print(_HUD_PRINTCENTER,All[TrackNumber,entity]:owner():name()+"'s "+All[TrackNumber,entity]:getName()+" E2 is : "+Distance+ " Feet away!")
+}
+
+#Dupe Protection
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884")
+    {
+        selfDestruct()
+    }
+}
+

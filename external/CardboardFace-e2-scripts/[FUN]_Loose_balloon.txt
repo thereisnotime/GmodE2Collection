@@ -1,0 +1,37 @@
+@name Press 'interact' to pop!
+@persist  Player:entity Popping Counter
+@model models/maxofs2d/balloon_classic.mdl
+
+interval(200)
+entity():applyForce(vec(0,0,160))
+setColor(255,0,0)
+
+findByClass("player")
+Player = findClosest(entity():pos())
+D = entity():pos():distance(Player:pos()) 
+
+if (D <= 70 & Player:keyUse() & Popping == 0){
+    Popping = 1
+    soundPlay(0, 99, "garrysmod/balloon_pop_cute.wav")
+}
+
+if(Counter >= 1)
+{
+    selfDestruct()
+}elseif(Popping == 1)
+{
+    Counter += 1
+}
+
+
+#Dupe Protection
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884")
+    {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

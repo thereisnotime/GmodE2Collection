@@ -1,0 +1,79 @@
+# Description: Targets players using chat commands and displays current information about targeted player
+
+@name Player Targeter
+@inputs 
+@outputs 
+@persist Target:entity Name:string Weapon:string Health Team:string Disround Distance
+@trigger 
+
+if(first()){
+    printColor(vec(255,0,255),"[Targeter] ",vec(255,255,255),"Commands: \n- Type /t <player> to target someone\n- Type /stop to stop targeting")
+    Target = noentity()
+    
+    holoCreate(1)
+    holoModel(1,"hq_sphere")
+    holoMaterial(1,"debug/debugportals")
+    holoColor(1,vec(255,0,0))
+    holoShadow(1,0)
+    holoDisableShading(1,1)
+    holoAlpha(1,0)
+    
+    holoCreate(2)
+    holoModel(2,"cone")
+    holoMaterial(2,"debug/debugportals")
+    holoColor(2,vec(255,0,0))
+    holoScale(2,vec(2,2,2))
+    holoAlpha(2,0)
+    #entity():propNotSolid(1)
+    #entity():setColor(0,0,0,0)
+}
+
+interval(100)
+runOnChat(1)
+
+L = owner():lastSaid():lower():explode(" ")
+holoVisible(1,players(),0)
+holoVisible(1,owner(),1)
+holoVisible(2,players(),0)
+holoVisible(2,owner(),1)
+
+if(chatClk(owner())){
+    if(L[1,string] == "/t"){
+        hideChat(1)
+        TargetTemp = findPlayerByName(L[2,string])
+        Target = noentity()
+        if(TargetTemp:isPlayer() == 1){
+            Target = TargetTemp
+            printColor(vec(255,0,255),"[Targeter] ",vec(255,255,255),"Targeting: "+Target:name()+"")
+        }
+        elseif(TargetTemp:isPlayer() == 0){
+            holoAlpha(1,0)
+            holoAlpha(2,0)
+            printColor(vec(255,0,255),"[Targeter] ",vec(255,0,0),"Couldn't find target")
+        }
+    }
+    if(L[1,string] == "/stop"){
+        hideChat(1)
+        Target = noentity()
+        holoAlpha(1,0)
+        holoAlpha(2,0)
+        printColor(vec(255,0,255),"[Targeter] ",vec(255,0,0),"Stopped targeting")
+    }
+}
+
+if(Target:isPlayer()){
+    Dir = Target:pos() - holoEntity(2):pos()
+    holoAng(2,(Dir:toAngle() + ang(90,0,0)))
+    holoPos(2,owner():pos() + vec(0,0,30) + owner():forward() * 100)
+    holoAlpha(2,255)
+    holoAlpha(1,255)
+    holoPos(1,Target:toWorld(vec(0,0,90)))
+    holoParent(1,Target)
+    Name = Target:name()
+    Weapon = Target:weapon():type():replace("m9k_",""):replace("csgo_",""):replace("weapon_",""):replace("sent_",""):replace("_"," ")
+    Distance = owner():pos():distance(Target:pos())
+    DisRound = round(toUnit("m",Distance))
+    Health = Target:health()
+    Team = Target:team():teamName()
+    print(_HUD_PRINTCENTER,""+Name+"\n\n"+"Distance: "+DisRound+" Meters\n"+"Weapon: "+Weapon+"\n"+"Health: "+Health+"\n"+"Job: "+Team)
+}

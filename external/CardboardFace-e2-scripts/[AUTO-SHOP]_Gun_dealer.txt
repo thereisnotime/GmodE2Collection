@@ -1,0 +1,132 @@
+@inputs [Screen OPTIONAL_Screen2]:wirelink [MoneyPotLastAmount MoneyPotUpdated ButtonUp ButtonDown ButtonSelect]:number
+@persist [TagColor TextColor]:vector Tag:string [ProffitMultiplier Funds FlashState Screen2IsConnected ShipmentsPerScreen]:number Shipments:array
+@trigger MoneyPotUpdated
+
+interval(900)
+
+if (first() | dupefinished()) {
+    ProffitMultiplier = 1.5 # Change this to set how much the price of items should be increased from their retail cost
+    
+    Tag = "[AUTO-SHOP]: "
+    TagColor = vec(60, 160, 110)
+    TextColor = vec(255,255,255)
+    ShipmentsPerScreen = 17 # This must be calculated based off how many lines are used up by default
+    
+    entity():setName("    Auto shop
+    by CardboardFace")
+    
+    function number isScreen2Connected() {
+        return OPTIONAL_Screen2:outputs():count() > 0
+    }
+    function void printFancy(String:string) {
+        printColor(TagColor, Tag, TextColor, String)
+    }
+    
+    Screen2IsConnected = isScreen2Connected()
+    
+    if (Screen2IsConnected) {
+        printFancy("Optional second screen detected, shipment capacity doubled!")
+    }
+    
+    
+    
+    function void resetScreens() {
+        Screen[2041] = 1
+        OPTIONAL_Screen2[2041] = 1
+        Screen:writeString("          AUTO-SHOP:          ",0,0,888,112)
+        Screen:writeString("Name:       Price:      Stock:",0,1,555,0)
+        Screen:writeString("         INSERT FUNDS         ",0,17,888,900)
+        OPTIONAL_Screen2:writeString("          AUTO-SHOP:          ",0,0,888,112)
+        OPTIONAL_Screen2:writeString("Name:       Price:      Stock:",0,1,555,0)
+        OPTIONAL_Screen2:writeString("         INSERT FUNDS         ",0,17,888,900)
+    }
+    
+    function void printBalance() {
+        if (Funds == 0) {
+            local BGColor = 111
+            if (FlashState) {
+                BGColor = 900
+            }
+            FlashState = !FlashState
+            
+            Screen:writeString("         INSERT FUNDS         ",0,17,888, BGColor)
+            if (Screen2IsConnected) { OPTIONAL_Screen2:writeString("         INSERT FUNDS         ",0,17,888, BGColor) }
+            
+        } elseif (changed(Funds)) {
+            Screen:writeString("         BALANCE: $" + Funds + "           ",0,17,888, 151)
+            OPTIONAL_Screen2:writeString("         BALANCE: $" + Funds + "           ",0,17,888, 151)
+        }
+    }
+    
+    printFancy("Aim at a shipment and hold SUIT ZOOM to add it!")
+        
+    resetScreens()
+}
+
+
+if (owner():keyZoom()) {
+    local Target = owner():aimEntity()
+    
+    if (Target:type() == "originalrp_shipment") {
+        Screen2IsConnected = isScreen2Connected() # Check if a second screen has been setup
+        
+        if (Screen2IsConnected) {
+            if (Shipments:count() + 1 > ShipmentsPerScreen * 2) {
+                printFancy("You can't add any more shipments to the shop!")
+            }
+        } else {
+            if (Shipments:count() + 1 > ShipmentsPerScreen) {
+                printFancy("You can't add any more shipments to the shop - try adding another console screen!")
+            }
+        }
+        
+        if (!Shipments:exists(Target:id())) {
+            Shipments[Target:id(), entity] = Target
+            printFancy(Target:shipmentName() + " shipment added!")
+        }
+    }
+}
+
+local LineOffset = 1
+local YPos = 1
+foreach(K, V:entity = Shipments)
+{
+    # Check the shipment still exists
+    if (!V:isValid()) {
+        Shipments:remove(V:id())
+        printFancy("Your " + V:shipmentName() + " shipment has ran out!")
+        continue
+    }
+    
+    if (changed(V:shipmentAmount())) {
+        local Name = V:shipmentName()
+        local Price = "$" + (V:shipmentIndividualCost() * ProffitMultiplier)
+        local Stock = V:shipmentAmount():toString()
+        
+        # Inefficient to make loads of locals here rather than persists
+        local NameChars = 12
+        local PriceChars = 12
+        local StockChars = 6
+        local Space = " "
+        
+        local Name = Name + Space:repeat(NameChars - Name:length())
+        local Price = Price + Space:repeat(PriceChars - Price:length())
+        local Stock = Stock + Space:repeat(StockChars - Stock:length())
+        local ItemRow = Name + Price + Stock
+        
+        if (YPos + LineOffset < 18) {
+            Screen:writeString(ItemRow, 0, YPos + LineOffset, 999)
+        } else {
+            OPTIONAL_Screen2:writeString(ItemRow, 0, YPos + LineOffset, 999)
+        }
+    }
+    
+    YPos++
+}
+
+
+if (MoneyPotUpdated & MoneyPotLastAmount > 0) {
+    Funds += MoneyPotLastAmount
+}
+
+printBalance()

@@ -1,0 +1,23 @@
+@name Hold 'USE' to eat me!
+@persist Eating
+@model models/food/burger.mdl
+#models/Noesis/donut.mdl
+#models/food/hotdog.mdl
+#models/props_junk/garbage_takeoutcarton001a.mdl
+
+
+findInSphere(entity():pos(), 50)
+findClipToClass("player")
+Player = findResult(1)
+
+if (Player:keyUse() & Eating == 0 & Player:aimEntity() == entity()) {
+    Eating = 1
+    entity():soundPlay(1,99, "vo/SandwichEat09.wav")
+    timer("selfDestruct", 4000) #Stack timer to auto-delete the E2
+    
+} elseif (clk("selfDestruct")) { #The execution was caused by the timer completing
+    selfDestruct()
+    
+} else {
+    interval(500) #Keep executing the E2 until another if statement suceeds
+}

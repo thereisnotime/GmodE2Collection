@@ -1,0 +1,221 @@
+# Description: Creates animations of a bending/wobbling props using numerous holos and clipping
+
+@name Prop Animation
+@inputs 
+@outputs 
+@persist Model:string Count P C I Time Bend Start Speed Scale Anim Bounce Sin Cos Cos2
+@trigger 
+
+#[
+Models that work well:
+- models/props_interiors/Furniture_Lamp01a.mdl
+- models/props_trainstation/payphone001a.mdl
+- models/props_c17/FurnitureSink001a.mdl
+- models/props_c17/gravestone002a.mdl
+- models/props_junk/Shovel01a.mdl
+- models/props_trainstation/clock01.mdl
+- models/props_trainstation/TrackSign03.mdl
+- models/props_wasteland/controlroom_filecabinet002a.mdl
+- models/props_lab/lockerdoorleft.mdl
+- models/props_c17/Lockers001a.mdl
+- models/props_borealis/borealis_door001a.mdl
+- models/props_c17/FurnitureWashingmachine001a.mdl
+- models/props_c17/FurnitureFridge001a.mdl
+- models/props_c17/FurnitureDresser001a.mdl
+]#
+
+if(first()){
+    Model = "models/props_trainstation/clock01.mdl"
+    Count = 70 # Essentially the number of frames (Higher = Smoother)
+    Bend = 30 # Degree of the bendiness
+    Speed = 150 # Speed of the wobble
+    Time = 20 # Time it takes to generate the holograms
+    Scale = 0.75 # Changes the scale of the holos
+    Anim = 1
+    Bounce = 1
+    
+    printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Commands:
+- /bend <number>
+- /speed <number>
+- /anim <1 - 7>
+- /bounce <on, off>")
+    
+    Start = 0
+    P = 2
+    C = 1 + Count
+    I = 1
+    
+    if((Count * 2) + 1 >= holoMaxAmount()){
+        printColor(vec(255,0,255),"[Bendy] ",vec(255,0,0),"You need to lower the holo count because it exceeds the server maximum.")
+    }
+    else{
+        holoCreate(0)
+        holoPos(0, entity():pos() + vec(0, 0, 0))
+        holoAng(0, entity():toWorld(ang(0, 0, 0)))
+        holoParent(0, entity())
+        holoModel(0, Model)
+        holoDisableShading(0, 1)
+        holoClipEnabled(0, 1)
+        holoVisible(0, owner(), 0)
+        holoVisible(0, players(), 0)
+    
+        holoCreate(1)
+        holoPos(1, entity():pos() + vec(0, 0, (holoEntity(0):boxSize():z() / 2) * Scale))
+        holoAng(1, entity():toWorld(ang(0, 0, 0)))
+        holoModel(1, Model)
+        holoScale(1, vec(Scale, Scale, Scale))
+        #holoDisableShading(1, 1)
+        holoClipEnabled(1, 1)
+    
+        LoadTime = round((Time / 1000) * Count * 3 + (Time / 1000) * 4, 2)
+    
+        printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Approximate Loading Time: "+LoadTime+"s")
+    
+        timer("create_clip", Time)
+    }
+}
+
+if(Start == 1){
+    entity():setName("Prop Animation")
+}
+else{
+    Percent = round((((C - Count) / Count) * 100) / 3 + ((P / Count) * 100) / 3 + ((I / Count) * 100) / 3, 1)
+    entity():setName("Prop Animation\nLoading... "+Percent+"%")
+}
+
+if(Start == 1){
+    for(S = 1, Count){     
+        if(Anim == 1){
+            holoAng(S, holoEntity(0):toWorld(ang(0, 0, (((S - 1) * Bend) / Count) * Sin)))
+        }
+        elseif(Anim == 2){
+            holoAng(S, holoEntity(0):toWorld(ang((((S - 1) * Bend) / Count) * Sin, 0, 0)))
+        }
+        elseif(Anim == 3){
+            holoAng(S, holoEntity(0):toWorld(ang(0, (((S - 1) * Bend) / Count) * Sin, 0)))
+        }
+        elseif(Anim == 4){
+            holoAng(S, holoEntity(0):toWorld(ang((((S - 1) * Bend * 2) / Count) * Cos2, 0, (((S - 1) * Bend) / Count) * Sin)))
+        }
+        elseif(Anim == 5){
+            holoAng(S, holoEntity(0):toWorld(ang((((S - 1) * Bend * 2) / Count) * Cos, 0, (((S - 1) * Bend) / Count) * Sin)))
+        }
+        elseif(Anim == 6){
+            holoAng(S, holoEntity(0):toWorld(ang((((S - 1) * Bend) / Count) * Cos2, (((S - 1) * Bend) / Count) * Sin, (((S - 1) * Bend) / Count) * Sin)))
+        }
+        elseif(Anim == 7){
+            holoAng(S, holoEntity(0):toWorld(ang((((S - 1) * Bend) / Count) * Cos, (((S - 1) * Bend) / Count) * Sin, (((S - 1) * Bend) / Count) * Sin)))
+        }
+        if(Bounce == 1){
+            holoPos(S, holoEntity(0):toWorld(vec(0,0,(((S - 1) * Bend) / Count) * ((Cos2 * Scale) / 4) + (holoEntity(0):boxSize():z() / 2) * Scale)))
+        }
+    }
+}
+
+interval(100)
+runOnChat(1)
+
+if(clk("create_clip")){
+    holoCreate(C)
+    #holoScale(C, vec(0.05,10,0.05))
+    holoPos(C, holoEntity(1):pos() - vec(0,0,(holoEntity(0):boxSize():z() / 2) * Scale) + vec(0,0,(holoEntity(0):boxSize():z() / Count) * Scale * (C - Count)))
+    holoDisableShading(C,1)
+    holoVisible(C, owner(), 0)
+    holoVisible(C, players(), 0)
+    C++
+    if(C <= (Count * 2)){
+        timer("create_clip", Time)
+    }
+    if(C > (Count * 2)){
+        timer("create_prop", Time)
+        printColor(vec(255,0,255),"[Bendy] ",vec(0,255,0),"Done with clip holos")
+    }
+}
+
+if(clk("create_prop")){
+    holoCreate(P)
+    holoPos(P, holoEntity(1):pos() + vec(0,0,0))
+    holoModel(P, Model)
+    holoScale(P, vec(Scale, Scale, Scale))
+    #holoDisableShading(P,1)
+    holoClipEnabled(P, 1, 1)
+    holoClipEnabled(P, 2, 1)
+    P++
+    if(P <= Count){
+        timer("create_prop", Time)
+    }
+    if(P > Count){
+        timer("clip", Time)
+        printColor(vec(255,0,255),"[Bendy] ",vec(0,255,0),"Done with prop holos")
+    }
+}
+
+if(clk("clip")){
+    holoClip(I, 1, vec(0, 0, 0), vec(0, 0, -1), holoEntity(Count + I))
+    holoParent(I, holoEntity(0))
+    holoParent(Count + I, holoEntity(I))
+    if(I > 1){
+        holoClip(I, 2, vec(0,0,0), vec(0,0,1), holoEntity((Count + I) - 1))
+    }
+    I++
+    if(I <= Count){
+        timer("clip", Time)
+    }
+    if(I > Count){
+        Start = 1
+        printColor(vec(255,0,255),"[Bendy] ",vec(0,255,0),"Done with clipping")
+    }
+}
+
+Sin = sin(curtime() * Speed)
+Cos = cos(curtime() * Speed)
+Cos2 = cos(curtime() * Speed * 2) / 2
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/bend"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() == 0){
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,0,0),"Not a valid input. Please input a number")
+        }
+        else{
+            Bend = LS[2,string]:toNumber()
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Bend: "+Bend+"")
+        }
+    }
+    if(LS[1,string] == "/speed"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() == 0){
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,0,0),"Not a valid input. Please input a number")
+        }
+        else{
+            Speed = LS[2,string]:toNumber()
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Speed: "+Speed+"")
+        }
+    }
+    if(LS[1,string] == "/anim"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 1 | LS[2,string]:toNumber() % 1 != 0 | LS[2,string]:toNumber() > 7){
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,0,0),"Not a valid input. Please input a valid number (1 - 7)")
+        }
+        else{
+            Anim = LS[2,string]:toNumber()
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Anim: "+Anim+"")
+        }
+    }
+    if(LS[1,string] == "/bounce"){
+        hideChat(1)
+        if(LS[2,string] == "on"){
+            Bounce = 1
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Bounce: ",vec(0,255,0),"On")
+        }
+        elseif(LS[2,string] == "off"){
+            Bounce = 0
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,255,255),"Bounce: ",vec(255,0,0),"Off")
+        }
+        else{
+            printColor(vec(255,0,255),"[Bendy] ",vec(255,0,0),"Not a valid input. Please type either on or off")
+        }
+    }
+}

@@ -1,0 +1,50 @@
+@name Entity info
+@persist Tag:string TagColor:vector TextColor:vector SubTextColor:vector
+
+if(first() | dupefinished()) {
+    runOnChat(1)
+
+    Tag = "[E-Info]: "
+    TagColor = vec(60, 110, 160)
+    TextColor = vec(255,255,255)
+    SubTextColor = vec(180,180,255)
+    printColor(TagColor, Tag, TextColor, "Type '.info' in chat to get the class name of the item you're looking at")
+}
+
+if(chatClk(owner()) & owner():lastSaid() == ".info") {
+    hideChat(1)
+    
+    local Entity = owner():aimEntity()
+    
+    if (Entity:type() == "") {
+        printColor(TagColor, Tag, vec(200, 0, 0), "You're not aiming at anything!")
+        exit()
+    }
+    
+    local EntityColor = Entity:getColor()
+    printColor(TagColor, Tag, TextColor, "Class: ", SubTextColor, Entity:type())
+    printColor(TagColor, Tag, TextColor, "Model: ", SubTextColor, Entity:model())
+    printColor(TagColor, Tag, TextColor, "Material: ", SubTextColor, Entity:getMaterial())
+    printColor(TagColor, Tag, TextColor, "Colour: ", EntityColor, EntityColor:toString())
+    printColor(TagColor, Tag, TextColor, "Pos: ", SubTextColor, Entity:pos():toString())
+    printColor(TagColor, Tag, TextColor, "Ang: ", SubTextColor, Entity:angles():toString())
+    
+    if (Entity:isShipment()) {
+        printColor(TagColor, Tag, TextColor, "Shipment name: ", EntityColor, Entity:shipmentName())
+        printColor(TagColor, Tag, TextColor, "Shipment type: ", EntityColor, Entity:shipmentType())
+        
+    } elseif (Entity:isPrinter()) {
+        printColor(TagColor, Tag, TextColor, "Printer name: ", EntityColor, Entity:printerType())
+        printColor(TagColor, Tag, TextColor, "Money: ", EntityColor, Entity:printedMoney())
+        
+    } elseif (Entity:isMoney()) {
+        printColor(TagColor, Tag, TextColor, "Money: ", EntityColor, Entity:moneyAmount())
+    } elseif (Entity:isPlayer()) {
+        local PlyCol = Entity:getPlayerColor()
+        local PlyWepCol = Entity:getWeaponColor()
+        printColor(TagColor, Tag, TextColor, "Rank: ", EntityColor, Entity:getUserGroup())
+        printColor(TagColor, Tag, TextColor, "SteamID64: ", EntityColor, Entity:steamID64())
+        printColor(TagColor, Tag, TextColor, "Player colour: ", PlyCol, PlyCol:toString())
+        printColor(TagColor, Tag, TextColor, "Weapon colour: ", PlyWepCol, PlyWepCol:toString())
+    }
+}

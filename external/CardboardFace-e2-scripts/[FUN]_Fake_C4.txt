@@ -1,0 +1,57 @@
+@name C4
+@persist On:number DisarmCount:number SecondsUntilExplode:number
+@model models/weapons/w_c4_planted.mdl
+interval(200)
+
+if(first() | dupefinished())
+{
+    On = 1
+    SecondsUntilExplode = 10
+    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:1:53854692"){selfDestruct()}
+    setName("C4 - Unarmed
+    Hold 'E' to arm!")
+}
+
+findInSphere(entity():pos(),50)
+findClipToClass("player")
+Player = findResult(1)
+if(On == 1)
+{
+    if(Player:aimEntity() == entity() & Player:keyUse()){
+        On = 0
+        timer("1",500)
+        timer("2",SecondsUntilExplode * 1000)
+        setName("C4 - ARMED!
+        Hold 'E' to disarm!")
+        soundPlay(0,0,"/weapons/c4/c4_plant.wav")
+    }
+    
+    if(clk("reset")){
+        On = 1
+        DisarmCount = 0
+    }
+} else {
+    if(Player:aimEntity() == entity() & Player:keyUse()){
+        DisarmCount++
+        if(DisarmCount == 10){
+            stopAllTimers()
+            soundPlay(0,0,"/weapons/c4/c4_disarm.wav")
+            timer("reset",5000)
+            setName("C4 - Unarmed
+            Hold 'E' to arm!")
+        }
+    }
+    
+    if(clk("1")){
+        soundPlay(0,0,"/weapons/c4/c4_beep1.wav")
+        timer("1",1000)
+    }
+    if(clk("2")){
+        soundPlay(0,0,"/weapons/c4/c4_explode1.wav")
+        stoptimer("1")
+        timer("3",3000)
+    }
+    if(clk("3")){
+        selfDestruct()
+    }
+}

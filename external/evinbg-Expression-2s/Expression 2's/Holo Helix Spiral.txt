@@ -1,0 +1,41 @@
+# Description: A cool holo creation
+
+@name Holo Helix Spiral
+@inputs 
+@outputs 
+@persist P Holos Speed
+@trigger 
+
+interval(100)
+
+if(first()){
+    Holos = 50
+    Speed = 5
+    P = 1
+    timer("create", 200)
+}
+
+if(clk("create")){
+    holoCreate(P)
+    holoScale(P, vec(P * (P / 10),8,8) / 50)
+    holoPos(P, entity():pos() + entity():up() * P * 1.9)
+    holoParent(P, entity())
+    holoModel(P, "hq_square")
+    holoDisableShading(P, 1)
+    print(P)
+    P++
+    if(P <= Holos){
+        timer("create", 200)
+    }
+    if(P > Holos){
+        print("Done")
+    }
+}
+
+if(clk()){
+    for(I = 1, Holos){
+        holoAng(I, entity():toWorld(ang(0, curtime() * I * Speed, 0)))
+        #holoColor(I, hsv2rgb(360 / Holos * I,1,1))
+        holoColor(I, hsv2rgb((curtime() * 35 + I * 3) % 360,1,1))
+    }
+}

@@ -1,0 +1,80 @@
+@name Pain sounds
+@persist [FemaleDeathSounds, MaleDeathSounds]:array FemaleModels:table
+interval(750)
+
+function number isPlayerMale(Player:entity)
+{
+    if(FemaleModels[Player:model(),number])
+    { return 0 } else { return 1 }    
+}
+
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:0:39121202") {selfDestruct()}
+    printColor(vec(0, 90, 255), "[Pain sounds]: ", vec(250, 250, 250), "You will now groan when hurt, and scream when killed!")
+    
+    #Calculate female models:
+    FemaleModels = table()
+    FemaleModels["models/player/mossman.mdl", number] = 1
+    FemaleModels["models/player/alyx.mdl", number] = 1
+    for(I=1, 4)
+    {
+        if(I != 4)
+        {
+            for(I2=1, 7)
+            {
+                FemaleModels["models/Humans/Group0" + I + "/Female_0" + I2 + ".mdl", number] = 1
+            }
+        } else {
+            for(I2=1, 7)
+            {
+                FemaleModels["models/Humans/Group03m/Female_0" + I2 + ".mdl", number] = 1
+            }
+        }
+    }
+    
+    #Store all male and female death sounds into tables
+    local DeathSounds = array()
+    DeathSounds:pushString("pain04")
+    DeathSounds:pushString("pain03")
+    DeathSounds:pushString("pain01")
+    DeathSounds:pushString("ow01")
+    DeathSounds:pushString("ow02")
+    DeathSounds:pushString("pain02")
+    DeathSounds:pushString("pain05")
+    DeathSounds:pushString("pain06")
+    DeathSounds:pushString("pain07")
+    DeathSounds:pushString("pain08")
+    DeathSounds:pushString("pain09")
+    DeathSounds:pushString("moan01")
+    for(I=1, 2)
+    {
+        foreach(K,V:string = DeathSounds)
+        {
+            if(I == 1)
+            {
+                MaleDeathSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemaleDeathSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+            
+        }
+    }
+}
+
+if(changed(owner():health()) & owner():health() != 100)
+{
+    if(isPlayerMale(owner()))
+    {
+        owner():soundPlay(1,0, MaleDeathSounds:string(round(random(MaleDeathSounds:count()))))
+    } else {
+        owner():soundPlay(1,0, FemaleDeathSounds:string(round(random(FemaleDeathSounds:count()))))
+    }
+    
+    if(!owner():isAlive())
+    {
+        soundVolume(1, 1)
+    } else {
+        soundVolume(1, 0.3)
+    }
+}

@@ -1,0 +1,46 @@
+# Description: Uses chat commands to check animation numbers of certain models
+
+@name Animation Checker
+@inputs 
+@outputs 
+@persist Model:string Anim Scale
+@trigger 
+
+if(first()){
+    Model = "models/Combine_dropship.mdl"
+    Anim = 1
+    Scale = 1
+    holoCreate(1)
+    holoModel(1,Model)
+    holoScale(1,vec(Scale,Scale,Scale))
+    holoEntity(1):animate(Anim,1)
+    holoPos(1,entity():pos()+vec(0,0,40))
+    holoParent(1,entity())
+    printColor(vec(255,0,255),"Commands:\n",vec(255,255,255),"/anim <number>\n/model <model string>\n/scale <number>")
+}
+
+interval(100)
+runOnChat(1)
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/anim"){
+        hideChat(1)
+        Anim = LS[2,string]:toNumber()
+        holoEntity(1):animate(Anim,1)
+        printColor(vec(0,0,255),"Animation: ",vec(255,255,255),""+Anim+"")
+    }
+    if(LS[1,string] == "/model"){
+        hideChat(1)
+        Model = LS[2,string]
+        holoModel(1,Model)
+        printColor(vec(0,0,255),"Model: ",vec(255,255,255),""+Model+"")
+    }
+    if(LS[1,string] == "/scale"){
+        hideChat(1)
+        Scale = LS[2,string]:toNumber()
+        holoScale(1,vec(Scale,Scale,Scale))
+        printColor(vec(0,0,255),"Scale: ",vec(255,255,255),""+Scale+"")
+    }
+}

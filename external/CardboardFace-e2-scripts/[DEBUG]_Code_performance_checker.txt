@@ -1,0 +1,62 @@
+@persist [OpTotal, ExecutionCounter, HowLongShouldTheE2ChipRunFor, TellMeMyScore]:number #Ignore this line, this sets permanent variables for the tester to work :)
+# ---------------------------- #
+# ADD YOUR CODE TO TRIAL HERE: #
+# ---------------------------- #
+@name
+@inputs
+@outputs
+@persist
+@trigger
+
+
+
+
+
+# ---------------------------- #
+#  DO NOT ADD CODE BELOW HERE  #
+# ---------------------------- #
+OpTotal += ops()
+ExecutionCounter++
+if(first()) {
+    # ---------------------------- #
+    #     CONFIG CHECKER HERE:     #
+    # ---------------------------- #
+    HowLongShouldTheE2ChipRunFor = 5 #Set in seconds, how long should the E2 chip be tested for?
+    TellMeMyScore = 1 #Set to 0 to disable the scoring/extra info system
+    
+    timer("stopdebugging", HowLongShouldTheE2ChipRunFor * 1000)
+} elseif(clk("stopdebugging")) {
+    local TagColor = vec(125, 70, 250)
+    local TextColor = vec(255, 255, 255)
+    local BadColor = vec(240, 60, 60)
+    local Tag = "[E2 performance]: "
+    
+    local ExecutionsPerSecondAvg = round(ExecutionCounter / HowLongShouldTheE2ChipRunFor, 3)
+    local AvgOpsPerExecution = round(OpTotal / ExecutionCounter, 3)
+    printColor(TagColor, Tag, TextColor, entity():getName() + " completed with " + OpTotal + " operations/OPs in " + ExecutionCounter + " executions")
+    
+    #Allow the creator to skip the scoring:
+    if (!TellMeMyScore) {
+        printColor(TagColor, Tag, TextColor, "It averaged " + ExecutionsPerSecondAvg + " executions per second and " + AvgOpsPerExecution + " OPs per execution")
+        selfDestruct()
+        exit()
+    }
+    
+    #Perform basic scoring checks:
+    local Rating = 2
+    if (ExecutionsPerSecondAvg > 3) {
+        Rating--
+        printColor(TagColor, Tag, BadColor, "Your E2 ran " + ExecutionsPerSecondAvg + " times per second (average). Are you sure that's necessary?")
+    
+    }
+    if (AvgOpsPerExecution > 50) {
+        Rating--
+        printColor(TagColor, Tag, BadColor, "Your E2 ran at " + AvgOpsPerExecution + " OPs per second (average) - this might be excessive for simple chips.")
+    }
+    
+    local ScoreColor = vec(0, 255, 0)
+    if (Rating == 0) { ScoreColor = BadColor }
+    printColor(TagColor, Tag, TextColor, "Your E2 scored ", ScoreColor, Rating + "/2", TextColor, " midichlorians. Don't take it personally, this isn't a great scoring system.")
+    
+    selfDestruct()
+}

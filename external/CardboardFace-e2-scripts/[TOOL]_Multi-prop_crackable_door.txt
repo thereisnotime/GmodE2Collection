@@ -1,0 +1,56 @@
+@name Multi-prop crackable door
+@inputs [FadeActive_1 FadeActive_2 FadeActive_3 FadeActive_4 FadeActive_5]:number
+@outputs [FadingDoor_1 FadingDoor_2 FadingDoor_3 FadingDoor_4 FadingDoor_5]:number
+@trigger FadeActive_1 FadeActive_2 FadeActive_3 FadeActive_4 FadeActive_5
+
+#Sets all doors to a passed state
+function void setAllDoors(Open:number) {
+    FadingDoor_1 = Open
+    FadingDoor_2 = Open
+    FadingDoor_3 = Open
+    FadingDoor_4 = Open
+    FadingDoor_5 = Open
+}
+
+
+#Checks if any of the doors are closed (and wired up), and then closes all doors
+if (clk("autoCloseDoors")) {
+    switch(1)
+    {
+        case FadeActive_1 == 0 && ->FadeActive_1,
+        case FadeActive_2 == 0 && ->FadeActive_2,
+        case FadeActive_3 == 0 && ->FadeActive_3,
+        case FadeActive_4 == 0 && ->FadeActive_4,
+        case FadeActive_5 == 0 && ->FadeActive_5,
+            break
+        default,
+            #No doors are closed, run the check again:
+            timer("autoCloseDoors", 1000)
+            exit()
+    }
+    
+    #A door has closed so close all doors:
+    setAllDoors(0)
+    exit()
+}
+
+
+
+
+switch(1)
+{
+    case FadeActive_1,
+    case FadeActive_2,
+    case FadeActive_3,
+    case FadeActive_4,
+    case FadeActive_5,
+        #A door is open, break the switch statement
+        break
+    default,
+        exit() #No doors open, exit the iteration
+}
+
+#A door is open, so open all doors
+setAllDoors(1)
+timer("autoCloseDoors", 1000) #Setup timer to auto-close doors when a door closes
+

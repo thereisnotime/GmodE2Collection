@@ -1,0 +1,230 @@
+# Description: Allows the user to utilize chat as a way of collecting votes from other players
+
+@name Voting
+@inputs 
+@outputs [Member, MemberVote1, MemberVote2]:array
+@persist VoteCount Count1 Count2 Start [Reason, Command1, Command2, Vote1, Vote2]:string Target:entity
+@trigger 
+        
+#          EDIT THESE:
+#+------------------------------+
+    Reason = "Sour or Regular Skittles?"
+    
+    Vote1 = "Sour"
+    Command1 = "/sour"
+    
+    Vote2 = "Regular"
+    Command2 = "/regular"
+#+------------------------------+
+
+if(first()){
+    Start = 0
+    VoteCount = 0
+    Count1 = 0
+    Count2 = 0
+    Member[1,entity] = noentity()
+    MemberVote1[1,entity] = noentity()
+    MemberVote2[1,entity] = noentity()
+    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"
+- Edit the voting in the E2 code
+- \"/start\" to start the vote
+- \"/stop\" to stop the vote
+- \"/say\" to restate the vote")
+printColor(vec(255,255,255),"- \"/totals\" to see the vote totals
+- \"/voters\" to see a list of voters")
+}
+
+interval(50)
+runOnChat(1)
+
+L = lastSpoke():lastSaid():lower():explode(" ")
+LO = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner())){
+    if(LO[1,string] == "/start"){
+        hideChat(1)
+        Start = 1
+        timer("say", 1500)
+    }
+    if(LO[1,string] == "/say"){
+        hideChat(1)
+        timer("say", 1500)
+    }
+}
+
+if(clk("say")){
+    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Reason+" | Type "+Command1+" to vote "+Vote1+" | Type "+Command2+" to vote "+Vote2+"")
+    concmd("say "+Reason+" | Type "+Command1+" to vote "+Vote1+" | Type "+Command2+" to vote "+Vote2+"")
+}
+
+if(Start == 1){
+    if(chatClk(lastSpoke())){
+        if(L[1,string] == Command1){
+            Target = lastSpoke()
+            if(Target:isPlayer()){
+                for(I = 1, Member:count()){
+                    if(Target == Member[I,entity]){
+                        for(J = 1, MemberVote2:count()){
+                            if(Target == MemberVote2[J,entity]){
+                                MemberVote2:remove(J)
+                                MemberVote1:pushEntity(Target)
+                                MemberCheck = 0
+                                Member2Check = 0
+                                Count1++
+                                Count2--
+                                printColor(vec(255,0,255),"[Vote] ",vec(0,255,0),""+Target:name()+" changed their vote to "+Vote1+"")
+                                printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Total Votes: ",vec(255,0,255),VoteCount)
+                                printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Vote1+" Count: ",vec(255,0,255),Count1)
+                                concmd("say "+Reason+" | "+Target:name()+" changed their vote to "+Vote1+" | "+Vote1+": "+Count1+" | "+Vote2+": "+Count2+" | Total: "+VoteCount+"")
+                                break
+                            }
+                            else{
+                                MemberCheck = 0
+                            }
+                            Member2Check = 1
+                        }
+                        if(Member2Check == 1){
+                            printColor(vec(255,0,255),"[Vote] ",vec(255,0,0),""+Target:name()+" has already voted for "+Vote1+"")
+                        }
+                        break
+                    }
+                    MemberCheck = 1
+                }
+                if(MemberCheck == 1){
+                    Member:pushEntity(Target)
+                    MemberVote1:pushEntity(Target)
+                    Count1++
+                    VoteCount++
+                    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Target:name()+" has voted: ",vec(255,0,255),Vote1)
+                    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Total Votes: ",vec(255,0,255),VoteCount)
+                    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Vote1+" Count: ",vec(255,0,255),Count1)
+                    concmd("say "+Reason+" | "+Target:name()+" voted "+Vote1+" | "+Vote1+": "+Count1+" | "+Vote2+": "+Count2+" | Total: "+VoteCount+"")
+                }
+            }
+        }
+        if(L[1,string] == Command2){
+            Target = lastSpoke()
+            if(Target:isPlayer()){
+                for(I = 1, Member:count()){
+                    if(Target == Member[I,entity]){
+                        for(J = 1, MemberVote1:count()){
+                            if(Target == MemberVote1[J,entity]){
+                                MemberVote1:remove(J)
+                                MemberVote2:pushEntity(Target)
+                                MemberCheck = 0
+                                Member1Check = 0
+                                Count2++
+                                Count1--
+                                printColor(vec(255,0,255),"[Vote] ",vec(0,255,0),""+Target:name()+" changed their vote to "+Vote2+"")
+                                printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Total Votes: ",vec(255,0,255),VoteCount)
+                                printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Vote2+" Count: ",vec(255,0,255),Count2)
+                                concmd("say "+Reason+" | "+Target:name()+" changed their vote to "+Vote2+" | "+Vote1+": "+Count1+" | "+Vote2+": "+Count2+" | Total: "+VoteCount+"")
+                                break
+                            }
+                            else{
+                                MemberCheck = 0
+                            }
+                            Member1Check = 1
+                        }
+                        if(Member1Check == 1){
+                            printColor(vec(255,0,255),"[Vote] ",vec(255,0,0),""+Target:name()+" has already voted for "+Vote2+"")
+                        }
+                        break
+                    }
+                    MemberCheck = 1
+                }
+                if(MemberCheck == 1){
+                    Member:pushEntity(Target)
+                    MemberVote2:pushEntity(Target)
+                    Count2++
+                    VoteCount++
+                    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Target:name()+" has voted: ",vec(255,0,255),Vote2)
+                    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Total Votes: ",vec(255,0,255),VoteCount)
+                    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Vote2+" Count: ",vec(255,0,255),Count2)
+                    concmd("say "+Reason+" | "+Target:name()+" voted "+Vote2+" | "+Vote1+": "+Count1+" | "+Vote2+": "+Count2+" | Total: "+VoteCount+"")
+                }
+            }
+        }
+    }
+}
+
+if(chatClk(owner())){
+    if(LO[1,string] == "/voters"){
+        hideChat(1)
+        timer("voters1",500)
+        #printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Voters:")
+        #timer("members",500)
+    }
+    if(LO[1,string] == "/vote1"){
+        hideChat(1)
+        timer("vote1",500)
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Voters For "+Vote1+":")
+    }
+    if(LO[1,string] == "/vote2"){
+        hideChat(1)
+        timer("vote2",500)
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Voters For "+Vote2+":")
+    }
+    if(LO[1,string] == "/totals"){
+        hideChat(1)
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Total Votes: ",vec(255,0,255),VoteCount)
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Vote1+" Count: ",vec(255,0,255),Count1)
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Vote2+" Count: ",vec(255,0,255),Count2)
+    }
+    if(LO[1,string] == "/stop"){
+        hideChat(1)
+        Start = 0
+        timer("stop", 1500)
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Stopped the vote")
+    }
+}
+
+if(clk("stop")){
+    if(Count1 > Count2){
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Reason+" | "+Vote1+" won with "+Count1+" / "+VoteCount+" votes")
+        concmd("say "+Reason+" | "+Vote1+" won with "+Count1+" / "+VoteCount+" votes")
+    }
+    elseif(Count1 < Count2){
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Reason+" | "+Vote2+" won with "+Count2+" / "+VoteCount+" votes")
+        concmd("say "+Reason+" | "+Vote2+" won with "+Count2+" / "+VoteCount+" votes")
+    }
+    else{
+        printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),""+Reason+" | it's a draw with both options having "+(VoteCount / 2)+" votes")
+        concmd("say "+Reason+" | it's a draw with both options having "+(VoteCount / 2)+" votes")
+    }
+}
+
+if(clk("members")){
+    for(I = 1,Member:count()){
+        printColor(vec(255,255,255),Member[I,entity]:name())
+    }
+}
+
+if(clk("voters1")){
+    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Voters For "+Vote1+":")
+    for(I = 1,MemberVote1:count()){
+        printColor(vec(255,255,255),MemberVote1[I,entity]:name())
+    }
+    timer("voters2", 500)
+}
+
+if(clk("voters2")){
+    printColor(vec(255,0,255),"[Vote] ",vec(255,255,255),"Voters For "+Vote2+":")
+    for(I = 1,MemberVote2:count()){
+        printColor(vec(255,255,255),MemberVote2[I,entity]:name())
+    }
+}
+
+if(clk("vote1")){
+    for(I = 1,MemberVote1:count()){
+        printColor(vec(255,255,255),MemberVote1[I,entity]:name())
+    }
+}
+
+if(clk("vote2")){
+    for(I = 1,MemberVote2:count()){
+        printColor(vec(255,255,255),MemberVote2[I,entity]:name())
+    }
+}
+
+entity():setName(""+Reason+"\n\n"+Vote1+": "+Count1+"\n"+Vote2+": "+Count2+"\nTotal: "+VoteCount+"")

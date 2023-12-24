@@ -1,0 +1,22 @@
+@persist Invisible:number
+
+if(first()) {
+    runOnChat(1)
+    Invisible = 0
+    print("Type .invis to toggle your invisibility cloak!")
+}
+
+if(chatClk(owner()) && lastSaid() == ".invis") {
+    hideChat(1)
+    Invisible = !Invisible
+    if(Invisible) {
+        owner():setMaterial("Models/effects/vol_light001")
+        print("You are invisible!")
+    } else {
+        owner():setMaterial("")
+        print("You are visible!")
+    }
+}
+
+# Created by Freddie
+

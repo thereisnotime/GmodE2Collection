@@ -1,0 +1,86 @@
+@name Music player
+@inputs MusicTypeConstantValue:number
+@model models/props/cs_office/radio.mdl
+@persist SongsToPlay:table [TrackIndex PlaySongsFor FadeOutDuration]:number
+@trigger MusicTypeConstantValue
+@autoupdate
+
+
+if (first() || dupefinished() || changed(MusicTypeConstantValue)) {
+    SongsToPlay:clear() # Remove previous songs
+
+    function void playSong(FilePath:string) {
+        soundStop(1, 1) #Stock radio changeover hiss
+        entity():soundPlay(0, 0, FilePath)
+        soundVolume(0, 0.7) # Music volume
+        timer("stopSong", PlaySongsFor * 1000)
+    }
+    
+    PlaySongsFor = 60 # How long to play each song for (seconds)
+    TrackIndex = 1 # Starting track index
+    FadeOutDuration = 3 # How long to fade out song for (seconds)
+    
+    
+    local RESTARAUNT = 1
+    local GUNSHOP = 2
+    local CLUB = 3
+    local BALLROOM = 4
+    local GAMINGHOUSE = 5
+    local FASTFOOD = 6
+    
+    if (MusicTypeConstantValue == RESTARAUNT) {
+        SongsToPlay:pushString("ambient/music/flamenco.wav")
+        SongsToPlay:pushString("ambient/guit1.wav")
+        SongsToPlay:pushString("ambient/opera.wav")
+        SongsToPlay:pushString("ambient/music/latin.wav")
+        
+    } elseif (MusicTypeConstantValue == GUNSHOP) {
+        SongsToPlay:pushString("ambient/music/country_rock_am_radio_loop.wav")
+        
+    } elseif (MusicTypeConstantValue == CLUB) {
+        SongsToPlay:pushString("music/hl1_song25_remix3.mp3")
+        SongsToPlay:pushString("music/hl2_song15.mp3")
+        SongsToPlay:pushString("music/hl2_song12_long.mp3")
+        SongsToPlay:pushString("music/vlvx_song25.mp3")
+        SongsToPlay:pushString("music/hl2_song4.mp3")
+        SongsToPlay:pushString("music/hl2_song20_submix0.mp3")
+        SongsToPlay:pushString("music/hl2_song15.mp3")
+        SongsToPlay:pushString("music/hl2_song14.mp3")
+        
+    } elseif (MusicTypeConstantValue == BALLROOM) {
+        SongsToPlay:pushString("ambient/music/piano1.wav")
+        SongsToPlay:pushString("ambient/music/piano2.wav")
+        
+    } elseif (MusicTypeConstantValue == GAMINGHOUSE) {
+        SongsToPlay:pushString("ambient/music/mirame_radio_thru_wall.wav")
+        
+    } elseif (MusicTypeConstantValue == FASTFOOD) {
+        SongsToPlay:pushString("ambient/music/cubanmusic1.wav")
+    
+    } else {
+        hint("To use this E2, you must wire a constant value with a valid music type ENUM!", 5)
+        exit()
+    }
+
+    # Play the first song (gives tables time to load)
+    timer("nextSong", 200)
+}
+
+
+if (clk("stopSong")) {
+    # Calculate next track index
+    if (TrackIndex == SongsToPlay:count()) {
+        TrackIndex = 1 #E2 isn't 0-indexed, table start is 1
+    } else {
+        TrackIndex++
+    }
+
+    # Fade current song out:
+    soundStop(0, FadeOutDuration)
+    entity():soundPlay(1, 0, "coast.radio_dead") #Play song changeover hiss
+    soundVolume(1, 0.9) # Hiss volume
+    timer("nextSong", FadeOutDuration * 1000)
+    
+} elseif (clk("nextSong")) {
+    playSong(SongsToPlay[TrackIndex, string])
+}

@@ -1,0 +1,39 @@
+@name Insane schitzophrenic sounds
+@persist CrazyKidnapperSFX:array [LastUse Cooldown]:number
+interval(200)
+
+if(first() | dupefinished())
+{
+    setName("Insane schitzophrenic sounds")
+    Cooldown = 3
+
+    #Store all male crazy sounds into table
+    for(I=1, 5)
+    {
+        if(I != 5)
+        {
+            CrazyKidnapperSFX:pushString("vo/ravenholm/madlaugh0" + I + ".wav")
+        }
+        CrazyKidnapperSFX:pushString("vo/npc/male01/moan0" + I + ".wav")
+    }
+    CrazyKidnapperSFX:pushString("vo/npc/male01/question06.wav") # "Sometimes, I dream about cheese"
+    CrazyKidnapperSFX:pushString("vo/npc/male01/question09.wav") # "oooh I could eat a horse, hooves and all"
+    CrazyKidnapperSFX:pushString("vo/npc/male01/question19.wav") # "I can't remember the last time I had a shower"
+    CrazyKidnapperSFX:pushString("vo/npc/male01/question22.wav") # "Doesn't anyone care what I think?"
+    CrazyKidnapperSFX:pushString("vo/npc/male01/question23.wav") # "I can't get this tune outa my head" *whistle*
+}
+
+#[if(clk("PlayMadSound"))
+{
+    owner():soundPlay(1,0, CrazyKidnapperSFX:string(round(random(CrazyKidnapperSFX:count()))))
+    timer("PlayMadSound", randint(30, 60))
+
+    soundVolume(1, 0.4)
+}]#
+
+if (owner():keyUse() && LastUse + Cooldown < curtime()) {
+    hint("Playing schitzophrenic sound", Cooldown)
+    owner():soundPlay(1,0, CrazyKidnapperSFX:string(round(random(CrazyKidnapperSFX:count()))))
+    soundVolume(1, 0.4)
+    LastUse = curtime()
+}

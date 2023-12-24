@@ -1,0 +1,109 @@
+@name Simple autoshop
+@inputs ConsoleScreen:wirelink LastMoneyPotAmount:number MoneyPotUpdated:number [Ranger1 Ranger2 Ranger3 Ranger4 Ranger5 Ranger6 Ranger7 Ranger8 Ranger9]:ranger
+@outputs [User1 User2 User3 User4 User5 User6 User7 User8 User9]:number
+@trigger MoneyPotUpdated # Trigger execution if ents change or money is added
+@persist Profit:number PriceUserTable:table
+@autoupdate
+
+
+if (first()) {
+    # SETTINGS:
+    Profit = 20 # How much to increase weapon prices
+    
+    function number drawItem(ItemEnt:entity, LineIndex:number, UserIndex:number) {
+        if(ItemEnt:isShipment()) {
+            local ItemPrice = (ItemEnt:shipmentIndividualCost()) * (1 + (Profit / 100))
+            ItemPrice = round(ItemPrice)
+            PriceUserTable[toString(ItemPrice), number] = UserIndex
+            
+            ConsoleScreen:writeString("$" + ItemPrice + ": " + ItemEnt:shipmentName(), 0,LineIndex,999,0)
+            LineIndex++
+            return LineIndex
+        }
+        return LineIndex
+    }
+    setName("Simple Auto-Shop
+    by CardboardFace    ")
+    timer("refreshShipments", 0) # Draw shipment display on next tick
+    exit()
+}
+
+
+# Reset users and play purchase successful SFX
+if (clk("switchOffUsers")) {
+    entity():soundPlay(0, 0, "Buttons.snd5")
+    User1 = 0
+    User2 = 0
+    User3 = 0
+    User4 = 0
+    User5 = 0
+    User6 = 0
+    User7 = 0
+    User8 = 0
+    User9 = 0
+    
+    exit()
+}
+
+
+# Check if the trigger was a ranger changing ent
+if (clk("refreshShipments")) {
+        ConsoleScreen:writeCell(2041,1) # Clear the console screen
+        
+        PriceUserTable:clear()
+        local LineIndex = 3
+        LineIndex = drawItem(Ranger1:entity(), LineIndex, 1)
+        LineIndex = drawItem(Ranger2:entity(), LineIndex, 2)
+        LineIndex = drawItem(Ranger3:entity(), LineIndex, 3)
+        LineIndex = drawItem(Ranger4:entity(), LineIndex, 4)
+        LineIndex = drawItem(Ranger5:entity(), LineIndex, 5)
+        LineIndex = drawItem(Ranger6:entity(), LineIndex, 6)
+        LineIndex = drawItem(Ranger7:entity(), LineIndex, 7)
+        LineIndex = drawItem(Ranger8:entity(), LineIndex, 8)
+        LineIndex = drawItem(Ranger9:entity(), LineIndex, 9)
+        
+        ConsoleScreen:writeString("       Simple auto-shop      ",0,0,999,400)
+        ConsoleScreen:writeString("Insert money to buy:",0,2,999,0)
+        ConsoleScreen:writeString("Simply drop the money in the  pot to buy items.",0,14,999,0)
+        ConsoleScreen:writeString("                              ",0,17,999,400)
+        
+        timer("refreshShipments", 5000) # How often the console screen refreshes shipments
+        exit() #Break the iteration if it was only needed for drawing the console screen
+}
+
+
+local UserIndex = PriceUserTable[toString(LastMoneyPotAmount), number]
+if (UserIndex > 0) {
+    switch(UserIndex) {
+        case 1,
+            User1 = 1
+            break
+        case 2,
+            User2 = 1
+            break
+        case 3,
+            User3 = 1
+            break
+        case 4,
+            User4 = 1
+            break
+        case 5,
+            User5 = 1
+            break
+        case 6,
+            User6 = 1
+            break
+        case 7,
+            User7 = 1
+            break
+        case 8,
+            User8 = 1
+            break
+        default,
+            User9 = 1
+    }
+    timer("switchOffUsers", 500)
+    
+} elseif (LastMoneyPotAmount != 0) {
+    entity():soundPlay(0, 0, "Buttons.snd8") #Play error sound effect when someone adds money that isn't enough to buy anything
+}

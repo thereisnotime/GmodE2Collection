@@ -1,0 +1,13 @@
+@name Trail E2
+
+owner():setTrails(10,4,40,"trails/tube",vec(255,255,255),255) 
+# Width, shrink behaviour, expire time
+
+#"trails/plasma"
+#"trails/tube"
+#"trails/electric"
+#"trails/smoke"
+#"trails/laser"
+#"trails/physbeam"
+#"trails/love"
+#"trails/lol"

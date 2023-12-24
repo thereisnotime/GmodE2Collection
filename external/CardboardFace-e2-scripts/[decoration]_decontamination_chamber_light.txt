@@ -1,0 +1,24 @@
+@name Decontamination chamber
+@inputs Button1
+@outputs LightRGB:vector
+@persist CanStartLight:number
+@trigger Button1
+
+if (first() || dupefinished()) {
+    LightRGB = vec(0,0,0)
+    CanStartLight = 1
+}
+
+if (Button1 && CanStartLight) {
+    LightRGB = vec(0,255,0)
+    entity():soundPlay(1, 0, "k_lab.teleport_active")
+    CanStartLight = 0
+    timer("reset", 2000)
+}
+
+
+if(clk("reset")) {
+    LightRGB = vec(0,0,0)
+    CanStartLight = 1
+    soundStop(1, 1)
+}

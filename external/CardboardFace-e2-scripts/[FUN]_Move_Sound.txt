@@ -1,0 +1,20 @@
+@name Move Sound
+@persist E:entity Speed
+
+if(first()){
+    E = owner()
+    E:soundPlay(0,0,"vo/npc/female01/pain06.wav")
+}
+interval(100)
+SSS = E:vel()
+Spd = sqrt(SSS:x()^2 + SSS:y()^2 + SSS:z()^2)
+if(Speed >= 0){
+    if((Spd-Speed)>0){
+        Speed += sqrt((Spd-Speed))
+    } elseif ((Spd-Speed)<0){
+        Speed -= sqrt(-(Spd-Speed))
+    }
+}
+if(Speed < 0){ Speed = 0}
+if(Speed > 250){ Speed = 250}
+soundPitch(0,Speed)

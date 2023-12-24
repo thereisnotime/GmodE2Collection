@@ -1,0 +1,61 @@
+@persist TagColor:vector TextColor:vector Tag:string
+@persist Sounds:array Target:entity
+interval(1000)
+#Made by Freddie
+
+if(first() | dupefinished())
+{
+    setName("Kill feed")
+    runOnChat(1)
+    Sounds[0, string] = "synth/12_5_pwm_1760.wav"
+    Sounds[1, string] = "synth/12_5_pwm_440.wav"
+    Sounds[2, string] = "synth/12_5_pwm_880.wav"
+    Sounds[3, string] = "synth/25_pwm_1760.wav"
+    Sounds[4, string] = "synth/25_pwm_440.wav"
+    Sounds[5, string] = "synth/25_pwm_880.wav"
+    Sounds[6, string] = "synth/75_pwm_1760.wav"
+    Sounds[7, string] = "synth/75_pwm_440.wav"
+    
+    TagColor = vec(255, 0, 0)
+    Tag = "[A]: "
+    TextColor = vec(255, 255, 255)
+    printColor(TagColor, "[Annoy]: ", TextColor, "Commands:")
+    printColor(TagColor, "[Annoy]: ", TextColor, ".annoy <playername> - really piss someone off!")
+    printColor(TagColor, "[Annoy]: ", TextColor, ".stopannoy - stops annoying the target!")
+    printColor(TagColor, "[Annoy]: ", TextColor, ".deletea - deletes the annoy E2")
+}
+
+if(chatClk(owner()))
+{
+    local LSParts = lastSaid():lower():explode(" ")
+    local PlayerToTrack = findPlayerByName(LSParts[2, string])
+    
+    if(lastSaid() == ".deletea")
+    {
+        hideChat(1)
+        printColor(TagColor, Tag, vec(255, 0, 0), "ESP stopped - deleting E2!")
+        selfDestruct()
+    } elseif(LSParts[1, string] == ".stopannoy") {
+        hideChat(1)
+        printColor(TagColor, Tag, TextColor, "Stopped annoying " + Target:name())
+        soundStop(0)
+        stopAllTimers()
+    } elseif(PlayerToTrack:isPlayer())
+    {
+        if(LSParts[1, string] == ".annoy")
+        {
+            hideChat(1)
+            Target = PlayerToTrack
+            printColor(TagColor, Tag, TextColor, "Started annoying " + Target:name())
+            timer("sound",100)
+        }
+    }
+    
+}
+
+if(clk("sound"))
+{
+    timer("sound",100)
+    Target:soundPlay(0,0,Sounds:string(randint(0,7)))
+    soundPitch(0,random(0,1000))
+}

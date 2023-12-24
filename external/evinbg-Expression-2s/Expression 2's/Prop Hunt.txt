@@ -1,0 +1,89 @@
+# Description: Allows user to become entities they look at, imitating the game Prop Hunt
+
+@name Prop Hunt
+@inputs 
+@outputs 
+@persist Prop:string Entity:entity Check Height AntiSpam Color:vector Alpha Material:string
+@trigger 
+
+if(first()){
+    printColor(vec(255,0,255),"[Prop Hunt] ",vec(255,255,255),"Commands:\n- Turn into a prop by looking at it and pressing \"T\"\n- Turn back to normal by pressing \"G\"")
+    
+    Prop = ""
+    Entity = noentity()
+    Check = 0
+    AntiSpam = 1
+    holoCreate(1)
+    holoScale(1,vec(0,0,0))
+    holoAlpha(1,0)
+    owner():setMaterial("")
+    owner():weapon():setAlpha(255)
+    owner():setColor(255,255,255,255)
+}
+
+interval(100)
+runOnChat(1)
+runOnLast(1)
+
+if(owner():keyPressed("t") & owner():aimEntity():isValid() & AntiSpam == 1){
+    Entity = owner():aimEntity()
+    Prop = owner():aimEntity():model()
+    Color = Entity:getColor()
+    Alpha = Entity:getAlpha()
+    Material = Entity:getMaterial()
+    Height = Entity:height()
+    Check = 1
+    holoModel(1,Prop)
+    holoMaterial(1,Material)
+    holoColor(1,Color)
+    holoAlpha(1,Alpha)
+    holoScale(1,vec(1,1,1))
+    owner():setMaterial("models/effects/vol_light001")
+    owner():setColor(0,0,0,0)
+    owner():weapon():setAlpha(0)
+    AntiSpam = 0
+    timer("spam",1000)
+    printColor(vec(255,0,255),"[Prop Hunt] ",vec(255,255,255),"Became: "+Entity:model()+"")
+}
+
+if(owner():keyPressed("g") & AntiSpam == 1){
+    holoScale(1,vec(0,0,0))
+    holoAlpha(1,0)
+    owner():setMaterial("")
+    owner():weapon():setAlpha(255)
+    Entity = noentity()
+    Check = 0
+    AntiSpam = 0
+    timer("spam",1000)
+    printColor(vec(255,0,255),"[Prop Hunt] ",vec(255,255,255),"Changed back to normal")
+}
+
+if(clk("spam")){
+    AntiSpam = 1
+}
+
+holoPos(1,owner():pos() + vec(0,0,Height / 2))
+holoParent(1,owner())
+holoAng(1,ang(0,owner():eyeAngles():yaw(),owner():eyeAngles():roll()))
+
+if(Check == 1){
+    owner():setMaterial("models/effects/vol_light001")
+    owner():setColor(0,0,0,0)
+    owner():weapon():setAlpha(0)
+    holoAlpha(1,255)
+    Check = 2
+}
+
+if(Check == 0){
+    owner():weapon():setAlpha(255)
+    owner():setMaterial("")
+    owner():setColor(255,255,255,255)
+    holoAlpha(1,0)
+    Check = 2
+}
+
+if(last()){
+    owner():setMaterial("")
+    owner():weapon():setAlpha(255)
+    owner():setColor(255,255,255,255)
+}

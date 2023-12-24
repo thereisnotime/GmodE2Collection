@@ -1,0 +1,347 @@
+@name RP sounds
+@persist FemaleModels:table
+@persist [FemalePainSounds, MalePainSounds]:array
+@persist [FemaleInjuredSounds, MaleInjuredSounds]:array
+@persist [FemaleMurderSounds, MaleMurderSounds]:array
+@persist [FemaleManDownSounds, MaleManDownSounds]:array
+@persist [MaleGreetingSounds, FemaleGreetingSounds, RudeMaleGreetingSounds, RudeFemaleGreetingSounds]:array
+@persist [MaleAngryJailedSounds, FemaleAngryJailedSounds]:array
+@persist TazerLaughSounds:array
+interval(750)
+
+function number isPlayerMale(Player:entity)
+{
+    if(FemaleModels[Player:model(),number])
+    { return 0 } else { return 1 }    
+}
+
+
+if(changed(owner():health()) & owner():health() != 100)
+{
+    if(isPlayerMale(owner()))
+    {
+        owner():soundPlay(1,0, MalePainSounds:string(randint(MalePainSounds:count())))
+    } else {
+        owner():soundPlay(1,0, FemalePainSounds:string(randint(FemalePainSounds:count())))
+    }
+}
+
+if(owner():isAlive())
+{
+    if(changed(owner():frags())) {
+        if(isPlayerMale(owner()))
+        {
+            owner():soundPlay(5,0, MaleMurderSounds:string(randint(MaleMurderSounds:count())))
+        } else {
+            owner():soundPlay(5,0, FemaleMurderSounds:string(randint(FemaleMurderSounds:count())))
+        }
+    }
+    
+    
+    if(owner():health() <= 30)
+    {
+        timer("InjuredSound", 10000)
+        if(clk("InjuredSound"))
+        {
+            if(isPlayerMale(owner()))
+            {
+                owner():soundPlay(4,0, MaleInjuredSounds:string(randint(MaleInjuredSounds:count())))
+            } else {
+                owner():soundPlay(4,0, FemaleInjuredSounds:string(randint(FemaleInjuredSounds:count())))
+            }
+        }
+    }
+    
+    
+    local OwnerWeapon = owner():weapon():type()
+    if(OwnerWeapon == "pocket")
+    {
+        if(changed(owner():keyUse()) & owner():keyUse())
+        {
+            function number playerisPD(Player:entity)
+            {
+                if(Player:isAuthorisedPersonnel() | Player:isMayorAssistant() | Player:isPoliceDeputy()) #Detect if a player is CP and had their weapons kidnapped
+                { return 1 }
+                
+                return 0
+            }
+    
+    
+            local AimingAt = owner():aimEntity()
+            local HoboTeam = 10
+            local ShouldPlaySound = 0
+            if(AimingAt:isPlayer())
+            {
+                if(owner():isSteamFriend(AimingAt))
+                {
+                    owner():soundPlay(3,0, "vo/npc/male01/vquestion04.wav") # "Sometimes I wonder how I ended up with you"
+                    
+                } elseif(AimingAt:team() == HoboTeam | ( !playerisPD(owner()) & playerisPD(AimingAt) )) {
+                    if(isPlayerMale(owner()))
+                    {
+                        owner():soundPlay(3,0, RudeMaleGreetingSounds:string(randint(RudeMaleGreetingSounds:count())))
+                    } else {
+                        owner():soundPlay(3,0, RudeFemaleGreetingSounds:string(randint(RudeFemaleGreetingSounds:count())))
+                    }
+                } else { ShouldPlaySound = 1 }
+            } else { ShouldPlaySound = 1 }
+            
+            if(ShouldPlaySound)
+            {
+                if(isPlayerMale(owner()))
+                {
+                    owner():soundPlay(3,0, MaleGreetingSounds:string(randint(MaleGreetingSounds:count())))
+                } else {
+                    owner():soundPlay(3,0, FemaleGreetingSounds:string(randint(FemaleGreetingSounds:count())))
+                }
+            }
+        }
+    } elseif(OwnerWeapon == "stungun" | OwnerWeapon == "arrest_batton") {
+        if(owner():aimEntity():type() == "prop_ragdoll" & changed(owner():aimEntity():type()))
+        {
+            owner():soundPlay(8,0, TazerLaughSounds:string(randint(TazerLaughSounds:count())))
+        }
+    } elseif (owner():isArrested()) {
+        if(changed(owner():keyUse()) & owner():keyUse())
+        {
+            if(isPlayerMale(owner()))
+            {
+                owner():soundPlay(2,0, MaleAngryJailedSounds:string(randint(MaleAngryJailedSounds:count())))
+            } else {
+                owner():soundPlay(2,0, FemaleAngryJailedSounds:string(randint(FemaleAngryJailedSounds:count())))
+            }
+        }
+        
+    }
+    
+    soundVolume(1, 0.3)
+} else {
+    soundVolume(1, 1)
+    stoptimer("InjuredSound")
+}
+
+
+if(clk("FindDeadFriends"))
+{
+    findInSphere(owner():pos(), 150)
+    findClipToClass("player")
+    NearbyPlayers = findToArray()
+    foreach(K,V:entity = NearbyPlayers)
+    {
+        if(!V:isAlive() & owner():isSteamFriend(V))
+        {
+            if(owner():isAlive())
+            {
+                if(isPlayerMale(owner()))
+                {
+                    owner():soundPlay(2,0, MaleManDownSounds:string(randint(MaleManDownSounds:count())))
+                } else {
+                    owner():soundPlay(2,0, FemaleManDownSounds:string(randint(FemaleManDownSounds:count())))
+                }
+            }
+        }
+    }
+    timer("FindDeadFriends", 2500)
+}
+
+
+
+
+
+
+#This is at the bottom to stop sounds playing on first execution
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884") {selfDestruct()}
+    setName("RP sounds
+    Price: Not for sale
+    
+    Written by Freddie")
+    printColor(vec(0, 90, 255), "[Pain sounds]: ", vec(250, 250, 250), "You will now groan while injured, yell when hurt, scream when killed, mock who you taze and cry when a friend dies by your side!\n\nYou can also hold 'interact' with the pocket tool equipped to greet other players! Your greeting will vary for different players you look at... Lastly, press 'interact' while jailed for some extra effects!")
+    
+    #Calculate female models:
+    FemaleModels = table()
+    FemaleModels["models/player/mossman.mdl", number] = 1
+    FemaleModels["models/player/alyx.mdl", number] = 1
+    for(I=1, 4)
+    {
+        if(I != 4)
+        {
+            for(I2=1, 7)
+            {
+                FemaleModels["models/Humans/Group0" + I + "/Female_0" + I2 + ".mdl", number] = 1
+            }
+        } else {
+            for(I2=1, 7)
+            {
+                FemaleModels["models/Humans/Group03m/Female_0" + I2 + ".mdl", number] = 1
+            }
+        }
+    }
+    
+    #Store all male and female pain sounds into tables
+    local PainSounds = array()
+    for(I=1, 9)
+    {
+        PainSounds:pushString("pain0" + I)
+    }
+    for(I=1, 2)
+    {
+        PainSounds:pushString("ow0" + I)
+        PainSounds:pushString("startle0" + I)
+        PainSounds:pushString("hitingut0" + I)
+    }
+    for(I=1, 2)
+    {
+        foreach(K,V:string = PainSounds)
+        {
+            if(I == 1)
+            {
+                MalePainSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemalePainSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+        }
+    }
+    
+    #Store all injured sounds into tables:
+    local InjuredSounds = array()
+    for(I=1, 5)
+    {
+        InjuredSounds:pushString("moan0" + I)
+    }
+    for(I=1, 2)
+    {
+        foreach(K,V:string = InjuredSounds)
+        {
+            if(I == 1)
+            {
+                MaleInjuredSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemaleInjuredSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+        }
+    }
+    
+    
+    #Store all murder sounds into tables:
+    local MurderSounds = array()
+    MurderSounds:pushString("gethellout")
+    MurderSounds:pushString("likethat")
+    MurderSounds:pushString("gotone01")
+    MurderSounds:pushString("gotone02")
+    for(I=1, 2)
+    {
+        foreach(K,V:string = MurderSounds)
+        {
+            if(I == 1)
+            {
+                MaleMurderSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemaleMurderSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+        }
+    }
+    
+    
+    #Store all male and female greeting sounds into arrays
+    local GreetingSounds = array()
+    for(I = 1, 2)
+    {
+        GreetingSounds:pushString("excuseme0" + I)
+        GreetingSounds:pushString("hi0" + I)
+        GreetingSounds:pushString("pardonme0" + I)
+    }
+    GreetingSounds:pushString("answer32") # makes you say "Right on"
+    for(I=1, 2)
+    {
+        foreach(K,V:string = GreetingSounds)
+        {
+            if(I == 1)
+            {
+                MaleGreetingSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemaleGreetingSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+            
+        }
+    }
+    
+    
+    #Store all male and female rude greeting sounds into arrays
+    local RudeGreetingSounds = array()
+    RudeGreetingSounds:pushString("answer39") # "That's enough out of you"
+    RudeGreetingSounds:pushString("answer17") # "I'm not even going to tell you to shut up"
+    RudeGreetingSounds:pushString("vquestion01") # "Stop looking at me like that"
+    RudeGreetingSounds:pushString("waitingsomebody") # *angry* "You waiting for somebody?"
+    for(I=1, 2)
+    {
+        foreach(K,V:string = RudeGreetingSounds)
+        {
+            if(I == 1)
+            {
+                RudeMaleGreetingSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                RudeFemaleGreetingSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+            
+        }
+    }
+    
+
+    #Tazer laughs:
+    for(I=1, 4)
+    {
+        TazerLaughSounds[I, string] = "vo/npc/barney/ba_laugh0" + I + ".wav"
+    }
+    
+    
+    #Angry jailed sounds:
+    local AngryJailedSounds = array()
+    AngryJailedSounds:pushString("question06") # I dream about cheese
+    AngryJailedSounds:pushString("question09") # I could eat a horse
+    AngryJailedSounds:pushString("question28") # God I'm hungry
+    AngryJailedSounds:pushString("question29") # When this is over, I'm gunna mate
+    AngryJailedSounds:pushString("question18") # I don't feel anything anymore
+    AngryJailedSounds:pushString("question19") # I can't remember the last time I had a shower
+    AngryJailedSounds:pushString("question20") # Someday this will all be a bad memory
+    AngryJailedSounds:pushString("question26") # This is bullshit
+    AngryJailedSounds:pushString("no02") # Noooooo
+    AngryJailedSounds:pushString("fantastic02") # Fantastic
+    for(I=1, 2)
+    {
+        foreach(K,V:string = AngryJailedSounds)
+        {
+            if(I == 1)
+            {
+                MaleAngryJailedSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemaleAngryJailedSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+            
+        }
+    }
+    
+    
+    #Friend death sounds:
+    local ManDownSounds = array()
+    ManDownSounds:pushString("no01")
+    ManDownSounds:pushString("no02")
+    for(I=1, 2)
+    {
+        foreach(K,V:string = ManDownSounds)
+        {
+            if(I == 1)
+            {
+                MaleManDownSounds[K, string] = "vo/npc/male01/" + V + ".wav"
+            } else {
+                FemaleManDownSounds[K, string] = "vo/npc/female01/" + V + ".wav"
+            }
+        }
+    }
+    for(I=1, 3)
+    {
+        FemaleManDownSounds[FemaleManDownSounds:count(), string] = "vo/npc/alyx/no0" + I + ".wav"
+    }
+    timer("FindDeadFriends", 3000)
+}

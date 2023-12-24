@@ -1,0 +1,76 @@
+@name Player information scanner
+@inputs RD:ranger Screen:wirelink Screen2:wirelink
+@outputs Play
+@persist Target:entity Weapons:array Play Allowed:table
+interval(1000)
+if (first()) {
+    Allowed["weapon_physcannon",number] = 1
+    Allowed["weapon_physgun",number]    = 1
+    Allowed["gmod_tool",number] = 1
+    Allowed["gmod_camera",number] = 1
+    Allowed["laserpointer",number] = 1
+    Allowed["remotecontroller",number] = 1
+    Allowed["weapon_fists",number] = 1
+    Allowed["keys",number] = 1
+    Allowed["pocket",number] = 1
+    Allowed["arrest_stick",number] = 1
+    Allowed["unarrest_stick",number] = 1
+    Allowed["stunstick",number] = 1
+}
+
+
+if (RD:hit() & clk()) {
+    if (RD:entity():type() == "player") {
+        
+        Target = RD:entity()
+        findIncludePlayerProps(Target)
+        findIncludeClass("weapon_*")
+        findExcludeClass("prop_physics")
+        findExcludeClass("player") 
+        findInSphere(Target:pos(),25)
+        if(Weapons:count() != findToArray():count())
+        {
+            Weapons = findToArray()
+            Name = Target:name()
+            Screen[2041] = 1
+            Screen2[2041] = 1
+            Screen:writeString("        Player scanner:       ",0,0,888,112)
+            Screen:writeString("Name: " + Name,0,2,888)
+            Screen:writeString("Job: " + Target:team():teamName(),0,3,888)
+            Screen:writeString("ID: " + Target:steamID(),0,4,888)
+            Screen:writeString("Model: " + Target:model(),0,5,888)
+            
+            
+            
+            Screen2:writeString("      Inventory scanner:      ",0,0,888,112)
+            Screen2:writeString("Inventory:",0,2,888)
+            for (X = 1,Weapons:count()) {
+                if (!Allowed[Weapons[X,entity]:type(),number]) {Play = 1, Color = 600} else {Color = 160}
+                Name = Weapons[X,entity]:type():sub(1,20)
+                if (X+3 < 17) {
+                    Screen2:writeString(Name,0,X + 2,Color)
+                    } else {
+                    Screen2:writeString(Name,0,X-14,Color)
+                }
+            }
+        }
+    }
+}elseif(RD:entity():type() != "player" )
+{
+    Screen[2041] = 1
+    Screen2[2041] = 1
+    Target = noentity()
+    Weapons = array()
+    Screen:writeString("        Player scanner:       ",0,0,888,112)
+    Screen2:writeString("      Inventory scanner:      ",0,0,888,112)
+}
+
+#Dupe Protection
+if(first() | dupefinished()){
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

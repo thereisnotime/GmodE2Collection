@@ -1,0 +1,26 @@
+function number isPlayerMale(Player:entity)
+{
+    FemaleModels = table()
+    FemaleModels["models/player/mossman.mdl", number] = 1
+    FemaleModels["models/player/alyx.mdl", number] = 1
+    for(I=1, 4)
+    {
+        if(I != 4)
+        {
+            for(I2=1, 7)
+            {
+                FemaleModels["models/Humans/Group0" + I + "/Female_0" + I2 + ".mdl", number] = 1
+            }
+        } else {
+            for(I2=1, 7)
+            {
+                FemaleModels["models/Humans/Group03m/Female_0" + I2 + ".mdl", number] = 1
+            }
+        }
+    }
+    
+    if(FemaleModels[Player:model(),number])
+    { return 0 } else { return 1 }    
+}
+
+print("Player is male: " + isPlayerMale(owner()))

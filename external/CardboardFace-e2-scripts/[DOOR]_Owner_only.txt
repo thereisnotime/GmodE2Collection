@@ -1,0 +1,7 @@
+@name Owner Only Door
+@outputs Fade
+
+interval(120)
+
+#distance2() is more efficient than distance()
+Fade = owner():weapon():type() == "keys" & entity():pos():distance2(owner():pos()) < 75 ^2

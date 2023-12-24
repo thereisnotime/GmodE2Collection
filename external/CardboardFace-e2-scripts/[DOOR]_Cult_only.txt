@@ -1,0 +1,17 @@
+@outputs Door:number
+@autoupdate
+
+interval(180)
+
+
+if (first() | dupefinished()) {
+    setName("Cult ONLY
+    Hold USE to open!
+    by CardboardFace")
+    findIncludeClass("player")
+}
+
+findInSphere(entity():pos(),35)
+local Target = find()
+
+Door = ((Target:team() == 5 | Target:team() == 6 | Target:owner()) & Target:isAlive() & Target:keyUse())

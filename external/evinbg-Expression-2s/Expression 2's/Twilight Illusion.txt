@@ -1,0 +1,73 @@
+# Description: Creates a cool illusion using holos
+
+@name Twilight Illusion
+@inputs 
+@outputs 
+@persist P Holos Speed Height CreateTime Scale
+@trigger 
+
+if(first()){
+    P = 1
+    Scale = 0.25
+    Holos = 50
+    Height = Holos * 7.5 * Scale
+    Speed = 200
+    CreateTime = 20
+    timer("create", 200)
+}
+
+interval(100)
+
+if(clk("create")){
+    holoCreate(P)
+    holoScale(P, vec(-P * Scale, -P * Scale, -P * Scale))
+    holoPos(P, entity():pos() + vec(0,0,Height))
+    holoParent(P, entity())
+    holoModel(P, "hq_sphere")
+    holoDisableShading(P, 1)
+    if(P % 2 == 0){
+        # Colors
+        holoColor(P, vec(255, 255, 255))
+        #holoColor(P, hsv2rgb(360 / Holos * P,1,1))
+        #holoColor(P, vec((P / Holos) * 255, (P / Holos) * 255, (P / Holos) * 255))
+        #holoColor(P, vec(255 - (P / Holos) * 255, 255 - (P / Holos) * 255, 255 - (P / Holos) * 255))
+    }
+    else{
+        # Colors
+        holoColor(P, vec(0,0,0))
+        #holoColor(P, hsv2rgb(360 / Holos * P,1,1))
+        #holoColor(P, vec((P / Holos) * 255, (P / Holos) * 255, (P / Holos) * 255))
+        #holoColor(P, vec(255 - (P / Holos) * 255, 255 - (P / Holos) * 255, 255 - (P / Holos) * 255))
+    }
+    P++
+    if(P <= Holos){
+        timer("create", CreateTime)
+    }
+    if(P > Holos){
+        print("Done")
+    }
+}
+
+if(clk()){
+    for(I = 1, Holos){
+        # Colors
+        #holoColor(I, hsv2rgb(360 / Holos * I,1,1))
+        #holoColor(I, hsv2rgb(curtime() * 360 / Holos * I,1,1))
+        #holoColor(I, hsv2rgb(curtime() * 30 + (I * (360 / Holos)) % 360,1,1))
+        
+        PosX = sin(curtime() * Speed + (I * 15)) * 15 * Scale
+        PosY = cos(curtime() * Speed + (I * 15)) * 15 * Scale
+        PosZ = Height + cos(curtime() * 0.75 * Speed + (I * 20)) * 7.5 * Scale
+        holoPos(I, entity():toWorld(vec(PosX, PosY, PosZ)))
+        
+        # Colors
+        if(I % 2 == 0){
+            #holoColor(I, hsv2rgb(curtime() * 360 / Holos * I,1,1))
+            #holoColor(I, hsv2rgb(curtime() * 30 + (I * (360 / Holos)) % 360,1,1))
+        }
+        else{
+            #holoColor(I, hsv2rgb(curtime() * 360 / Holos * I,1,1))
+            #holoColor(I, hsv2rgb(curtime() * 30 + (I * (360 / Holos)) % 360,1,1))
+        }
+    }
+}

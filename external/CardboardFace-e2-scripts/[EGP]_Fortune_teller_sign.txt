@@ -1,0 +1,59 @@
+@name Fortune teller sign
+@inputs EGP_UI:wirelink
+@persist Counter:number CountUp:number Blink:number
+
+interval(1000)
+if(first() | dupefinished())
+{
+    Counter = 110
+    HeightOffset = 400
+    EGP_UI:egpClear()
+    EGP_UI:egpText(1,"Get your future told",vec2(255, HeightOffset + 0))
+    EGP_UI:egpFont(1,"Coolvetica",29)
+    EGP_UI:egpColor(1,vec(Counter,0,204))
+    EGP_UI:egpAlign(1,1)
+    
+    EGP_UI:egpText(2,"NOW!",vec2(255, HeightOffset + 30))
+    EGP_UI:egpFont(2,"Coolvetica",29)
+    EGP_UI:egpColor(2,vec(255,30,30))
+    EGP_UI:egpAlign(2,1)
+    
+    EGP_UI:egpText(3,"Only      ",vec2(255, HeightOffset + 70))
+    EGP_UI:egpFont(3,"Coolvetica",29)
+    EGP_UI:egpColor(3,vec(210,210,210))
+    EGP_UI:egpAlign(3,1)
+    
+    EGP_UI:egpText(4,"         $5!",vec2(255, HeightOffset + 70))
+    EGP_UI:egpFont(4,"Coolvetica",29)
+    EGP_UI:egpColor(4,vec(80,210,80))
+    EGP_UI:egpAlign(4,1)
+    
+    EGP_UI:egpText(5,">>>>",vec2(255, HeightOffset + 100))
+    EGP_UI:egpFont(5,"Coolvetica",29)
+    EGP_UI:egpColor(5,vec(80,210,80))
+    EGP_UI:egpAlign(5,1)
+}
+
+Blink = !Blink
+
+if(Counter > 235)
+{
+    CountUp = 0
+} elseif (Counter < 115) {
+    CountUp = 1
+}
+
+if(CountUp)
+{
+    Counter += 10
+} else {
+    Counter -= 10
+}
+
+EGP_UI:egpColor(1,vec(Counter,0,204))
+
+if(Blink) {
+    EGP_UI:egpColor(5,vec(10,240,10))
+} else {
+    EGP_UI:egpColor(5,vec(80,100,80))
+}

@@ -1,0 +1,55 @@
+@name Gang wanted commands
+@persist TextColor:vector Tag:string
+@persist [WantedPlayers, WantedReasons]:array
+interval(500)
+
+if(first() | dupefinished())
+{
+    runOnChat(1)
+    Tag = "[Gang wanted]: "
+    TextColor = vec(230, 60, 60)
+    printColor(vec(0, 90, 255), Tag, vec(250, 250, 250), "Use this E2 to make someone wanted for your gang! If you aim at a wanted player you will be alerted. You can also hook this E2 up to a screen to display all wanted players!")
+    printColor(vec(0, 90, 255), Tag, vec(250, 250, 250), "Commands:")
+    printColor(vec(0, 90, 255), Tag, vec(250, 250, 250), "/gwanted <player> - makes the player wanted\n")
+}
+
+if(chatClk())
+{
+    local LSParts = lastSaid():explode(" ")
+    if(LSParts[1, string]:lower() == "/gwanted")
+    {
+        hideChat(1)
+        Target = findPlayerByName(LSParts[2, string])
+        Reason = lastSaid():sub(LSParts[1, string]:length() + 1 + LSParts[2, string]:length() + 2)
+        if(Target:isPlayer())
+        {
+            if(Target:steamID() != "STEAM_0:0:29948884" & Reason != "")
+            {
+                printColor(vec(0, 90, 255), Tag, TextColor, Target:name() + " is gang wanted for " + Reason)
+                WantedPlayers:pushEntity(Target)
+                WantedReasons:pushString(Reason)
+            } else {
+                printColor(vec(0, 90, 255), Tag, vec(250, 250, 250), "You must enter a valid reason to make someone wanted.")
+            }
+        } else {
+            printColor(vec(0, 90, 255), Tag, vec(250, 250, 250), "No player found.")
+        }
+    }
+}
+
+local AimingAt = owner():aimEntity()
+if(AimingAt:isPlayer())
+{
+    foreach(Index,Player:entity = WantedPlayers)
+    {
+        if(AimingAt == Player)
+        {
+            local WantedReason = WantedReasons[Index, string]
+            for(I=1, 5)
+            {
+                hint(AimingAt:name():upper() + " IS WANTED BY YOUR GANG FOR " + WantedReason:upper(), 1000)
+            }
+            break
+        }
+    }
+}

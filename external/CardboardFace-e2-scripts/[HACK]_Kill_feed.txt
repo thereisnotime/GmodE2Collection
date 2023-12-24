@@ -1,0 +1,93 @@
+@name Kill feed
+@persist TagColor:vector TextColor:vector Tag:string
+@persist [OldPlayerDeaths OldPlayerKills]:array PrintToChat:number
+interval(1500)
+#Made by Freddie
+
+if(first() | dupefinished())
+{
+    setName("Kill feed
+    Price: Free at bybservers.co.uk
+    
+    Written by Freddie")
+    TagColor = vec(205, 0, 0)
+    Tag = "[KF]: "
+    TextColor = vec(255, 100, 100)
+    printColor(TagColor, "[Kill feed]: ", TextColor, "Commands:")
+    printColor(TagColor, "[Kill feed]: ", TextColor, ".kfchat - toggle the killfeed being printed to the chatbox")
+    printColor(TagColor, "[Kill feed]: ", TextColor, ".deletekf - deletes the killfeed E2")
+    runOnChat(1)
+    PrintToChat = 1
+}
+
+if(chatClk(owner()))
+{
+    if(lastSaid() == ".deletekf")
+    {
+        hideChat(1)
+        printColor(TagColor, Tag, vec(255, 0, 0), "Kill feed stopped - deleting E2!")
+        selfDestruct()
+    } elseif (lastSaid() == ".kfchat") {
+        hideChat(1)
+        PrintToChat = !PrintToChat
+        printColor(TagColor, Tag, TextColor, "printing to chat toggled!")
+    }
+}
+
+if(changed(numPlayers()))
+{
+    OldPlayerDeaths = array()
+    OldPlayerKills = array()
+    Players = players()
+    for(I=1, Players:count())
+    {
+        local CurPlayer = Players[I,entity]
+        OldPlayerDeaths[I,number] = CurPlayer:deaths()
+        OldPlayerKills[I,number] = CurPlayer:frags()
+    }
+    
+} else {
+    foreach(K,CurPlayer:entity = players())
+    {
+        if (CurPlayer:frags() != OldPlayerKills[K, number])
+        {
+            Killer = CurPlayer
+            OldPlayerKills[K,number] = CurPlayer:frags()
+        }
+        
+        if (CurPlayer:deaths() != OldPlayerDeaths[K, number])
+        {
+            Victim = CurPlayer
+            OldPlayerDeaths[K,number] = CurPlayer:deaths()
+            
+            if(PrintToChat) {
+                if(Killer != Victim)
+                {
+                    if(!Killer:isPlayer()) { Killer = owner() }
+                    WeaponString = " [" + Killer:weapon():type() + "] "
+                    if(Victim:weapon():clip1() == -1)
+                    {
+                        printColor(TagColor, Tag, teamColor(Killer:team()), Killer:name(), vec(205, 0, 0), WeaponString, teamColor(Victim:team()), Victim:name(), vec(205, 0, 0), " (UNARMED)")
+                    } else {
+                        printColor(TagColor, Tag, teamColor(Killer:team()), Killer:name(), vec(205, 0, 0), WeaponString, teamColor(Victim:team()), Victim:name())
+                    }
+                } else {
+                    printColor(TagColor, Tag, teamColor(Victim:team()), Victim:name(), TextColor, " killed themself.")
+                }
+            } else {
+                if(Killer != Victim)
+                {
+                    WeaponString = " [" + Killer:weapon():type() + "] "
+                    if(Victim:weapon():clip1() == -1)
+                    {
+                        printColor(_HUD_PRINTCONSOLE, TagColor, Tag, teamColor(Killer:team()), Killer:name(), vec(205, 0, 0), WeaponString, teamColor(Victim:team()), Victim:name(), vec(205, 0, 0), " (UNARMED)")
+                    } else {
+                        printColor(_HUD_PRINTCONSOLE, TagColor, Tag, teamColor(Killer:team()), Killer:name(), vec(205, 0, 0), WeaponString, teamColor(Victim:team()), Victim:name())
+                    }
+                } else {
+                    printColor(_HUD_PRINTCONSOLE, TagColor, Tag, teamColor(Victim:team()), Victim:name(), TextColor, " killed themself.")
+                }
+            }
+        }
+    }
+}

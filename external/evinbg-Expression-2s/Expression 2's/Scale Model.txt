@@ -1,0 +1,104 @@
+# Description: Creates a scale model of the targeted player's props out of holos
+
+@name Scale Model
+@persist Props:array Target:entity P Create Scale CreateSpeed
+@persist [Models, Materials, Colors, Positions, Angles, Alphas]:array
+
+if(first()){
+    P = 0
+    Create = 0
+    Scale = 0.05
+    CreateSpeed = 50
+    Models = array()
+    Materials = array()
+    Colors = array()
+    Positions = array()
+    Angles = array()
+    Alphas = array()
+    printColor(vec(255,0,255),"[Scale] ",vec(255,255,255),"
+- /create <name> | Creates the props of the targeted player")
+}
+
+interval(100)
+runOnChat(1)
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner()) & LS[1,string] == "/create"){
+    hideChat(1)
+    if(Create == 1){
+        printColor(vec(255,0,255),"[Scale] ",vec(255,255,255),"The E2 needed to reset. Enter the command again.")
+        reset()
+    }
+    TargetTemp = findPlayerByName(LS[2,string])
+    if(TargetTemp:isPlayer()){
+        Create = 1
+        Target = TargetTemp
+        I = 0
+        P = 0
+        holoDeleteAll()
+        findClearWhitePlayerPropList()
+        findClearBlackPlayerPropList()
+        findIncludePlayerProps(Target)
+        findExcludeClass("player")
+        findInSphere(entity():pos(), 100000)
+        Props = findToArray()
+        timer("info", 50)
+        printColor(vec(255,0,255),"[Scale] ",vec(255,255,255),"Creating around "+Props:count()+" props from "+Target:name()+"")
+    }
+    else{
+        printColor(vec(255,0,255),"[Scale] ",vec(255,0,0),"Couldn't find a player named \""+LS[2,string]+"\"")
+    }
+}
+
+if(clk("info")){
+    for(Q = 1, Props:count()){
+        local Prop = Props[Q, entity]
+        Models:pushString(Prop:model())
+        Materials:pushString(Prop:getMaterial())
+        Colors:pushVector(Prop:getColor())
+        Positions:pushVector(Prop:pos())
+        Angles:pushAngle(Prop:angles())
+        Alphas:pushNumber(Prop:getAlpha())
+    }
+    printColor(vec(255,0,255),"[Scale] ",vec(0,255,0),"Retrieved prop information")
+    timer("create", 1000)
+}
+
+if(clk("create")){
+    P++
+    if(Props:count() < P){
+        timer("done", 100)
+    }
+    else{
+        local Prop = Props[P, entity]
+        if(Prop:isWeapon() == 0){
+            entity():setName("Creating "+Target:name()+"'s scale...\n("+(P)+" / "+Props:count()+")")
+            printColor(vec(255,0,255),"[Scale] ",vec(255,255,0),P)
+            holoCreate(P)
+            holoVisible(P, owner(),0)
+            holoVisible(P, players(),0)
+            holoPos(P, Props[1, entity]:toWorld(Props[1, entity]:toLocal(Positions[P, vector]) / (1 / Scale)))
+            holoModel(P, Models[P, string])
+            holoScale(P, vec(1) / (1 / Scale))
+            holoAng(P, Angles[P, angle])
+            holoMaterial(P, Materials[P, string])
+            holoColor(P, Colors[P, vector])
+            holoAlpha(P, 0)
+            holoParent(P, holoEntity(1))
+        }
+        timer("create", CreateSpeed)
+    }
+}
+
+if(clk("done")){
+    holoPos(1, entity():pos() + vec(0,0,50))
+    holoParent(1, entity())
+    for(D = 1, Props:count()){
+        holoVisible(D, owner(),1)
+        holoVisible(D, players(),1)
+        holoAlpha(D, Alphas[D, number])
+    }
+    entity():setName("Scale Model of "+Target:name()+"'s props")
+    printColor(vec(255,0,255),"[Scale] ",vec(0,255,0),"Done")
+}

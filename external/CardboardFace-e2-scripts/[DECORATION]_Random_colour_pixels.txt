@@ -1,0 +1,16 @@
+@name Random colour pixels
+@outputs [Pixel1 Pixel2 Pixel3 Pixel4]:vector
+interval(500)
+#[
+    Created by Freddie Chessell
+    If you use this with a custom pixel prop, the random colours can make a nice decoration!
+]#
+
+function vector generaterandomcolor(){
+    return hsl2rgb(randint(0, 255), 1, 0.5)
+}
+
+Pixel1 = generaterandomcolor()
+Pixel2 = generaterandomcolor()
+Pixel3 = generaterandomcolor()
+Pixel4 = generaterandomcolor()

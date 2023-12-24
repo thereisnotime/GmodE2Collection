@@ -1,0 +1,19 @@
+@name Get tool info
+@persist Tag:string TagColor:vector TextColor:vector SubTextColor:vector
+
+
+if(first()) {
+    Tag = "[Tool-Info]: "
+    TagColor = vec(0, 80, 160)
+    TextColor = vec(255,255,255)
+    SubTextColor = vec(180,180,255)
+    printColor(TagColor, Tag, TextColor, "Type '.tool' in chat to get info about what you're holding")
+}
+
+runOnChat(1)
+if(chatClk(owner()) && owner():lastSaid() == ".tool") {
+    hideChat(1)
+    printColor(TagColor, Tag, TextColor, "Current tool: ", SubTextColor, owner():tool())
+    printColor(TagColor, Tag, TextColor, "Current weapon: ", SubTextColor, owner():weapon():type())
+    printColor(TagColor, Tag, TextColor, "Weapon model: ", SubTextColor, owner():weapon():model())
+}

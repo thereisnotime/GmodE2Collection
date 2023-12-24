@@ -1,0 +1,66 @@
+@name Mugging command
+
+runOnChat(1)
+interval(50)
+LS = owner():lastSaid()
+
+if(first() | dupefinished())
+{
+    print("Commands:")
+    print(".mug to start a mugging, and use .mugstop to cancel!")
+}
+
+if(chatClk(owner()))
+{
+    if(LS==".mug")   
+    {
+        hideChat(1)
+        timer("mug",1000)    
+    }
+    if(LS==".mugstop")
+    {
+        hideChat(1)
+        stopAllTimers()    
+    }
+}
+if(clk("mug"))
+{
+    concmd("say This is a mugging! Drop $500 within 5 seconds or die, do anything else and I will kill you!")
+    timer("countdown5",1000)    
+}
+if(clk("countdown5"))
+{
+    concmd("say 5")   
+    timer("countdown4",1000) 
+}
+if(clk("countdown4"))
+{
+    concmd("say 4")   
+    timer("countdown3",1000) 
+}
+if(clk("countdown3"))
+{
+    concmd("say 3")   
+    timer("countdown2",1000) 
+}
+if(clk("countdown2"))
+{
+    concmd("say 2")   
+    timer("countdown1",1000) 
+}
+if(clk("countdown1"))
+{
+    concmd("say 1")   
+}
+
+#Dupe Protection
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884")
+    {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

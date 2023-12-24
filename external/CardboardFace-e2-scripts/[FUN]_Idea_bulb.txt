@@ -1,0 +1,40 @@
+@name Idea!
+@inputs 
+@outputs 
+@persist Vec:vector Gyro:angle Num1
+@trigger 
+@model models/MaxOfS2D/light_tubular.mdl 
+
+interval(50)
+runOnChat(1)
+
+# makes the chip fly stable above owner
+Eang=entity():angles()
+Epos=entity():pos()
+Gyro=-entity():angles()
+Vec=(owner():pos()-entity():pos())+vec(0,0,120)
+applyForce($Vec *5 +Vec)
+applyAngForce($Gyro *5 +Gyro)
+
+
+if(chatClk() & owner():lastSaid()==".idea") 
+{
+    hideChat(1)
+    soundPlay(1, 99, "garrysmod/save_load1.wav")
+    setColor(255, 255, 0)
+}
+
+if(first())
+{
+    print("Type .idea")
+}
+
+#Dupe Protection
+if(first() | dupefinished()){
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

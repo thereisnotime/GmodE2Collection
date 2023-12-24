@@ -1,0 +1,71 @@
+@name Shipment Display
+@inputs CS:wirelink [R1 R2 R3 R4 R5 R6]:entity
+@persist BoxColor1 BoxColor2 BoxColor3 BoxColor4 BoxColor5 BoxColor6
+
+if (first()) {
+    BoxColor1 = 0
+    BoxColor2 = 0
+    BoxColor3 = 0
+    BoxColor4 = 0
+    BoxColor5 = 0
+    BoxColor6 = 0
+    hint("Original Code By ByB@ | Nightmare",5000)
+    hint("Edited By Freddie",5000)
+    hint("DO NOT Sell This E2 Or Dupe It Belongs To Freddie",5000)
+}
+
+
+
+if(owner():name() != "CardboardFace"){selfDestruct()}
+
+
+timer("reset",2000)
+
+
+CS:writeString("      Shipment Dispenser      ",0,0,999,9,0)
+CS:writeString("    Press Buttons To Spawn    ",0,17,999,9,0)
+
+if(R1:isShipment()){
+    CS:writeString("Shipment 1:  " +R1:shipmentName() ,0,2,999,BoxColor1)
+} else {
+
+    CS:writeString("Shipment 1:                  ",0,2,999)
+}
+
+if(R2:isShipment()){
+    CS:writeString("Shipment 2:  " +R2:shipmentName() ,0,4,999,BoxColor2)
+} else {
+
+    CS:writeString("Shipment 2:                  ",0,4,999)
+}
+
+if(R3:isShipment()){
+    CS:writeString("Shipment 3:  " +R3:shipmentName() ,0,6,999,BoxColor3)
+} else {
+
+    CS:writeString("Shipment 3:                  ",0,6,999)
+}
+
+if(R4:isShipment()){
+    CS:writeString("Shipment 4:  " +R4:shipmentName() ,0,8,999,BoxColor4)
+} else {
+
+    CS:writeString("Shipment 4:                  ",0,8,999)
+}
+
+if(R5:isShipment()){
+    CS:writeString("Shipment 5:  " +R5:shipmentName() ,0,10,999,BoxColor5)
+} else {
+
+    CS:writeString("Shipment 5:                  ",0,10,999)
+}
+
+if(R6:isShipment()){
+    CS:writeString("Shipment 6:  " +R6:shipmentName() ,0,12,999,BoxColor6)
+} else {
+
+    CS:writeString("Shipment 6:                  ",0,12,999)
+}
+
+#Code edited by Freddie, removing credit for my code or Nightmares credit, or selling this e2 or selling the dupe without the permission of Freddie, is a banable offence of ByB.
+#Stealing the dupe will get your server dupes wiped.

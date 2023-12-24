@@ -1,0 +1,132 @@
+# Description: Auto wirelinks a wire camera controller to allow user to spectate players or move around freely
+
+@name Spectator
+@inputs 
+@persist I P Target:entity CamEnt:entity Cam:wirelink Free Spec Pos:vector Speed
+@outputs On
+@trigger 
+
+if(first()){
+    On = 0
+    Free = 0
+    Spec = 0
+    Target = entity()
+    Pos = Target:pos() + vec(0,0,Target:height() * 1.5)
+    Speed = 15
+    findIncludePlayerProps(owner())
+    findByClass("gmod_wire_cameracontroller")
+    findSortByDistance(entity():pos())
+    
+    printColor(vec(255,0,255),"[Spec] ",vec(255,255,255),"Commands:
+- /spec <name> | Spectate a certain person
+- /free | Allows you to move your camera around freely
+- Press P to toggle on and off")
+
+    if(find()){
+        CamEnt = findResult(1)
+        Cam = CamEnt:wirelink()
+        Cam["Position",vector] = Pos
+        printColor(vec(255,0,255),"[Spec] ",vec(0,255,0),"Camera controller found")
+    }
+    else{
+        timer("check",10000)
+        printColor(vec(255,0,255),"[Spec] ",vec(255,0,0),"Camera controller not found. Spawn a wire camera controller and it will auto link. Checking again in 10 seconds...")
+    }
+}
+
+interval(10)
+runOnChat(1)
+
+LS = owner():lastSaid():lower():explode(" ")
+
+P = owner():keyPressed("p")
+
+Cam["Activated",number] = On
+
+if(On == 1 & Spec == 1){
+    Pos = Target:pos() + vec(0,0,Target:height() * 1.5)
+    Cam["Position",vector] = Pos
+}
+
+if(On == 1 & Free == 1){
+    Cam["Position",vector] = Pos
+    if(owner():keyPressed("i") | owner():keyPressed("w")){
+        Pos = Pos + owner():eyeAngles():forward() * Speed
+    }
+    if(owner():keyPressed("k") | owner():keyPressed("s")){
+        Pos = Pos - owner():eyeAngles():forward() * Speed
+    }
+    if(owner():keyPressed("j") | owner():keyPressed("a")){
+        Pos = Pos - owner():eyeAngles():right() * Speed
+    }
+    if(owner():keyPressed("l") | owner():keyPressed("d")){
+        Pos = Pos + owner():eyeAngles():right() * Speed
+    }
+    if(owner():keyPressed("space")){
+        Pos = Pos + vec(0,0,5)
+    }
+    if(owner():keyPressed("lcontrol") | owner():keyPressed("rcontrol")){
+        Pos = Pos - vec(0,0,5)
+    }
+    if(owner():keyPressed("lshift") | owner():keyPressed("rshift")){
+        Speed = 30
+    }
+    else{
+        Speed = 10
+    }
+}
+
+if(clk("check")){
+    findIncludePlayerProps(owner())
+    findByClass("gmod_wire_cameracontroller")
+    findSortByDistance(entity():pos())
+    if(find()){
+        CamEnt = findResult(1)
+        Cam = CamEnt:wirelink()
+        printColor(vec(255,0,255),"[Spec] ",vec(0,255,0),"Camera controller found")
+    }
+    else{
+        timer("check",10000)
+        printColor(vec(255,0,255),"[Spec] ",vec(255,0,0),"Camera controller not found. Spawn a wire camera controller and it will auto link. Checking again in 10 seconds...")
+    }
+}
+
+if(changed(P) & P == 1){
+    I++
+}
+
+if(changed(I) & I == 1){
+    On = 1
+    printColor(vec(255,0,255),"[Spec] ",vec(0,255,0),"On")
+}
+
+if(changed(I) & I == 2){
+    On = 0
+    printColor(vec(255,0,255),"[Spec] ",vec(255,0,0),"Off")
+    I = 0
+}
+
+if(chatClk(owner()) & LS[1,string] == "/spec"){
+    hideChat(1)
+    TargetTemp = findPlayerByName(LS[2,string])
+    if(TargetTemp:isPlayer()){
+        Target = TargetTemp
+        On = 1
+        I = 1
+        Free = 0
+        Spec = 1
+        printColor(vec(255,0,255),"[Spec] ",vec(255,255,255),"Now spectating "+Target:name()+"")
+    }
+    else{
+        printColor(vec(255,0,255),"[Spec] ",vec(255,0,0),"Couldn't find a player named \""+LS[2,string]+"\"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/free"){
+    hideChat(1)
+    On = 1
+    I = 1
+    Spec = 0
+    Free = 1
+    printColor(vec(255,0,255),"[Spec] ",vec(255,255,255),"Free mode activated. You can use WASD or IJKL to move")
+}

@@ -1,0 +1,127 @@
+@name Clan screen
+@inputs Screen:wirelink
+@persist P:array BGcolor:number Z  Target:entity Description:array
+
+#This Expression 2 code was created by tgb156 (tom) and edited by Freddie!
+
+
+#Info
+runOnChat(1)
+Str = owner():lastSaid():explode(" ")
+
+
+
+#Background Color
+Screen:writeCell(2042,BGcolor)
+
+if(first() | dupefinished()) {
+    print("Commands:")
+    print(".add <name> <rank>")
+    print(".remove <name>")
+    print(".removeall")
+    print("Use .raid and .raidover to toggle raid sirens")
+    Screen:writeString("                               ",0,17,999,9)
+    BGcolor = 0
+    Screen:writeCell(2042,BGcolor)
+}
+
+
+#Header
+Screen:writeString("      BAM! Gang members:      ",0,0,999,9)
+Screen:writeString("Member:                  Rank:",0,1,999,9)
+Screen:writeString("                              ",0,17,999,9)
+
+#If owner talks
+if(chatClk(owner())) {
+#Adding A Player
+if (Str[1,string]==".add")
+{
+    TP = findPlayerByName(Str[2,string])
+    if(TP:isPlayer())
+        {
+            Description:pushString(Str:string(3))
+            Target = TP
+            P:pushEntity(TP)
+            printColor(vec(0,255,0),"Added "+TP:name()+" to clan screen!")
+        }
+        
+    }
+
+#Removing A Player
+   if(Str[1,string]==".remove")
+    {
+        TP = findPlayerByName(Str[2,string])
+        if(TP:isPlayer())
+        {
+            while(Z < 20)
+            {
+                if(TP == P[Z,entity])
+                {
+                    P:remove(Z)
+                    TempPlayer = findPlayerByName(Str:string(2))
+                    printColor(vec(255,0,0),"Removed "+TP:name()+" from the clan screen!")
+                }
+                Z++
+            }
+        }
+        Z = 0
+    }
+if(Str[1,string]==".removeall"){
+    P:clear()
+    printColor(vec(255,0,0),"Cleared everybody but you from the clan screen")
+}
+for (X = 1,P:count()) {
+        E2 = P[X,entity]
+        Screen:writeString(""+E2:name(),0,X+1,999)
+}
+}
+
+
+#Screen Refresh when play count changes
+if(changed(P:count())){
+    Screen[2041]=1
+    Screen:writeString("      BAM! Gang members:      ",0,0,999,9)
+    Screen:writeString("Member:                  Rank:",0,1,999,9)
+    Screen:writeString("                              ",0,17,999,9)
+    for(K=1,P:count()){
+    Screen:writeString(Description[K,string],25,K+1,999,0)
+    Screen:writeString(P[K,entity]:name(),0,K+1,999,0)
+}
+}
+
+
+#Raid Mode
+if(Str[1,string]==".raid") {
+    soundPlay(1,60,"/ambient/alarms/siren.wav")
+    BGcolor = 900
+    Screen[2042] = BGcolor
+}
+
+if(Str[1,string]==".raidover") {
+    BGcolor = 0
+    Screen[2042] = BGcolor
+    soundStop(1)
+}
+
+Max = round(players():count()/100*30)
+Current = P:count()
+Still = Max-Current
+
+Screen:writeString("Current Members: "+Current,0,14,999)
+Screen:writeString("Still Allowed: "+Still,0,15,999)
+Screen:writeString("Limit: "+Max+"",0,16,999)
+if(Still==0) {Screen:writeString("Maximum Members",7,17,800,1,1)}
+if(Still < 0) {Screen:writeString("  Over Limit!  ",7,17,800,1,1)}
+
+
+#Coded by Freddie
+#Dupe Protection
+if(first() | dupefinished()){
+if(owner():steamID() != "STEAM_0:0:29948884") {
+hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+concmd("say /advert -----I have stolen Freddie's e2!-----")
+concmd("gmod_cleanup")
+selfDestruct()
+selfDestructAll()
+}
+}

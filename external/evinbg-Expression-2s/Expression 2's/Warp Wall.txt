@@ -1,0 +1,203 @@
+# Description: Creates a door/wall with whitelist features that warps to open
+
+@name Warp Wall Scalable
+@inputs 
+@outputs 
+@persist Count Distance I MoveUp MoveSide MoveOtherSide CreateSpeed Done Height Width Check Scale
+@persist Props:table Offset:vector Tag:string Model:string
+@persist Member:array [TempMember, It]:entity
+@trigger
+
+if(first()){
+    Height = 8
+    Width = 4
+    Count = Height * Width
+    Scale = 1
+    CreateSpeed = 300
+    Distance = 60
+    Model = "models/hunter/plates/plate025x025.mdl"
+    
+    CreateTime = (CreateSpeed / 1000) * Count
+    Tag = "Warp Wall"
+    printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),"Commands:
+- /delete | Deletes the E2 spawned props and E2
+- /add <name> | Adds a player to the whitelist
+- /remove <name> | Removes a player from the whitelist
+- /addall | Adds all players to the whitelist")
+    printColor(vec(255,255,255),"- /removeall | Removes all players from the whitelist
+- /list | Prints names of whitelisted players")
+    printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),"Approximate Creation Time: "+CreateTime:toString()+"s")
+    
+    MoveUp = 0
+    MoveSide = 0
+    Done = 0
+    Check = 0
+    
+    I = 1
+    
+    Member[1,entity] = owner()
+    
+    timer("create", 200)
+}
+
+interval(100)
+runOnChat(1)
+
+if(clk("create")){
+    local E = propSpawn(Model, 1)
+    Offset = vec((-(E:aabbSize():x() - 0.8625) * Width / 2) + ((E:aabbSize():x() - 0.8625) / 2), 0, (E:aabbSize():y() - 0.8625) / 2)
+    local Position = entity():pos() + vec((E:aabbSize():x() - 0.8625) * MoveSide, 0, (E:aabbSize():y() - 0.8625) * MoveUp) + Offset
+    E:setPos(Position)
+    E:setAng(ang(0, 0, 90))
+    E:setMaterial("models/debug/debugwhite")
+    E:propShadow(0)
+    Scale = E:aabbSize():x() / 11.8625
+    
+    local Pos = E:pos() - entity():pos()
+    local Plate = E
+    local Angle = E:angles()
+    Props[I,table] = table(
+        "pos" = Pos,
+        "plate" = Plate,
+        "angle" = Angle
+        )
+    
+    MoveSide++
+    if(I % Width == 0){
+        MoveUp++
+        MoveSide = 0
+    }
+    I++
+    if(I <= Count){
+        timer("create", CreateSpeed)
+    }
+    if(I > Count){
+        timer("done", 200)
+        printColor(vec(255,0,255),"["+Tag+"] ",vec(0,255,0),"Done creating wall")
+    }
+}
+
+if(clk("done")){
+    foreach(J:number, Data:table = Props){
+        Data["pos",vector] = Data["plate",entity]:pos() - entity():pos()
+    }
+    Done = 1
+}
+
+findByClass("player")
+ClosestPlayer = findClosest(entity():pos())
+if(ClosestPlayer:pos():distance(entity():pos()) <= Distance * Scale){
+    for(K = 1, Member:count()){
+        if(ClosestPlayer == Member[K,entity]){
+            Check = 1
+        }
+    }
+}
+else{
+    Check = 0
+}
+
+if(Done == 1){
+    foreach(K:number, Data:table = Props){
+        
+        local LP = entity():toLocal(ClosestPlayer:attachmentPos("chest"))
+        #local LP = entity():toLocal(ClosestPlayer:pos())
+        local LLP = LP - Data["pos",vector]
+        local Dist = LP:distance(Data["pos",vector])
+        
+        if(Dist < Distance * (Data["plate",entity]:aabbSize():x() / 12) & Check == 1){
+            Data["plate",entity]:setPos(entity():toWorld(Data["pos",vector] - LLP:normalized() * (Distance * Scale * 1.3 - LLP:length())))
+            Data["plate",entity]:setColor(hsv2rgb(360 *(Dist / (Distance)),1,1))
+            Data["plate",entity]:setAng(entity():angles() + ang(0,0,90))
+            #Data["plate",entity]:setColor(vec((Dist / (Distance)) * 255, (Dist / (Distance)) * 255, (Dist / (Distance)) * 255))
+        }
+        else{
+            Data["plate",entity]:setPos(entity():toWorld(Data["pos",vector]))
+            Data["plate",entity]:setColor(vec(255,255,255))
+            Data["plate",entity]:setAng(entity():angles() + ang(0,0,90))
+        }  
+    }
+}
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner()) & LS[1,string] == "/add"){
+    hideChat(1)
+    TempMember = findPlayerByName(LS[2,string])
+    if(TempMember:isPlayer()){
+        for(I = 1,Member:count()){
+            if(TempMember == Member[I,entity]){
+                MemberCheck = 1
+                printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),""+TempMember:name()+" has already been added")
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            Member:pushEntity(TempMember)
+            printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),""+TempMember:name()+" was added")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"["+Tag+"] ",vec(255,0,0),"Can't find "+LS[2,string]+"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/remove"){
+    hideChat(1)
+    TempMember = findPlayerByName(LS[2,string])
+    if(TempMember:isPlayer()){
+        for(I = 1,Member:count()){
+            if(TempMember == Member[I,entity]){
+                Member:remove(I)
+                MemberCheck = 1
+                printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),""+TempMember:name()+" has been removed")
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            printColor(vec(255,0,255),"["+Tag+"] ",vec(255,0,0),""+TempMember:name()+" has already been removed or was never added")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"["+Tag+"] ",vec(255,0,0),"Can't find "+LS[2,string]+"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/addall"){
+    hideChat(1)
+    printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),"All players were added")
+    Member = players()
+}
+
+if(chatClk(owner()) & LS[1,string] == "/removeall"){
+    hideChat(1)
+    printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),"All players were removed")
+    Member:clear()
+}
+
+if(chatClk(owner()) & LS[1,string] == "/list"){
+    hideChat(1)
+    timer("list",500)
+    printColor(vec(255,0,255),"["+Tag+"] ",vec(255,255,255),"Added Players:")
+}
+
+if(clk("list")){
+    for(I = 1, Member:count()){
+        printColor(vec(255,255,255),Member[I,entity]:name())
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/delete"){
+    hideChat(1)
+    printColor(vec(255,0,255),"["+Tag+"] ",vec(255,0,0),"Deleting...")
+    propDeleteAll()
+    selfDestruct()
+}

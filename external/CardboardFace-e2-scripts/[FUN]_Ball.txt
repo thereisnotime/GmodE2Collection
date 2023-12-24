@@ -1,0 +1,26 @@
+@name Ball
+@persist  Pos:vector Player:entity Ent:entity
+@model models/props_phx/misc/soccerball.mdl
+interval(100)
+
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:1:53854692"){selfDestruct()}
+    Ent=entity()
+    setName("Football:
+    Press 'Attack1' to kick
+    Press 'interact' to kickup")
+}
+
+findInSphere(entity():pos(),100)
+findClipToClass("player")
+Player = findResult(1)
+
+if (Player:keyAttack1()){
+    Pos = Player:pos()+vec(0,0,60) - (-Player:eye()*150)
+    Ent:applyForce(((-Ent:pos()+Pos)*10-Ent:vel())*Ent:mass())
+} elseif (Player:keyUse()){
+    Pos = Ent:pos()+vec(0,0,25)
+    
+    Ent:applyForce(((-Ent:pos()+Pos)*7-Ent:vel())*Ent:mass()) 
+}

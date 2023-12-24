@@ -1,0 +1,27 @@
+#[
+    Used to check server OP limits
+    
+    To simply test how many OPs max are allowed, set min and max to the
+    same value.
+    
+    To test soft quota and hard quota, use different values.
+    
+    Soft quota:
+        E2 can exceed this quota temporarily, though will abort if
+        exceeded for too long
+    
+    Hard quota:
+        The soft quota limit
+    
+    Tick quota:
+        How many OPs the E2 can run per tick, maximum
+]#
+
+@name Stress-tester
+local DifficultyMin = 5
+local DifficultyMax = 5
+interval(1)
+
+for (I=1, randint(DifficultyMin, DifficultyMax)) {
+    findInSphere(entity():pos(), 10)
+}

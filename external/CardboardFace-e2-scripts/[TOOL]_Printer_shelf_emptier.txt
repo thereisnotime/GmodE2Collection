@@ -1,0 +1,49 @@
+@name Printer shelf emptier
+@inputs Button:number
+@outputs [UserFire, HydrolicLength, HydrolicConstant]:number
+@persist ReadyToFire:number
+
+#[
+    Steps to use:
+    Create a shelf prop for printers. Prop for this E2 is:
+    models/hunter/plates/plate05x5.mdl
+    
+    Next, add a small plate above this, at one end.
+    You can wire a hydrolic to move the plate from one end to the other.
+    Attach a user under the plate, and when the user flys over the bottom plate
+    it will empty all the printers sat on the plate!
+]#
+
+if(first() | dupefinished())
+{
+    setName("Printer shelf emptier
+    Price: $50,000
+    
+    Created by Freddie")
+    
+    HydrolicLength = 20
+    HydrolicConstant = 30
+    UserFire = 1
+    ReadyToFire = 1
+    
+    if(Button == 1)
+    {
+        printColor(vec(255, 0, 0), "Your button must be toggle!")
+    }
+}
+
+if(Button & ReadyToFire)
+{
+    HydrolicLength = 210
+    ReadyToFire = 0
+    
+} elseif (Button == 0) {
+    timer("RetractUser", 7000)
+    
+}
+
+if(clk("RetractUser"))
+{
+    HydrolicLength = 20
+    ReadyToFire = 1
+}

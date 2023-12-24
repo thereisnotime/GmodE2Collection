@@ -1,0 +1,452 @@
+# Description: A lightsaber modeled with holos and added functionality with chat commands and keys
+
+@name Lightsaber
+@persist Hilt Saber Color:vector RGB RGBColor:vector C Timer Colors:array Sound CloseProgress
+
+if(first()){
+    printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Commands:")
+    printColor(vec(255,255,255),"- Toggle on and off by pressing \"G\"\n- Toggle saber by pressing \"H\"")
+    printColor(vec(255,255,255),"- Type \"/color <color>\" to change the color of your lightsaber\n- Type \"/colors\" to see a list of the colors")
+    printColor(vec(255,255,255),"- Type \"/sound <on or off>\" to turn on and off the sounds\n- Type \"/play <theme, march, or duel>\" to play Star Wars music\n- Type \"/stopmusic\" to stop the music")
+    
+    Color = vec(0,255,0)
+    RGB = 0
+    Timer = 0
+    Sound = 1
+    Colors = array("Red", "Green", "Blue", "Yellow", "Pink", "Skyblue", "Orange", "Purple", "White", "Black", "RGB")
+    
+    # Holo that parents to hand, which everything else parents to
+    holoCreate(999)
+    holoModel(999,"")
+    holoPos(999,owner():attachmentPos("anim_attachment_RH"))
+    holoAng(999,owner():attachmentAng("anim_attachment_RH"))
+    holoParentAttachment(999,owner(),"anim_attachment_RH")
+    #holoPos(999,entity():pos()+vec(0,0,50))
+    #holoAng(999,entity():angles())
+    #holoParent(999,entity())
+    holoAlpha(999,0)
+    
+    # Hilt Model
+    holoCreate(101)
+    holoModel(101,"hq_cylinder")
+    holoPos(101,holoEntity(999):toWorld(vec(0,-1,0))) 
+    holoScale(101,vec(0.15,0.15,0.9))
+    holoColor(101,vec(160,160,160))
+    holoAng(101,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(101,holoEntity(999)) 
+    holoMaterial(101,"models/shiny")
+    
+    holoCreate(102)
+    holoModel(102,"hq_cylinder")
+    holoPos(102,holoEntity(999):toWorld(vec(0,-1,-5))) 
+    holoScale(102,vec(0.2,0.2,0.15))
+    holoColor(102,vec(25,25,25))
+    holoAng(102,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(102,holoEntity(999)) 
+    
+    holoCreate(103)
+    holoModel(103,"hq_cylinder")
+    holoPos(103,holoEntity(999):toWorld(vec(0,-1,5))) 
+    holoScale(103,vec(0.25,0.25,0.1))
+    holoColor(103,vec(25,25,25))
+    holoAng(103,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(103,holoEntity(999))
+    
+    holoCreate(104)
+    holoModel(104,"")
+    holoPos(104,holoEntity(999):toWorld(vec(0,-1,-2.25))) 
+    holoScale(104,vec(0.05,0.2,0.25))
+    holoColor(104,vec(25,25,25))
+    holoAng(104,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(104,holoEntity(999))
+    
+    holoCreate(105)
+    holoModel(105,"")
+    holoPos(105,holoEntity(999):toWorld(vec(0,-1,-2.25))) 
+    holoScale(105,vec(0.2,0.05,0.25))
+    holoColor(105,vec(25,25,25))
+    holoAng(105,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(105,holoEntity(999))
+    
+    holoCreate(106)
+    holoModel(106,"hq_cylinder")
+    holoPos(106,holoEntity(999):toWorld(vec(0,-1,4))) 
+    holoScale(106,vec(0.2,0.2,0.03))
+    holoColor(106,vec(25,25,25))
+    holoAng(106,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(106,holoEntity(999))
+    
+    holoCreate(107)
+    holoModel(107,"hq_cylinder")
+    holoPos(107,holoEntity(999):toWorld(vec(0,-1,3.5))) 
+    holoScale(107,vec(0.2,0.2,0.03))
+    holoColor(107,vec(25,25,25))
+    holoAng(107,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(107,holoEntity(999))
+    
+    holoCreate(108)
+    holoModel(108,"hq_cylinder")
+    holoPos(108,holoEntity(999):toWorld(vec(0,-1,3))) 
+    holoScale(108,vec(0.2,0.2,0.03))
+    holoColor(108,vec(25,25,25))
+    holoAng(108,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(108,holoEntity(999))
+    
+    holoCreate(109)
+    holoModel(109,"hq_cylinder")
+    holoPos(109,holoEntity(999):toWorld(vec(0,-1,6.9))) 
+    holoScale(109,vec(0.22,0.22,0.22))
+    holoColor(109,vec(25,25,25))
+    holoAng(109,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(109,holoEntity(999))
+    holoClipEnabled(109,1)
+    holoClip(109,vec(0,0,0),vec(0,-1,-1),0)
+    
+    # Saber Model
+    holoCreate(201)
+    holoModel(201,"hq_cylinder")
+    holoPos(201,holoEntity(999):toWorld(vec(0,-1,-20))) 
+    holoScale(201,vec(0.16,0.16,3.3))
+    holoColor(201,Color)
+    holoAng(201,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoAlpha(201,200)
+    holoParent(201,holoEntity(999)) 
+    holoDisableShading(201,1)
+    holoClipEnabled(201,1)
+    holoClip(201,vec(0,0,5),vec(0,0,1),holoEntity(101))
+    
+    holoCreate(202)
+    holoModel(202,"hq_cylinder")
+    holoPos(202,holoEntity(999):toWorld(vec(0,-1,-20))) 
+    holoScale(202,vec(0.19,0.19,3.3))
+    holoColor(202,Color)
+    holoMaterial(202,"models/alyx/emptool_glow")
+    holoAng(202,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(202,holoEntity(999))  
+    holoDisableShading(202,1)
+    holoClipEnabled(202,1)
+    holoClip(202,vec(0,0,5),vec(0,0,1),holoEntity(101))
+    
+    holoCreate(203)
+    holoModel(203,"hq_dome")
+    holoPos(203,holoEntity(999):toWorld(vec(0,-1,-0.25))) 
+    holoScale(203,vec(0.16,0.16,0.16))
+    holoColor(203,Color)
+    holoAng(203,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoAlpha(203,200)
+    holoParent(203,holoEntity(999)) 
+    holoDisableShading(203,1)
+    holoClipEnabled(203,1)
+    holoClip(203,vec(0,0,5),vec(0,0,1),holoEntity(101))
+    
+    holoCreate(204)
+    holoModel(204,"hq_dome")
+    holoPos(204,holoEntity(999):toWorld(vec(0,-1,-0.25))) 
+    holoScale(204,vec(0.19,0.19,0.19))
+    holoColor(204,Color)
+    holoMaterial(204,"models/alyx/emptool_glow")
+    holoAng(204,holoEntity(999):toWorld(ang(0,0,0))) 
+    holoParent(204,holoEntity(999))  
+    holoDisableShading(204,1)
+    holoClipEnabled(204,1)
+    holoClip(204,vec(0,0,5),vec(0,0,1),holoEntity(101))
+    
+    owner():weapon():setAlpha(255)
+    owner():weapon():setMaterial("")
+    entity():setMaterial("models/debug/debugwhite")
+}
+
+interval(100)
+runOnChat(1)
+runOnLast(1)
+
+L = owner():lastSaid():lower():explode(" ")
+
+G = owner():keyPressed("G")
+H = owner():keyPressed("H")
+
+if(changed(G) & G == 1){
+    Hilt++
+}
+
+if(changed(Hilt) & Hilt == 1){
+    printColor(vec(255,0,255),"[Lightsaber] ",vec(0,255,0),"On")
+}
+
+if(changed(Hilt) & Hilt == 2){
+    printColor(vec(255,0,255),"[Lightsaber] ",vec(255,0,0),"Off")
+    Hilt = 0
+    Timer = 0
+    streamStop(1)
+    streamStop(2)
+}
+
+if(changed(H) & H == 1 & Hilt == 1){
+    Saber++
+}
+
+if(changed(Saber) & Saber == 1 & Hilt == 1){
+    printColor(vec(255,0,255),"[Lightsaber] ",vec(0,255,0),"Ignited")
+    Timer = 1
+    timer("open",0)
+    if(Sound == 1){
+        timer("on",60000)
+        holoEntity(201):streamStart(1,"https://drive.google.com/uc?export=download&id=1dQ-VOypEc90Ho34EpNR881JlQIZEqhR_",0.75)
+    }
+}
+
+if(changed(Saber) & Saber == 2 & Hilt == 1){
+    printColor(vec(255,0,255),"[Lightsaber] ",vec(255,0,0),"Powered down")
+    Timer = 0
+    Saber = 0
+    timer("close",0)
+    if(Sound == 1){
+        streamStop(1)
+        holoEntity(201):streamStart(1,"https://drive.google.com/uc?export=download&id=1Zubfo7XexQ1BRg99N-0hnZQJvs2s4RVE",0.75)
+    }
+}
+
+if(Timer == 1 & Sound == 1 & clk("on")){
+    holoEntity(201):streamStart(1,"https://drive.google.com/uc?export=download&id=1txLgSn-HJSRzeHOqfke3D0jBcs5eBC3A",0.75)
+    timer("on",300000)
+}
+
+if(clk("open")){
+    CloseProgress += 5
+    if (CloseProgress >= 46){
+    }
+    else{
+        holoPos(201,holoEntity(999):toWorld(vec(0,-1,-20 + CloseProgress))) 
+        holoPos(202,holoEntity(999):toWorld(vec(0,-1,-20 + CloseProgress))) 
+        holoPos(203,holoEntity(999):toWorld(vec(0,-1,-0.25 + CloseProgress))) 
+        holoPos(204,holoEntity(999):toWorld(vec(0,-1,-0.25 + CloseProgress))) 
+        timer("open", 10)
+    }    
+}
+
+if(clk("close")){
+    CloseProgress -= 5
+    if (CloseProgress <= -4){
+    }
+    else{
+        holoPos(201,holoEntity(999):toWorld(vec(0,-1,-20 + CloseProgress))) 
+        holoPos(202,holoEntity(999):toWorld(vec(0,-1,-20 + CloseProgress))) 
+        holoPos(203,holoEntity(999):toWorld(vec(0,-1,-0.25 + CloseProgress))) 
+        holoPos(204,holoEntity(999):toWorld(vec(0,-1,-0.25 + CloseProgress))) 
+        timer("close", 10)
+    }    
+}
+
+if(Hilt == 1){
+    holoVisible(101,players(),1)
+    holoVisible(101,owner(),1)
+    holoVisible(102,players(),1)
+    holoVisible(102,owner(),1)
+    holoVisible(103,players(),1)
+    holoVisible(103,owner(),1)
+    holoVisible(104,players(),1)
+    holoVisible(104,owner(),1)
+    holoVisible(105,players(),1)
+    holoVisible(105,owner(),1)
+    holoVisible(106,players(),1)
+    holoVisible(106,owner(),1)
+    holoVisible(107,players(),1)
+    holoVisible(107,owner(),1)
+    holoVisible(108,players(),1)
+    holoVisible(108,owner(),1)
+    holoVisible(109,players(),1)
+    holoVisible(109,owner(),1)
+    holoVisible(201,players(),1)
+    holoVisible(201,owner(),1)
+    holoVisible(202,players(),1)
+    holoVisible(202,owner(),1)
+    holoVisible(203,players(),1)
+    holoVisible(203,owner(),1)
+    holoVisible(204,players(),1)
+    holoVisible(204,owner(),1)
+    owner():weapon():setAlpha(0)
+}
+
+if(Hilt == 0){
+    holoVisible(101,players(),0)
+    holoVisible(101,owner(),0)
+    holoVisible(102,players(),0)
+    holoVisible(102,owner(),0)
+    holoVisible(103,players(),0)
+    holoVisible(103,owner(),0)
+    holoVisible(104,players(),0)
+    holoVisible(104,owner(),0)
+    holoVisible(105,players(),0)
+    holoVisible(105,owner(),0)
+    holoVisible(106,players(),0)
+    holoVisible(106,owner(),0)
+    holoVisible(107,players(),0)
+    holoVisible(107,owner(),0)
+    holoVisible(108,players(),0)
+    holoVisible(108,owner(),0)
+    holoVisible(109,players(),0)
+    holoVisible(109,owner(),0)
+    holoVisible(201,players(),0)
+    holoVisible(201,owner(),0)
+    holoVisible(202,players(),0)
+    holoVisible(202,owner(),0)
+    holoVisible(203,players(),0)
+    holoVisible(203,owner(),0)
+    holoVisible(204,players(),0)
+    holoVisible(204,owner(),0)
+    owner():weapon():setAlpha(255)
+}
+
+holoColor(201,Color)
+holoColor(202,Color)
+holoColor(203,Color)
+holoColor(204,Color)
+entity():setColor(Color)
+
+RGBColor = hsv2rgb(vec(C*4,1,1))
+
+if(C == 720){
+    C = 0
+}
+
+if(RGB == 1){
+    Color = RGBColor
+    C++
+}
+
+if(chatClk(owner())){
+    if(L[1,string]=="/colors"){
+        hideChat(1)
+        timer("list",500)
+        printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Colors:")
+    }
+    
+    elseif(L[1,string] == "/color"){
+        RGB = 0
+        if(L[2,string] == "red"){
+            hideChat(1)
+            Color = vec(255,0,0)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Red")
+        }
+        elseif(L[2,string] == "green"){
+            hideChat(1)
+            Color = vec(0,255,0)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Green")
+        }
+        elseif(L[2,string] == "blue"){
+            hideChat(1)
+            Color = vec(0,0,255)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Blue")
+        }
+        elseif(L[2,string] == "yellow"){
+            hideChat(1)
+            Color = vec(255,255,0)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Yellow")
+        }
+        elseif(L[2,string] == "orange"){
+            hideChat(1)
+            Color = vec(255,155,0)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Orange")
+        }
+        elseif(L[2,string] == "pink"){
+            hideChat(1)
+            Color = vec(255,0,255)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Pink")
+        }
+        elseif(L[2,string] == "purple"){
+            hideChat(1)
+            Color = vec(155,0,255)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Purple")
+        }
+        elseif(L[2,string] == "skyblue"){
+            hideChat(1)
+            Color = vec(0,255,255)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Sky Blue")
+        }
+        elseif(L[2,string] == "white"){
+            hideChat(1)
+            Color = vec(255,255,255)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"White")
+        }
+        elseif(L[2,string] == "black"){
+            hideChat(1)
+            Color = vec(0,0,0)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Black")
+        }
+        elseif(L[2,string] == "rgb"){
+            hideChat(1)
+            RGB = 1
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",vec(255,0,0),"R",vec(0,255,0),"G",vec(0,0,255),"B")
+        }
+        else{
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color not found. Type \"/colors\" to see a list of the colors")
+        }
+    }
+    
+    elseif(L[1,string] == "/custom"){
+        hideChat(1)
+        RGB = 0
+        R = L[2,string]:toNumber()
+        G = L[3,string]:toNumber()
+        B = L[4,string]:toNumber()
+        Color = vec(R,G,B)
+        printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Color: ",Color,"Custom")
+    }
+    
+    elseif(L[1,string] == "/sound"){
+        hideChat(1)
+        if(L[2,string] == "on"){
+            Sound = 1
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Sound: ",vec(0,255,0),"On")
+        }
+        elseif(L[2,string] == "off"){
+            Sound = 0
+            streamStop(1)
+            streamStop(2)
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Sound: ",vec(255,0,0),"Off")
+        }
+        else {
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Type \"/sound off\" or \"/sound on\"")
+        }
+    }
+    
+    elseif(L[1,string] == "/play"){
+        hideChat(1)
+        if(Sound == 1){
+            if(L[2,string] == "theme"){
+                holoEntity(202):streamStart(2,"https://drive.google.com/uc?export=download&id=13aaMBuAsT9b2CgSkhpiZnCWSC0HsZUCu",0.75)
+                printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Playing: Main Theme")
+            }
+            elseif(L[2,string] == "march"){
+                holoEntity(202):streamStart(2,"https://drive.google.com/uc?export=download&id=1NKjeEKbQhPlAhe4qPrkZZi-SDeOJAwhA",0.75)
+                printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Playing: Imperial March")
+            }
+            elseif(L[2,string] == "duel"){
+                holoEntity(202):streamStart(2,"https://drive.google.com/uc?export=download&id=1OwJWaaBa8EYrDJ3TMMWwKI20JbDPxLag",0.75)
+                printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Playing: Duel of the Fates")
+            }
+            else{
+                printColor(vec(255,0,255),"[Lightsaber] ",vec(255,255,255),"Song not found. After /play, type either theme, march, or duel")
+            }
+        }
+        else{
+            printColor(vec(255,0,255),"[Lightsaber] ",vec(255,0,0),"Sound isn't on")
+        }
+    }
+    
+    elseif(L[1,string] == "/stopmusic"){
+        hideChat(1)
+        streamStop(2)
+        printColor(vec(255,0,255),"[Lightsaber] ",vec(255,0,0),"Music stopped")
+    }
+}
+
+if(clk("list")){
+    for(I = 1, Colors:count()){
+        printColor(vec(255,255,255),Colors[I,string])
+    }
+}
+
+if(last()){
+    owner():weapon():setAlpha(255)
+}

@@ -1,0 +1,207 @@
+# Description: Creates holograms that spawn where the user is aiming at when pressing 'E', essentially allowing them to draw
+
+@name Grafiti
+@inputs 
+@outputs 
+@persist On A C I Scale Random RGB Color:vector Colors:array Limit
+@trigger 
+
+if(first()){
+    printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Commands:\n/turn <on, off>\n/color <color>\n/clean\n/scale <number>\n/colors\n/amount")
+    On = 1
+    Color = vec(255,255,255)
+    A = 1
+    Scale = 1
+    Random = 0
+    RGB = 0
+    Limit = 0
+    Colors = array("Red", "Green", "Blue", "Yellow", "Pink", "Skyblue", "Orange", "Purple", "White", "Black", "Random", "RGB")
+    holoCreate(1)
+    holoScale(1,vec(Scale,Scale,0.05))
+    holoMaterial(1,"models/wireframe")
+    holoDisableShading(1,1)
+}
+
+interval(100)
+runOnChat(1)
+
+holoVisible(1,players(),On)
+holoVisible(1,owner(),On)
+holoPos(1,owner():aimPos())
+holoColor(1,Color)
+holoAng(1,owner():aimNormal():toAngle() + ang(90,0,0))
+
+L = owner():lastSaid():lower():explode(" ")
+
+if(On == 1){
+    if(owner():keyPressed("e")){
+        timer("draw",75)
+        if(clk("draw")){
+            A++
+            holoCreate(A)
+            holoPos(A,owner():aimPos())
+            holoColor(A,Color)
+            holoParent(A,owner():aimEntity())
+            holoDisableShading(A,1)
+            holoScale(A,vec(Scale,Scale,0.05))
+            holoAng(A,(owner():aimNormal():toAngle() + ang(90,0,0)))
+        }
+    }
+}
+
+if(A >= holoMaxAmount() & Limit == 0){
+    printColor(vec(255,0,255),"[Grafiti] ",vec(255,0,0),"Holo limit reached!")
+    Limit = 1
+}
+
+if(A < holoMaxAmount() & Limit == 1){
+    Limit = 0
+}
+
+if(chatClk(owner())){
+    if(L[1,string] == "/color"){
+        Random = 0
+        RGB = 0
+        if(L[2,string] == "red"){
+            hideChat(1)
+            Color = vec(255,0,0)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Red")
+        }
+        elseif(L[2,string] == "green"){
+            hideChat(1)
+            Color = vec(0,255,0)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Green")
+        }
+        elseif(L[2,string] == "blue"){
+            hideChat(1)
+            Color = vec(0,0,255)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Blue")
+        }
+        elseif(L[2,string] == "yellow"){
+            hideChat(1)
+            Color = vec(255,255,0)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Yellow")
+        }
+        elseif(L[2,string] == "orange"){
+            hideChat(1)
+            Color = vec(255,155,0)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Orange")
+        }
+        elseif(L[2,string] == "pink"){
+            hideChat(1)
+            Color = vec(255,0,255)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Pink")
+        }
+        elseif(L[2,string] == "purple"){
+            hideChat(1)
+            Color = vec(155,0,255)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Purple")
+        }
+        elseif(L[2,string] == "skyblue"){
+            hideChat(1)
+            Color = vec(0,255,255)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Sky Blue")
+        }
+        elseif(L[2,string] == "white"){
+            hideChat(1)
+            Color = vec(255,255,255)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"White")
+        }
+        elseif(L[2,string] == "black"){
+            hideChat(1)
+            Color = vec(0,0,0)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Black")
+        }
+        elseif(L[2,string] == "random"){
+            hideChat(1)
+            Random = 1
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",vec(random(255),random(255),random(255)),"Random")
+        }
+        elseif(L[2,string] == "rgb"){
+            hideChat(1)
+            RGB = 1
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",vec(255,0,0),"R",vec(0,255,0),"G",vec(0,0,255),"B")
+        }
+        else{
+            hideChat(1)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,0,0),"Color not found. Type \"/colors\" to see a list of the colors")
+        }
+    }
+}
+
+if(Random == 1){
+    Color = vec(random(255),random(255),random(255))
+}
+
+RGBColor = hsv2rgb(vec(C*4,1,1))
+
+if(C == 720){
+    C = 0
+}
+
+if(RGB == 1){
+    Color = RGBColor
+    C++
+}
+
+if(chatClk(owner())){
+    if(L[1,string] == "/turn"){
+        if(L[2,string] == "on"){
+            hideChat(1)
+            On = 1
+            holoVisible(1,players(),1)
+            holoVisible(1,owner(),1)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(0,255,0),"On")
+        }
+        if(L[2,string] == "off"){
+            hideChat(1)
+            On = 0
+            holoVisible(1,players(),0)
+            holoVisible(1,owner(),0)
+            printColor(vec(255,0,255),"[Grafiti] ",vec(255,0,0),"Off")
+        }
+    }
+    if(L[1,string] == "/clean"){
+        hideChat(1)
+        holoDeleteAll()
+        timer("create",50)
+        printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Cleaned")
+    }
+    if(L[1,string] == "/scale"){
+        hideChat(1)
+        Scale = L[2,string]:toNumber()
+        holoScale(1,vec(Scale,Scale,0.05))
+        printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Scale: ",Color,""+Scale+"")
+    }
+    if(L[1,string] == "/amount"){
+        hideChat(1)
+        printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),""+holoAmount()+" / "+holoMaxAmount()+"")
+    }
+    if(L[1,string] == "/custom"){
+        hideChat(1)
+        R = L[2,string]:toNumber()
+        G = L[3,string]:toNumber()
+        B = L[4,string]:toNumber()
+        Color = vec(R,G,B)
+        printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Color: ",Color,"Custom")
+    }
+    if(L[1,string] == "/colors"){
+        hideChat(1)
+        timer("list",500)
+        printColor(vec(255,0,255),"[Grafiti] ",vec(255,255,255),"Colors:")
+    }
+}
+
+if(clk("create")){
+    holoCreate(1)
+    holoScale(1,vec(Scale,Scale,0.05))
+    holoMaterial(1,"models/wireframe")
+    holoDisableShading(1,1)
+    A = 1
+}
+
+if(clk("list")){
+    for(I=1, Colors:count()){
+        printColor(vec(255,255,255),Colors[I,string])
+    }
+}

@@ -1,0 +1,38 @@
+@name Server information
+@inputs Screen:wirelink Screen2:wirelink
+@persist [PlayerCount, MaxPlayers]:number MapName:string
+interval(10000) #Only re-check the player count every 10 seconds
+
+if (first() | dupefinished()) {
+    Screen[2041] = 1
+    Screen2[2041] = 1
+    
+    #These won't ever change, so don't fetch them every execution:
+    MaxPlayers = maxPlayers()
+    MapName = map()
+}
+
+if(PlayerCount != players():count())
+{
+    PlayerCount = players():count()
+    local EntitiesOnServer = findInSphere(entity():pos(), 5000)
+    findExcludeClass("player") #Don't include players in the entity count
+    
+    local SuperAdminCount = playersSuperAdmins():count()
+    local AdminCount = playersAdmins():count() - SuperAdminCount
+    
+    Screen:writeString("      Server information:     ",0,0,888,112)
+    Screen:writeString("Map name: " + MapName,0,2,888)
+    Screen:writeString("Players: " + "(" + PlayerCount + "/" + MaxPlayers + ")    ",0,3,888)
+    Screen:writeString("Admins: " + AdminCount + "    ",0,4,888)
+    Screen:writeString("Super-admins: " + SuperAdminCount + "    ",0,5,888)
+    Screen:writeString("Entities: " + EntitiesOnServer + "    ",0,6,888)
+    
+    Screen2:writeString("           Players:           ",0,0,888,112)
+    local PlayerList = ""
+    foreach(ArrayIndex, Player:entity = players()) {
+        PlayerList += Player:name() + ", "
+    }
+    PlayerList = PlayerList:sub(0, PlayerList:length() - 2) #Remove last comma and space in string
+    Screen2:writeString(PlayerList,0,2,888)
+}

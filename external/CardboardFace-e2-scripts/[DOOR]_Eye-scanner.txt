@@ -1,0 +1,120 @@
+@inputs ButtonProp:entity Button:number
+@outputs Door:number
+@persist Allow:array [Pos TagColor TextColor]:vector Tag:string Distance:number
+@trigger Button
+@autoupdate
+
+if(first() | dupefinished()) {
+    setName("EyeScanner - hold USE to open
+    Written by CardboardFace")
+    runOnChat(1)
+    
+    Tag = "[EYE-SCANNER]: "
+    TagColor = vec(240, 110, 110)
+    TextColor = vec(255,255,255)
+    Distance = 200
+    Allow:pushEntity(owner()) #Add owner to the door
+    Pos = round(entity():pos())
+
+    printColor(TagColor, Tag, TextColor, "Commands: .add .rem .removeall .list")
+    printColor(TagColor, Tag, TextColor, "You can also use \".add\" while looking at a player to add them")
+    
+    
+    function addplayer(Target:entity)
+    {
+        for(I=1,Allow:count())
+        {
+            if(Target == Allow[I,entity])
+            {
+                Already = 1
+                printColor(TagColor, Tag, TextColor, Target:name() + " is already added!")
+                break
+            }
+        }
+        if(Already == 0)
+        {
+            Allow:pushEntity(Target)
+            printColor(TagColor, Tag, TextColor, "Added " + Target:name() + " to allow list")
+        }
+    }
+}
+
+if(chatClk(owner())) {
+    LS = owner():lastSaid():explode(" ")
+    if(LS[1,string] == ".add") {
+        hideChat(1)
+        Already = 0
+        TargetPlayer = findPlayerByName(LS[2,string])
+        
+        if(ops() < 80)
+        {
+            if(TargetPlayer:isPlayer() & owner():lastSaid() != ".add")
+            {
+                addplayer(TargetPlayer)
+
+            } elseif(owner():aimEntity():isPlayer()) {
+                addplayer(owner():aimEntity())
+
+            } else {
+                printColor(TagColor, Tag, TextColor, "Player not found!")
+            }
+        } else { printColor(TagColor, Tag, TextColor, "Too full to add more players!") }
+        
+    } elseif(LS[1,string] == ".rem") {
+        hideChat(1)
+        TargetPlayer=findPlayerByName(LS[2,string])
+        if(TargetPlayer:isPlayer())
+        {
+            for(I = 1, Allow:count())
+            {
+                if(Allow[I, entity] == TargetPlayer)
+                {
+                    Allow:remove(I)
+                    printColor(TagColor, Tag, TextColor, "Removed "+TargetPlayer:name()+" from allow list")
+                }
+            }
+            
+        } else { printColor(TagColor, Tag, TextColor, "Player not found!") }
+        
+    } elseif(LS[1,string] == ".removeall") {
+        hideChat(1)
+        Allow:clear()
+        Allow:pushEntity(owner())
+        printColor(TagColor, Tag, TextColor, "Cleared everybody but you!")  
+    
+    } elseif(LS[1,string] == ".list") {
+        hideChat(1)
+        printColor(TagColor, Tag, TextColor, "Players added to your auto-door:")
+        foreach(K,V:entity = Allow) {
+            printColor(vec(80,80,120), V:name())
+        }
+    }
+}
+
+if (Button) {
+    local Allowed = 0
+    foreach(K,V:entity = Allow)
+    {
+        if(V:keyUse() & V:aimEntity() == ButtonProp)
+        {
+            if((Pos - V:pos()):length() < Distance)
+            {
+                if(V:isAlive())
+                {
+                    Allowed = 1
+                    break
+                }
+            }
+        }
+    }
+    
+    if (Allowed) {
+        entity():soundPlay(0, 0, "buttons/button14.wav")
+    } else {
+        entity():soundPlay(0, 0, "buttons/button16.wav")
+    }
+    
+    Door = Allowed
+} else {
+    Door = 0
+}

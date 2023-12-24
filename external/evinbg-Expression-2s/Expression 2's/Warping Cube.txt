@@ -1,0 +1,157 @@
+# Description: Creates a cube made of smaller cubes that warp around the nearest player if they walk through it
+
+@name Warping Cube
+@inputs 
+@outputs 
+@persist Size HoloCount Scale Distance I MoveUp MoveSide MoveOtherSide CreateSpeed Done Offset:vector
+@persist Holos:table
+@trigger 
+
+if(first()){
+    Size = 4
+    HoloCount = Size * Size * Size
+    Scale = 2
+    CreateSpeed = 10
+    Distance = 80
+    Offset = vec((-(Scale * 12) * Size / 2) + Scale * 6, (-(Scale * 12) * Size / 2) + Scale * 6, 0)
+    
+    printColor(vec(255,0,255),"[Warp] ",vec(255,255,255),"Commands:
+- /scale <0.01 - 50>
+- /size <1 - 12>")
+    
+    MoveUp = 0
+    MoveSide = 0
+    MoveOtherSide = 0
+    Done = 0
+    
+    I = 1
+    
+    timer("create", 200)
+}
+
+interval(100)
+runOnChat(1)
+
+if(clk("create")){
+    holoCreate(I)
+    holoScale(I, vec(Scale, Scale, Scale))
+    local Position = entity():pos() + vec((Scale * 12) * MoveSide, (Scale * 12) * MoveOtherSide, (Scale * 12) * MoveUp) + Offset
+    holoPos(I, vec(0, 0, ((Scale * 12) / 2)) + Position)
+    holoDisableShading(I, 1)
+    holoParent(I, entity())
+    
+    local Pos = holoEntity(I):pos() - entity():pos()
+    local Ang = holoEntity(I):angles()
+    local Holo = holoEntity(I)
+    local Count = I
+    Holos[I,table] = table(
+        "pos" = Pos,
+        "ang" = Ang,
+        "holo" = Holo,
+        "count" = Count
+        )
+    
+    MoveSide++
+    if(I % Size == 0){
+        MoveOtherSide++
+        MoveSide = 0
+    }
+    if(I % (Size * Size) == 0){
+        MoveOtherSide = 0
+        MoveUp++
+    }
+    I++
+    if(I <= HoloCount){
+        timer("create", CreateSpeed)
+    }
+    if(I > HoloCount){
+        timer("done", 200)
+        printColor(vec(255,0,255),"[Warp] ",vec(0,255,0),"Done creating block")
+    }
+}
+
+if(clk("done")){
+    foreach(J:number, Data:table = Holos){
+        Data["pos",vector] = holoEntity(J):pos() - entity():pos()
+    }
+    Done = 1
+}
+
+findByClass("player")
+ClosestPlayer = findClosest(entity():pos())
+
+if(Done == 1){
+    foreach(K:number, Data:table = Holos){
+        
+        local LP = entity():toLocal(ClosestPlayer:pos())
+        local LLP = LP - Data["pos",vector]
+        local Dist = LP:distance(Data["pos",vector])
+        
+        if(Dist < (Distance * Scale)){
+            #Data["holo",entity]:setPos(entity():toWorld(Data["pos",vector] - LLP:normalized() * ((Distance * Scale) - LLP:length())))
+            #Data["holo",entity]:setAng(entity():toWorld(ang(Data["pos",vector] - LLP:normalized() * ((Distance * Scale) - LLP:length()))))
+            
+            holoPos(Data["count",number], entity():toWorld(Data["pos",vector] - LLP:normalized() * ((Distance * Scale) - LLP:length())))
+            holoAng(Data["count",number], entity():toWorld(ang(Data["pos",vector] - LLP:normalized() * ((Distance * Scale) - LLP:length()))))
+            
+            Data["holo",entity]:setColor(hsv2rgb(360 *(Dist / (Distance * Scale)),1,1))
+            #Data["holo",entity]:setColor(vec((Dist / (Distance * Scale)) * 255, (Dist / (Distance * Scale)) * 255, (Dist / (Distance * Scale)) * 255))
+        }
+        else{
+            #Data["holo",entity]:setPos(entity():toWorld(Data["pos",vector]))
+            #Data["holo",entity]:setAng(entity():toWorld(Data["ang",angle]))
+            
+            holoAng(Data["count",number], entity():toWorld(Data["ang",angle]))
+            holoPos(Data["count",number], entity():toWorld(Data["pos",vector]))
+            
+            Data["holo",entity]:setColor(vec(255,255,255))
+        }  
+    }
+}
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/scale"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 0.01 | LS[2,string]:toNumber() > 50){
+            printColor(vec(255,0,255),"[Warp] ",vec(255,0,0),"Please enter a number between 0.01 - 50")
+        }
+        else{
+            holoDeleteAll()
+            Holos:clear()
+            Done = 0
+            Scale = LS[2,string]:toNumber()
+            I = 1
+            MoveUp = 0
+            MoveOtherSide = 0
+            MoveSide = 0
+            Offset = vec((-(Scale * 12) * Size / 2) + Scale * 6, (-(Scale * 12) * Size / 2) + Scale * 6, 0)
+            timer("create", 200)
+            printColor(vec(255,0,255),"[Warp] ",vec(255,255,255),"Scale: "+LS[2,string]:toNumber()+"")
+        }
+    }
+    if(LS[1,string] == "/size"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 1 | LS[2,string]:toNumber() > 12){
+            printColor(vec(255,0,255),"[Warp] ",vec(255,0,0),"Please enter a whole number between 1 - 12")
+        }
+        elseif(LS[2,string]:toNumber() % 1 != 0){
+            printColor(vec(255,0,255),"[Warp] ",vec(255,0,0),"Please enter a whole number between 1 - 12")
+        }
+        else{
+            holoDeleteAll()
+            Holos:clear()
+            Done = 0
+            Size = LS[2,string]:toNumber()
+            I = 1
+            MoveUp = 0
+            MoveOtherSide = 0
+            MoveSide = 0
+            HoloCount = Size * Size * Size
+            Offset = vec((-(Scale * 12) * Size / 2) + Scale * 6, (-(Scale * 12) * Size / 2) + Scale * 6, 0)
+            timer("create", 200)
+            printColor(vec(255,0,255),"[Warp] ",vec(255,255,255),"Size: "+LS[2,string]:toNumber()+"")
+        }
+    }
+}

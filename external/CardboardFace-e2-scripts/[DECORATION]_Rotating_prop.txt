@@ -1,0 +1,33 @@
+#[
+
+    This expression makes the prop it's attached to rotate, if the prop has an axis constraint
+    
+    Some nice props to use (spawn them with "gm_spawn <model>" in console are:
+    Ceiling fan: models/props/de_prodigy/fanoff.mdl
+    Spinning gears: models/Mechanics/gears/gear12x6.mdl
+
+]#
+
+
+
+@name Rotating prop
+@persist E:entity
+interval(300) #Execute the E2 code every 300ms
+
+if(first() | dupefinished())
+{
+    setName("Spinning props
+    Avaliable on ORP forums
+    
+    by CardboardFace")
+    
+    # Store variable for faster access
+    E = entity():isWeldedTo()
+    
+    # Make ents near-weightless so they lose their speed slower
+    # (applyAngForce does nothing on weightless props)
+    entity():setMass(1)
+    E:setMass(1)
+}
+
+E:applyAngForce(ang(vec(0, 30, 0))) #Set the angle force to rotate prop

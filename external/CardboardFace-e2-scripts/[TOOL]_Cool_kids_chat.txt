@@ -1,0 +1,25 @@
+@name Group chat
+@persist [TagColor, TextColor]:vector
+
+if(first() | dupefinished())
+{
+    runOnChat(1)
+    TagColor = vec(50, 255, 255)
+    Tag = "[CKC]: "
+    TextColor = vec(100, 180, 255)
+
+    printColor(TagColor, Tag, vec(255,255,255), "Welcome to the cool kids chat!")
+    printColor(TagColor, Tag, vec(255,255,255), "Use /ckc <message> to write to the cool kids.")
+    printColor(TagColor, Tag, vec(255, 0, 0), "WARNING: While normal players cannot see this chat, what you say is NOT annoynmous or hidden from logs.")
+}
+
+if(chatClk())
+{
+    local LSParts = lastSaid():explode(" ")
+    if(LSParts[1, string]:lower() == "/ckc")
+    {
+        if(chatClk(owner())) {hideChat(1)}
+        printColor(TagColor, "(CoolKidsChat) " + lastSpoke():name(), TextColor, ": " + lastSaid():sub(6))
+    }
+}
+

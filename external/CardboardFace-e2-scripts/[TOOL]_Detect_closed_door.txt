@@ -1,0 +1,48 @@
+@name Detect closed door
+@outputs DoorIsOpen:number
+@persist [TagColor TextColor]:vector Tag:string DoorScanRange:number RotatingDoor:entity ClosedDoorAng:angle
+@trigger none
+@model models/jaanus/wiretool/wiretool_input.mdl
+@autoupdate
+
+
+interval(200)
+
+if (first() | dupefinished()) {
+    Tag = "[CLOSED-DETECTIOR]: "
+    TagColor = vec(60, 110, 160)
+    TextColor = vec(255,255,255)
+    DoorScanRange = 75
+    
+    function void printFancy(String:string) {
+        printColor(TagColor, Tag, TextColor, String)
+    }
+
+    printFancy("Position the E2 so that it will only see the door when it is closed")
+}
+
+if (RotatingDoor) {
+    DoorIsOpen = (RotatingDoor:angles() == ClosedDoorAng)
+
+} else {
+    local MyRanger = ranger(DoorScanRange)
+    
+    local SpottedEnt = MyRanger:entity()
+    if (SpottedEnt:type() == "prop_door_rotating") {
+        RotatingDoor = SpottedEnt #Save the entity to the persistant var
+        
+        printFancy("Door detected! Waiting 1 second to ensure it is fully closed...")
+
+        timer("saveDoorAng", 1000)
+    }
+}
+
+if (clk("saveDoorAng")) {
+    if (ranger(DoorScanRange):entity() == RotatingDoor) {
+        ClosedDoorAng = RotatingDoor:angles()
+        printFancy("Closed door angles saved!")
+    } else {
+        printFancy("WARNING: Door was opened during save process! Retrying...")
+        timer("saveDoorAng", 1000)
+    }
+}

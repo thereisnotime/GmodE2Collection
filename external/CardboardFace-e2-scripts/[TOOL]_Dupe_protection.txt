@@ -1,0 +1,15 @@
+@name Dupe Protection
+
+#Coded by Freddie
+#Dupe Protection
+if(first() | dupefinished()){
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this base, please run 'wire_expression2_concmd 1' in the console",1000)
+        concmd("say // I have stolen Freddie's base!")
+        concmd("say // I have stolen Freddie's base!")
+        concmd("say // My god I'm a stealing abusing idiot?! Please ticket me, my steamID is " + owner():steamID())
+        concmd("kill")
+        concmd("gmod_cleanup")
+        selfDestructAll()
+    }
+}

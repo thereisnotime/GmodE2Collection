@@ -1,0 +1,54 @@
+@name EGP Line draw
+@inputs EGP:wirelink
+@persist User:entity Cursor:vector2 Use Start:vector2 I Drawing
+interval(100)
+if(first() | changed(EGP:entity()) | dupefinished()){
+    setName("
+    EGP line draw
+    Hold E to draw lines
+    Press T to clear last line
+    Press G to reset
+    
+    Created by FrippKripp
+    Modded by Freddie
+    ")
+    EGP:egpClear()
+    I = 4
+
+    EGP:egpText(1,"Available: n/a",vec2(0,512))
+    EGP:egpAlign(1,0,2)
+    
+    User = owner()
+}
+
+
+findInSphere(entity():pos(),30)
+findClipToClass("player")
+User=findResult(1)
+if(User:isPlayer())
+{
+    EGP:egpSetText(1,"Available: "+(egpMaxObjects()-EGP:egpNumObjects()))
+    
+    Cursor = EGP:egpCursor(User)
+    Use = User:keyUse()
+    
+    if(changed(Use)&Use){
+        Start = Cursor
+    }
+    if(Use){
+        Drawing = 1
+        EGP:egpLine(I,Start,Cursor)
+    }
+    if(Drawing&!Use){
+        Drawing = 0
+        I++
+    }
+    
+    if(changed(User:keyPressed("t"))&User:keyPressed("t")&I!=4){
+        I--
+        EGP:egpRemove(I)
+    }
+    if(changed(User:keyPressed("g"))&User:keyPressed("g")){
+        reset()
+    }
+}

@@ -1,0 +1,53 @@
+@name Grav-Gun enhancer
+@persist O:entity
+interval(100)
+if(first() | dupefinished())
+{
+    setName("Grav-Gun enhancer
+    Price: $100,000
+    
+    Written by Freddie")
+    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:0:39121202")
+    {
+        print("To use this chip, please run wire_expression2_concmd 1 in the console")
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+    TagColor = vec(215, 150, 15)
+    Tag = "[GravGun enhancer]: "
+    HeaderColor = vec(255,255,255)
+    TextColor = vec(80, 110, 140)
+    printColor(TagColor, Tag, HeaderColor, "Press 'R' while looking at something to shoot it away!")
+    printColor(TagColor, Tag, HeaderColor, "Hold right click to drag stuff close to you!")
+    O = owner()
+}
+
+if(O:weapon():type() == "weapon_physcannon")
+{
+    Target = O:aimEntity()
+    if (O:keyReload())
+    {
+        if(Target:owner():isPlayer() & O:pos():distance(Target:pos()) <= 1000)
+        {
+            Force = (Target:pos() - O:pos()) * Target:mass()
+            Force = vec(Force:x() * 100, Force:y() * 100, Force:z() + 5000 * Target:mass())
+            Target:applyForce(Force)
+            O:soundPlay(1, 1, "Weapon_PhysCannon.Launch")
+            
+            interval(2000)
+        }
+    } elseif (O:keyAttack2()) {
+        if(Target:owner():isPlayer())
+        {
+            Force = O:pos() - Target:pos()
+            Target:applyForce(Force * Target:mass())
+        } else {
+            O:soundPlay(1, 99, "Weapon_PhysCannon.DryFire")
+            interval(500)
+        }
+    }
+} else {
+    interval(1000)
+}

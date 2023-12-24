@@ -1,0 +1,222 @@
+# Description: Allows user to select props to set as doors that auto fade when members that are added are in range of the doors
+
+@name Auto Doors
+@inputs 
+@outputs 
+@persist DoorCheck AntiSpam DoorMode C D Distance DoorOpenTime
+@persist [Member, Doors, Colors, Materials, Distances, DistanceCheck]:array [Player, TempPlayer, TempMember]:entity
+@trigger 
+          
+#          HOW TO USE:
+#+------------------------------+
+#[
+- Pressing 'T' on a prop turns it into a door
+- /add <name>: Adds a player to the doors
+- /remove <name>: Removes a player from the doors
+- /doormode <on, off>: Turns on or off the ability to add a door by pressing 'T'
+- /addall: Adds all players on the server to the doors
+- /removeall: Removes all players on the server from the doors
+- /list: Prints a list of all the players added to the doors
+]#
+#+------------------------------+
+
+if(first()){
+    printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),"!!! ",vec(255,255,255),"Check E2 code for how to use",vec(255,0,0)," !!!\n",vec(255,255,255),"
+- /add <name>
+- /remove <name>
+- Press 'T' on a prop to add it as a door
+- /doormode <on, off>
+- /addall
+- /removeall
+- /list")
+
+printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),"/doormode is turned on by default. When you're done setting your doors by pressing 'T' on them, turn off door mode by typing \"/doormode off\"")
+
+    DoorOpenTime = 5000 # this is how long the door will remain open in milliseconds
+    Distance = 70 # this is how far the player will have to be for the door to open
+    AntiSpam = 1
+    DoorMode = 2
+    C = 0
+    D = 0
+    Doors = array()
+    Colors = array()
+    Materials = array()
+    Distances = array()
+    DistanceCheck = array()
+    Member[1,entity] = owner()
+    entity():setName(""+owner():name()+"'s E2 Doors")
+}
+
+interval(200)
+runOnChat(1)
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(DoorMode == 2 & owner():keyPressed("t") & owner():aimEntity():isValid() & owner():aimEntity():owner() == owner() & AntiSpam == 1){
+    Entity = owner():aimEntity()
+    for(I = 1, Doors:count()){
+        if(Entity == Doors[I,entity]){
+            DoorCheck = 0
+            printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),""+Entity:toString()+" was already as Door "+I+"")
+            break
+        }
+        DoorCheck = 1
+    }
+    if(DoorCheck == 1){
+        Doors:pushEntity(Entity)
+        C = 1
+        D++
+        Distances:pushNumber(C)
+        DistanceCheck:pushNumber(C)
+        Color = Entity:getColor()
+        Material = Entity:getMaterial()
+        Colors:pushVector(Color)
+        Materials:pushString(Material)
+        printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),""+Entity:toString()+" was added as Door "+D:toString()+"")
+    }
+    DoorCheck = 1
+    AntiSpam = 0
+    timer("spam",500)
+}
+
+if(clk("spam")){
+    AntiSpam = 1
+}
+
+if(chatClk(owner()) & LS[1,string] == "/doormode"){
+    hideChat(1)
+    if(LS[2,string] == "on"){
+        DoorMode = 1
+    }
+    elseif(LS[2,string] == "off"){
+        DoorMode = 3
+    }
+    else{
+        DoorMode++
+        #printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),"Please type either \"on\" or \"off\" after \"/doormode\"")
+    }
+}
+
+if(DoorMode == 1){
+    DoorMode++
+    printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),"Door Adding: ",vec(0,255,0),"On")
+}
+
+if(DoorMode == 3){
+    DoorMode = 0
+    printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),"Door Adding: ",vec(255,0,0),"Off")
+}
+
+if(chatClk(owner()) & LS[1,string] == "/add"){
+    hideChat(1)
+    TempMember = findPlayerByName(LS[2,string])
+    if(TempMember:isPlayer()){
+        for(I = 1,Member:count()){
+            if(TempMember == Member[I,entity]){
+                MemberCheck = 1
+                printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),""+TempMember:name()+" has already been added to the door")
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            Member:pushEntity(TempMember)
+            printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),""+TempMember:name()+" was added to the door")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),"Can't find "+LS[2,string]+"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/remove"){
+    hideChat(1)
+    TempMember = findPlayerByName(LS[2,string])
+    if(TempMember:isPlayer()){
+        for(I = 1,Member:count()){
+            if(TempMember == Member[I,entity]){
+                Member:remove(I)
+                MemberCheck = 1
+                printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),""+TempMember:name()+" has been removed from the door")
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),""+TempMember:name()+" has already been removed or was never added")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"[DOOR] ",vec(255,0,0),"Can't find "+LS[2,string]+"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/addall"){
+    hideChat(1)
+    printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),"All players were added to the door")
+    Member = players()
+}
+
+if(chatClk(owner()) & LS[1,string] == "/removeall"){
+    hideChat(1)
+    printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),"All players were removed from the door")
+    Member:clear()
+}
+
+if(chatClk(owner()) & LS[1,string] == "/list"){
+    hideChat(1)
+    timer("list",1000)
+    printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),"Added Players:")
+}
+
+if(clk("list")){
+    for(I = 1, Member:count()){
+        printColor(vec(255,255,255),Member[I,entity]:name())
+    }
+}
+
+for(J = 1, Doors:count()){
+    findByClass("player")
+    TempPlayer = findClosest(Doors[J,entity]:pos())
+    if(TempPlayer:pos():distance(Doors[J,entity]:pos()) <= Distance ){
+        for(K = 1, Member:count()){
+            if(TempPlayer == Member[K,entity]){
+                Player = TempPlayer
+                Distances[J,number] = 1
+            }
+        }
+    }
+    else{
+        Distances[J,number] = 0
+    }
+    if(Distances[J,number] == 1){
+        Doors[J,entity]:propNotSolid(1)
+        Doors[J,entity]:setMaterial("models/wireframe")
+        Doors[J,entity]:setColor(vec(255,255,255))
+    }
+}
+
+for(L = 1, Distances:count()){
+    if(Distances[L,number] == 1 & DistanceCheck[L,number] == 1){
+        printColor(vec(255,0,255),"[DOOR] ",vec(255,255,255),""+Player:name()+" went through Door "+L+"")
+        DistanceCheck[L,number] = 0
+    }
+}
+    
+for(M = 1, Distances:count()){
+    if(Distances[M,number] == 0 & DistanceCheck[M,number] == 0){
+        timer(M:toString(),DoorOpenTime)
+        DistanceCheck[M,number] = 1
+    }
+    if(clk(M:toString())){
+        Doors[M,entity]:propNotSolid(0)
+        Doors[M,entity]:setColor(Colors[M,vector])
+        Doors[M,entity]:setMaterial(Materials[M,string])
+    }
+}

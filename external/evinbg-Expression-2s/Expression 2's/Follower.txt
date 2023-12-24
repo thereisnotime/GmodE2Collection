@@ -1,0 +1,188 @@
+# Description: Creates a holo that you can configure that follows a target
+
+@name Follower
+@inputs 
+@outputs 
+@persist Model:string [Target X Tar]:entity
+@persist Distance Anim Speed Follow Float I Scale Running SpeedConst On 
+@trigger 
+
+#[ 
+! Animations may differ between player models !
+
+/t <player>: The holo targets the specific player
+/follow: The model follows you wherever the target goes
+/unfollow: The model stops following the target
+/speed <number>: Sets speed at which the holo follows or orbits the target
+/model <model string>: Sets the model of the holo
+/float: Orbits the holo around the target
+/anim <number>: Plays specific animations
+/stopanim: Stops the animations of the holo
+/scale <number>: Changes the scale of the holo
+]#
+
+if(first()){
+    printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Commands:\nCheck E2 or console")
+    
+    print(_HUD_PRINTCONSOLE,"Commands:
+    /t <player>
+    /follow
+    /unfollow
+    /speed <number>
+    /model <model string>
+    /float
+    /anim <number>
+    /stopanim
+    /scale <number>")
+    
+    Target = owner()
+    Model = "models/Eli.mdl"
+    Anim = 3
+    Speed = 12
+    SpeedConst = Speed
+    Follow = 1
+    Float = 0
+    Scale = 1
+    On = 0
+    holoCreate(1)
+    holoModel(1,Model)
+    holoScale(1,vec(Scale,Scale,Scale))
+    holoEntity(1):animate(Anim,1)
+    entity():setName(""+owner():name()+"'s Son")
+}
+
+interval(50)
+runOnChat(1)
+runOnKeys(Target,1)
+
+LS = owner():lastSaid():lower():explode(" ")
+Ang = (Target:pos() - holoEntity(1):pos()):toAngle()
+Dist = (Target:pos():distance(holoEntity(1):pos()))
+I++
+Length = 5
+Sin = sin(curtime() * 10 * Speed) * Length
+Cos = cos(curtime() * 10 * Speed) * Length
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/t"){
+        hideChat(1)
+        Tar = findPlayerByName(LS[2,string])
+        if(Tar:isPlayer() == 1){
+            Target = Tar
+            printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Targeting: "+Target:name()+"")
+        }
+        if(Tar:isPlayer() == 0){
+            printColor(vec(255,0,255),"[Follower] ",vec(255,0,0),"Couldn't find a player")
+        }
+    }
+}
+
+if(Follow == 1 & Float == 0 & Target:isPlayer()){
+    if(Target:keyPressed("lshift")){
+        Running = 1
+    }else{
+        Running = 0
+    }
+    if(changed(Running) & Running == 1){
+        Speed = Speed * 1.66
+    }
+    if(changed(Running) & Running == 0){
+        Speed = SpeedConst
+    }
+    if(Target:pos():distance(holoEntity(1):pos()) >= 100){
+        holoAng(1,(Ang))
+        holoPos(1,holoEntity(1):toWorld(vec(Speed,0,0)))
+        Distance = 1
+        Anim = 10
+    }
+    else{
+        Anim = 3
+        holoEntity(1):animate(Anim,1)
+        Distance = 0
+    }
+    if(changed(Distance) & Distance == 1){
+        holoEntity(1):animate(Anim,Speed / Scale / 5)
+    }
+}
+
+if(Float == 1 & Follow == 0){
+    holoAng(1,Target:toWorld(ang(30,I * SpeedConst / 2,0)))
+    holoPos(1,Target:toWorld(vec(Cos * 8,Sin * 8,(Sin * Cos) + 60)))
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/follow"){
+        hideChat(1)
+        Follow = 1
+        Float = 0
+        printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Following "+Target:name()+"")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/unfollow"){
+        hideChat(1)
+        Follow = 0
+        Float = 0
+        printColor(vec(255,0,255),"[Follower] ",vec(255,0,0),"Stopped following")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/speed"){
+        hideChat(1)
+        SpeedConst = LS[2,string]:toNumber()
+        Speed = LS[2,string]:toNumber()
+        printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Speed: "+Speed+"")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/model"){
+        hideChat(1)
+        Model = LS[2,string]
+        holoModel(1,Model)
+        printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Model: "+Model+"")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/float"){
+        hideChat(1)
+        Float = 1
+        Follow = 0
+        Anim = 9
+        holoEntity(1):animate(Anim,1)
+        printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Floating")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/anim"){
+        hideChat(1)
+        Float = 0
+        Follow = 0
+        Anim = LS[2,string]:toNumber()
+        holoEntity(1):animate(Anim,1)
+        printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Animating: "+Anim+"")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/stopanim"){
+        hideChat(1)
+        Follow = 0
+        Anim = 0
+        holoEntity(1):animate(Anim,1)
+        printColor(vec(255,0,255),"[Follower] ",vec(255,0,0),"Stopped Animations")
+    }
+}
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/scale"){
+        Scale = LS[2,string]:toNumber()
+        hideChat(1)
+        holoScale(1,vec(Scale,Scale,Scale))
+        printColor(vec(255,0,255),"[Follower] ",vec(255,255,255),"Scale: "+Scale+"")
+    }
+}

@@ -1,0 +1,38 @@
+@name Prop button
+@inputs [Button]:entity
+@outputs [Out]:number
+@persist [Target]:entity [Distance,Mode, ButtonIsToggle]:number 
+interval(500)
+if(first() | duped()){
+    Distance = 30 #How close player has to be to button in order to activate it
+    ButtonIsToggle = 0
+}
+
+findIncludeClass("Player") #Target Players only.
+findInSphere(Button:boxCenterW(),Distance)
+Target = findClosest(Button:boxCenterW()) #Find cloesest playert to button
+TargetDistance = (((Target:boxCenterW() - Button:boxCenterW()):length()) * 0.75) /12 #Distance from player to button.
+
+if(Target:isPlayer())
+{
+    if(ButtonIsToggle)
+    {
+        if(Target:aimEntity() == Button)
+        {
+            if(Target:isAlive() & TargetDistance <= Distance & Target:keyUse())
+            {
+                Out = !Out
+            }
+        }
+    } else {
+        if(Target:aimEntity() == Button)
+        {
+            if(Target:isAlive() & TargetDistance <= Distance & Target:keyUse()) {
+                Out=1
+            } else {
+                Out=0
+            }
+        }
+    }
+}
+

@@ -1,0 +1,141 @@
+@name Torture chair
+@inputs Button_ToggleTrap EGP_UI:wirelink
+@outputs Fade_Cuffs Fade_OptionalFakeRopeDecoration
+@persist EGP_UI:wirelink Player:entity [CancelRestrain ForceMax ForceMin ForceIncrement ForceDecrement NotBrokeOut BreakForce LastCuffButtonState LastTrapToggleState]:number
+@model models/props_c17/chair_kleiner03a.mdl
+
+interval(100)
+
+#[
+    THE TORTURE CHAIR - Made by Freddie
+    
+    To use this chair:
+    Button model: models/hunter/blocks/cube2x2x2.mdl
+    EGP screen model: models/hunter/plates/plate025x05.mdl
+    
+    Make the button colided
+    Button must NOT be toggle mode and MUST be 0 by default
+]#
+
+
+if(first() | changed(EGP_UI:entity() | dupefinished()))
+{
+    if(owner():steamID() != "STEAM_0:0:29948884"){selfDestruct()}
+    setName("   The TORTURE CHAIR
+    by CardboardFace")
+    
+    #Global variables:
+    ForceMax = 400
+    ForceMin = 20
+    BreakForce = ForceMin
+    ForceIncrement = 20
+    ForceDecrement = 1
+    LastCuffButtonState = 0
+    NotBrokeOut = 1
+    CancelRestrain = 0
+    
+    function drawEGP(Toggle:number)
+    {
+        EGP_UI:egpClear()
+        
+        if(Toggle)
+        {
+            if(NotBrokeOut)
+            {
+                EGP_UI:egpText(1,"Mash 'USE' to escape",vec2(256,400))
+                EGP_UI:egpFont(1,"Arial",35)
+                EGP_UI:egpColor(1,vec(210,210,210))
+                EGP_UI:egpAlign(1,1)
+                
+                EGP_UI:egpText(2,"your restraints!",vec2(256, 430))
+                EGP_UI:egpFont(2,"akbar",35)
+                EGP_UI:egpColor(2,vec(210,210,210))
+                EGP_UI:egpAlign(2,1)
+                
+                
+                EGP_UI:egpRoundedBox(3, vec2(255, 360), vec2(ForceMax, 40))
+                EGP_UI:egpRadius(3,2)
+                EGP_UI:egpColor(3, vec4(20, 20, 20, 255))
+                
+    
+                EGP_UI:egpRoundedBox(4, vec2(255, 10), vec2(BreakForce, 38))
+                EGP_UI:egpRadius(4, 4)
+                EGP_UI:egpColor(4, vec4(70, 20, 20, 255))
+            } else {
+                EGP_UI:egpText(1,"You broke your restraints!",vec2(256,400))
+                EGP_UI:egpFont(1,"akbar",35)
+                EGP_UI:egpColor(1,vec(210,210,210))
+                EGP_UI:egpAlign(1,1)
+            }
+        } else {
+            EGP_UI:egpText(1,"Restraints disabled!",vec2(256,400))
+            EGP_UI:egpFont(1,"akbar",35)
+            EGP_UI:egpColor(1,vec(210,210,210))
+            EGP_UI:egpAlign(1,1)
+        }
+    }
+    drawEGP(Button_ToggleTrap)
+}
+
+if(LastTrapToggleState == 0 & Button_ToggleTrap)
+{
+    CancelRestrain = 0
+    findByClass("player")
+    Player = findClosest(entity():pos())
+    if (entity():pos():distance(Player:pos()) <= 35)
+    {
+        Fade_Cuffs = 0
+        Fade_OptionalFakeRopeDecoration = 0
+
+        #Draw UI
+        drawEGP(1)
+    } else {
+        CancelRestrain = 1
+        hint("Could not restrain target - they were too far from the chair!", 3)
+    }
+    
+} elseif(LastTrapToggleState == 1 & Button_ToggleTrap == 0)
+{
+    #Hide UI
+    drawEGP(0)
+}
+
+if(Button_ToggleTrap & NotBrokeOut & CancelRestrain == 0)
+{
+    BreakForce -= ForceDecrement
+    
+    EGP_UI:egpRoundedBox(4, vec2(255, 360), vec2(BreakForce - 20, 38))
+    
+    if(BreakForce <= ForceMin)
+    {
+        BreakForce = ForceMin
+    } elseif(BreakForce >= ForceMax)
+    {
+        BreakForce = ForceMax
+        Fade_Cuffs = 1
+        Fade_OptionalFakeRopeDecoration = 1
+        NotBrokeOut = 0
+        soundPlay(1, 1, "npc/headcrab_poison/ph_jump1.wav")
+        drawEGP(1)
+    }
+    
+    if(Player:keyUse() & !(LastCuffButtonState))
+    {
+        BreakForce += ForceIncrement
+        soundPlay(1, 1, "npc/headcrab_poison/ph_wallhit" + randint(1,2):toString() + ".wav")
+        LastCuffButtonState = 1
+    }
+    
+    if(!(Player:keyUse()))
+    {
+        LastCuffButtonState = 0
+    }
+} else {
+    interval(700)
+    NotBrokeOut = 1
+    BreakForce = 0
+    Fade_Cuffs = 1
+    Fade_OptionalFakeRopeDecoration = 1
+}
+
+LastTrapToggleState = Button_ToggleTrap

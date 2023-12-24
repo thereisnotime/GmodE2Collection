@@ -1,0 +1,28 @@
+@name Pay to pass point
+@inputs [LastMoneyPotAmount MoneyPotUpdated]:number InsideButton:number
+@outputs FadingDoor:number
+@persist [PassPrice AllowCPsThroughFree]:number
+@trigger MoneyPotUpdated InsideButton
+@autoupdate
+
+
+if (first() | dupefinished()) {
+    setName("Pay to pass point
+    Written by CardboardFace")
+    PassPrice = 20
+    FadingDoor = 0
+}
+
+if (clk("closeDoor")) {
+    FadingDoor = 0
+    
+} elseif (LastMoneyPotAmount >= PassPrice || (changed(InsideButton) && InsideButton)) {
+    FadingDoor = 1
+    entity():soundPlay(0, 0, "buttons/bell1.wav") # Purchase successful SFX
+    timer("closeDoor", 2500)
+
+# Play error sound effect when someone adds money that isn't enough to buy anything
+# Don't play if money is removed (negative) or if no money is added
+} elseif (LastMoneyPotAmount > 0) {
+    entity():soundPlay(0, 0, "Buttons.snd8")
+}

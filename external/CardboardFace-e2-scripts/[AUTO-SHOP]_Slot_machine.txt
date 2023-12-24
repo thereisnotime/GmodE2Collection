@@ -1,0 +1,124 @@
+@name Slot Machine
+@inputs X Y Use OnScreen Button C:wirelink Box
+@outputs Time [Numbers BGcolors]:array Xout Yout Print
+@persist [Numbers BGcolors]:array Time Xout Yout Reset Page Paid Spun SpinCost Finished Print SavePot Deposited
+
+interval(600)
+if(first()) {
+    SpinCost=100
+    Reset=1
+    Page=1
+    timer("savepot",1)
+}
+if(clk("Reset")|Reset==1) {
+    C[2041]=1
+    C[2042]=111
+    C:writeString("    Freddie's Slot Machine    ",0,0,999,5)
+    C:writeString("                               ",0,17,999,9)
+    timer("Reset",2000)
+}
+
+Xout=round(X*100)*OnScreen
+Yout=round(Y*100)*OnScreen
+
+if(clk("Time")) {
+    if(Time<5) {
+    Time++
+    timer("Time",1000)
+}else{Time=20}
+}
+if(Time<5&Time!=20&Time!=0) {
+    for(I=1,3) {
+        Numbers[I,number]=randint(1,3)
+    }
+}
+if(Page==1&Paid!=1) {
+    for(I=1,3) {
+        C:writeString("            ",9,I+6,999,9)
+        C:writeString("                               ",0,17,999,9)
+        C:writeString(" Buy A Spin ",9,7,999,9)
+        C:writeString("    $" + SpinCost + "    ",9,8,999,9)
+    }
+    if((Xout>=26&Yout>=40)&(Xout<=64&Yout<=57)) {
+        MouseOver=1
+        if(Use==1&~Use) {
+            if(Deposited>=SpinCost) {
+                Page=2
+                Spun=0
+        }else{soundPlay(0,0,"/hl1/fvox/bell.wav")}
+        }
+    }
+}
+if(Page==2|Paid==1) {
+    if(Spun==0) {
+    C:writeString("  Pull Lever  ",8,12,999,900)
+    C:writeString("                               ",0,17,999,9)
+    if((Xout>=26&Yout>=67)&(Xout<=71&Yout<=72)) {
+        MouseOver=1
+        if(Use==1&~Use) {
+            C[2041]=1
+            Spun=1
+            timer("Time",1000)
+            Time=1
+        }
+    }
+}
+    
+    if(Time<=5|Time==20) {
+        for(I=1,3) {
+            if(Numbers[I,number]==1) { BGcolors[I,number]=900 }
+            if(Numbers[I,number]==2) { BGcolors[I,number]=90 }
+            if(Numbers[I,number]==3) { BGcolors[I,number]=9 }
+            C:writeString("     ",7,I+6,999,BGcolors[1,number])
+            C:writeString("     ",13,I+6,999,BGcolors[2,number])
+            C:writeString("     ",19,I+6,999,BGcolors[3,number])
+        }
+    }else{
+    for(I=1,3) {
+        C:writeString("                ",0,8,999,0)
+    }
+}
+}
+if(Time==20) {
+    Finished=1
+}
+if(Finished==1&$Finished==1) {
+    timer("Numbers",5000)
+    if(Numbers[1,number]==Numbers[2,number]&Numbers[2,number]==Numbers[3,number]) {
+        #print("win" + " " +Box/3)
+        Print=Box/3
+        timer("resetprint",1000)
+}
+}
+if(Time==0) { 
+for(I=1,3) {
+            BGcolors[I,number]=222
+        }
+    }
+
+if(~Paid) { Reset=1 }
+if(clk("Numbers")) {
+    Time=0
+    Paid=0
+    Page=1
+    Finished=0
+    Print=0
+    Numbers:clear()
+}
+if(clk("savepot")) {
+    SavePot=Box
+    Deposited=$SavePot
+    timer("savepot",2000)
+}
+
+#Dupe Protection
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884")
+    {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

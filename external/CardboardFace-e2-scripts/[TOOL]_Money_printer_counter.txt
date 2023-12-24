@@ -1,0 +1,42 @@
+@outputs TotalScreen TotalTextScreen:string Printers:array
+@persist SuitZoom Total
+interval(500)
+if(first()) {
+    print("Use Suit Zoom while looking at your printer to begin counting.\nThen wire a Screen to the E2.")
+}
+setName(owner():name()+"'s printer counter\n$"+Total+" ("+Printers:count()+")")
+SuitZoom=owner():keyZoom()
+Total=0
+if(($SuitZoom&SuitZoom)==1) {
+    AimEnt=owner():aimEntity()
+    if(AimEnt:isPrinter()) {
+        if(Printers:count()!=0) {
+            Already=0
+            for(I=1,Printers:count()) {
+                if(AimEnt==Printers[I,entity]) {
+                    Already=1
+                    break
+                }
+            }
+            if(Already==0) {
+                print("Adding a "+AimEnt:printerType()+" printer to the list.")
+                Printers:pushEntity(AimEnt)
+            }else{
+                print("Already exists.")
+            }
+        } else {
+            print("Adding a "+AimEnt:printerType()+" printer to the list.")
+            Printers:pushEntity(AimEnt)
+        }
+    }
+}
+for(I=1,Printers:count()){
+    if(Printers[I,entity]:isPrinter()) {
+        Total += Printers[I,entity]:printedMoney()
+        TotalScreen=Total
+        PrinterCount=Printers:count()
+        TotalTextScreen="Total:<br>$"+Total
+    }else{
+        Printers:remove(I)
+    }
+}

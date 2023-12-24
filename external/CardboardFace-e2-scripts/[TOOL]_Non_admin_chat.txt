@@ -1,0 +1,37 @@
+@name Non-admins chat
+@persist TextColor:vector Tag:string
+
+function number isanyadmin(Player:entity)
+{
+    if(Player:isAdmin() | Player:isTrustedAdmin() | Player:isSuperAdmin())
+    { return 1 } else { return 0 }
+}
+
+if(first() | dupefinished())
+{
+    runOnChat(1)
+    Tag = "(Non-admin chat)"
+    TextColor = vec(255, 0, 130)
+    
+    if(isanyadmin(owner()))
+    {
+        printColor(vec(255, 0, 0), "WTF ARE YOU DOING?!")
+        selfDestruct()
+    } else {
+        printColor(vec(100, 180, 255), Tag, vec(255,255,255), ": Welcome to the non-admin chat!")
+        printColor(vec(100, 180, 255), Tag, vec(255,255,255), ": Use /na <message> to write to the non admins.")
+    }  
+}
+
+if(chatClk())
+{
+    local LSParts = lastSaid():explode(" ")
+    if(!isanyadmin(lastSpoke()))
+    {
+        if(LSParts[1, string]:lower() == "/na")
+        {
+            if(chatClk(owner())) { hideChat(1) }
+            printColor(teamColor(lastSpoke():team()), Tag + " " + lastSpoke():name(), TextColor, ": " + lastSaid():sub(5))
+        }
+    }
+}

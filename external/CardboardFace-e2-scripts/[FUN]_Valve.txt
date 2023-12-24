@@ -1,0 +1,39 @@
+@name Hold 'interact' to Valve
+@model models/props_pipes/valve003.mdl
+@persist Playing:number Counter:number
+interval(500)
+
+findInSphere(entity():pos(),50)
+findClipToClass("player")
+Player = findResult(1)
+if (Player:keyUse() & Playing == 0)
+{
+    if (Player:aimEntity() == entity())
+    {
+        Playing = 1
+        entity():soundPlay(1, 7, "music/hl1_song11.mp3", 4)
+    }
+}
+
+if(Counter >= 7)
+{
+    Playing = 0
+    Counter = 0
+} elseif(Playing == 1) {
+    Counter += 1
+}
+
+
+#Dupe Protection
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884")
+    {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+    Counter = 0
+    setColor(255, 0, 0)
+}

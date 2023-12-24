@@ -1,0 +1,109 @@
+@inputs EGPHUD:wirelink
+@persist List:array BoxColour:vector [Mode MODE_PRINTERS MODE_PLAYERS MODE_SHIPMENTS MODE_STORAGE]:number
+
+if(first()) {
+    MODE_PRINTERS = 1
+    MODE_PLAYERS = 2
+    MODE_SHIPMENTS = 3
+    MODE_STORAGE = 4 #Cargo and evidence boxes
+    
+    # Change ESP mode here
+    Mode = MODE_PRINTERS
+    
+    
+    
+    
+    if (Mode == MODE_PRINTERS) {
+        BoxColour = vec(40, 200, 0)
+    
+    } elseif (Mode == MODE_SHIPMENTS) {
+        BoxColour = vec(200, 20, 20)
+        
+    } elseif (Mode == MODE_STORAGE) {
+        BoxColour = vec(20, 20, 200)
+    }
+    
+    
+    findExcludeEntity(owner())
+    EGPHUD:egpClear()
+    
+    function void drawEnt(ENT:entity, I:number, Width:number, Height:number, Text1:string, Text2:string) {
+        #local Distance = sqrt(owner():pos():distance2(ENT:pos()))
+        local Distance = owner():pos():distance(ENT:pos())
+        Width = Width / Distance
+        Height = Height / Distance
+        local StartIndex = I * 4
+        local TextSize = clamp(20000 / Distance, 10, 30)
+        
+        # Create ent parent
+        EGPHUD:egp3DTracker(StartIndex, ENT:pos() + vec(0, 0, ENT:height() / 2))
+        
+        # Box outline
+        Index = StartIndex + 1
+        EGPHUD:egpBoxOutline(Index, vec2(0, 0), vec2(Width, Height))
+        EGPHUD:egpColor(Index, BoxColour)
+        EGPHUD:egpSize(Index, 1)
+        EGPHUD:egpParent(Index, StartIndex)
+        
+        # Player name
+        Index += 1
+        EGPHUD:egpText(Index, Text1, vec2(-(Width / 2), -(Height / 2) - TextSize))
+        EGPHUD:egpSize(Index, TextSize)
+        EGPHUD:egpColor(Index, vec(200, 200, 200))
+        EGPHUD:egpParent(Index, StartIndex)
+        
+        # Health text
+        Index += 1
+        EGPHUD:egpText(Index, Text2, vec2(-(Width / 2), Height / 2))
+        EGPHUD:egpSize(Index, TextSize)
+        EGPHUD:egpColor(Index, vec(150, 0, 0))
+        EGPHUD:egpParent(Index, StartIndex)
+    }
+    
+    interval(700) # Lets ops cooldown before starting standard code
+} else {
+
+    if(changed(List:count())) {
+        EGPHUD:egpClear()
+    }
+    
+    
+    if (Mode == MODE_PRINTERS) {
+        findByModel("models/props_lab/reciever01a.mdl")
+        
+    } elseif (Mode == MODE_PLAYERS) {
+        findByClass("player")
+    
+    } elseif (Mode == MODE_SHIPMENTS) {
+        findByClass("originalrp_shipment")
+    
+    } elseif (Mode == MODE_STORAGE) {
+        findIncludeClass("originalrp_cargobox")
+        findIncludeClass("originalrp_evidencebox")
+        findInSphere(entity():pos(), 99999999999)
+    }
+    List = findToArray()
+    
+    
+    foreach(K, ENT:entity = List) {
+        if (Mode == MODE_PRINTERS) {
+            if (ENT:isPrinter()) {
+                drawEnt(ENT, K, 20000, 15000, ENT:printerType(), "$" + ENT:printedMoney())
+            }
+            
+        } elseif (Mode == MODE_PLAYERS) {
+            if (ENT:isAlive()) {
+                BoxColour = teamColor(ENT:team())
+                drawEnt(ENT, K, 30000, 60000, ENT:name(), ENT:health() + "HP")
+            }
+            
+        } elseif (Mode == MODE_SHIPMENTS) {
+            drawEnt(ENT, K, 30000, 30000, ENT:shipmentType(), ENT:shipmentAmount():toString())
+        
+        } elseif (Mode == MODE_STORAGE) {
+            drawEnt(ENT, K, 70000, 30000, ENT:type(), "")
+        }
+    }
+    
+    interval(210)
+}

@@ -1,0 +1,42 @@
+@name MetadoorHandler
+@inputs Bottom:entity A:entity B:entity
+@persist Cur [Ao Bo Aa Ba]:vector
+@persist Stop
+@outputs Status Count
+
+findInBox(Bottom:toWorld(Bottom:aabbSize()*vec(0.5,0.5,0)),Bottom:toWorld(Bottom:aabbSize()*vec(-0.5,-0.5,30)))
+Status=0
+foreach(I,V:entity=findToArray()) {
+    if (!V:isFrozen()) {
+        Status=1
+    }
+}
+if (~A | first()) {
+    Ao=A:pos()
+    Aa=A:pos()+vec(0,0,24*4)
+}
+
+if (~B | first()) {
+    Bo=B:pos()
+    Ba=B:pos()-vec(0,0,24*4)
+}
+
+if (changed(Status)) {
+    Bottom:soundPlay(0,0,"doors/doormove3.wav")
+}
+
+Stop=!(Cur!=0 & Cur!=1)
+
+if (changed(Stop) & Stop) {
+    Bottom:soundPlay(1,0,"doors/doorstop1.wav")
+}
+
+Cur=clamp(Cur+(Status ? 0.2 : -0.2),0,1)
+
+if (A & B) {
+    #i*(Max-min)+min
+    A:setPos(Cur * (Aa-Ao) + Ao)
+    B:setPos(Cur * (Ba-Bo) + Bo)
+}
+
+interval(100)

@@ -1,0 +1,62 @@
+@name BAM! Rules
+@inputs Screen:wirelink
+@persist BGcolor
+
+runOnChat(1)
+Str = owner():lastSaid():explode(" ")
+
+if(first()) {
+    BGcolor = 0
+    
+    #Background Color
+    Screen:writeCell(2042,BGcolor)
+}
+
+if(first()) {
+    Screen[2041]=1
+    Screen:writeString("          BAM! Rules:         ",0,0,999,9)
+    Screen:writeString("                              ",0,17,999,9)
+    Screen:writeString("1.Only use E2 doors when safe",0,1,999)
+    Screen:writeString("  (they open with keys)",0,2,999)
+    Screen:writeString("2.Don't argue with members",0,3,999)
+    Screen:writeString("3.Don't use keypaded doors",0,4,999)
+    Screen:writeString("4.Don't beg for ranks",0,5,999)
+    Screen:writeString("5.Don't spawn keypads",0,6,999)
+    Screen:writeString("6 Don't clutter the base",0,7,999)
+    Screen:writeString("7.NEVER raid truce members",0,8,999)
+    Screen:writeString("8.Obey higher ranks than you",0,9,999)
+    Screen:writeString("  but dont break server rules",0,10,999)
+    Screen:writeString("9.NEVER betray us while",0,11,999)
+    Screen:writeString("  basing with us",0,12,999)
+    Screen:writeString("10.Report any rule-breaking",0,13,999)
+    Screen:writeString("  members for demote",0,14,999)
+    Screen:writeString("11.You must only set your job",0,14,999)
+    Screen:writeString("  name to exactly: BAM!",0,15,999)
+    
+    print("Use .raid and .over to toggle raid sirens")
+}
+
+
+#Raid Mode
+if(Screen[1,string]==".raid" & chatClk(owner())) {
+    soundPlay(1,60,"/ambient/alarms/siren.wav")
+    BGcolor = 900
+    Screen[2042] = BGcolor
+}
+
+if(Screen[1,string]==".raidover" & chatClk(owner())) {
+    BGcolor = 0
+    Screen[2042] = BGcolor
+    soundStop(1)
+}
+
+
+#Dupe Protection
+if(first() | dupefinished()){
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+}

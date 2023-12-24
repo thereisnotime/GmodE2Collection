@@ -1,0 +1,35 @@
+@name Glass door re-enforcer
+@outputs FadingDoor
+@persist DefaultDoorAngle:number Door:entity
+interval(500)
+if(first() | dupefinished())
+{
+    findInSphere(entity():pos(), 50)
+    findClipToClass("func_door_rotating")
+    Door = findResult(1)
+    DefaultDoorAngle = Door:angles():yaw()
+    print("Make sure the door is set to a closed state before using this chip!")
+    print("Door closed angle recorded: " + DefaultDoorAngle)
+}
+
+if(Door:angles():yaw() != DefaultDoorAngle)
+{
+    FadingDoor = 1
+} else {
+    FadingDoor = 0
+}
+
+#[
+    What's the purpose of this E2?
+    
+    Some doors in DarkRP are made of glass, making them very easy to
+    break into without cracking.
+    
+    Place this chip by the door, put a fading door inside the door.
+    When the door is cracked and swings open, the prop disapears,
+    enabling users to enter without being able to simply break the glass.
+    
+    This is also good for some bases where you want to lock the door open
+    as part of a raiding entrance, forcing players to crack it, close it
+    and then be able to enter the raiding entrance!
+]#

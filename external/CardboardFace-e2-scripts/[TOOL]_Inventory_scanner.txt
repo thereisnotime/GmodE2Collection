@@ -1,0 +1,116 @@
+@inputs Screen:wirelink Screen2:wirelink
+@persist Allowed:table TargetScanned:number
+@trigger none
+@model models/jaanus/wiretool/wiretool_siren.mdl
+@autoupdate
+
+interval(800)
+
+if (first() | dupefinished()) {
+    entity():setName("    Inventory Scanner
+    by CardboardFace")
+    
+    # Items everyone has are never shown
+    function void addDefaultItem(ItemName:string) {
+        Allowed[ItemName, number] = 2
+    }
+    
+    # Allowed items are shown in green
+    function void addAllowedItem(ItemName:string) {
+        Allowed[ItemName, number] = 1
+    }
+    
+    function void resetScreens() {
+        Screen[2041] = 1
+        Screen2[2041] = 1
+        Screen:writeString("      Inventory scanner:      ",0,0,888,112)
+        Screen2:writeString("      Inventory scanner:      ",0,0,888,112)
+    }
+    
+    addDefaultItem("weapon_physcannon")
+    addDefaultItem("weapon_physgun")
+    addDefaultItem("gmod_tool")
+    addDefaultItem("gmod_camera")
+    addDefaultItem("keys")
+    addDefaultItem("pocket")
+    addDefaultItem("orp_surrender")
+    
+    addAllowedItem("laserpointer")
+    addAllowedItem("remotecontroller")
+    addAllowedItem("weapon_fists")
+    addAllowedItem("arrest_stick")
+    addAllowedItem("weapon_bugbait")
+    addAllowedItem("unarrest_stick")
+    addAllowedItem("stunstick")
+    addAllowedItem("stungun")
+    addAllowedItem("door_ram")
+    addAllowedItem("weaponchecker")
+    addAllowedItem("gmod_flashbang")
+    addAllowedItem("med_kit")
+    
+    addAllowedItem("orp_bodyremover")
+    addAllowedItem("orp_cleanupsmasher")
+    addAllowedItem("orp_windowrepair")
+    
+    addAllowedItem("orp_religioustexts")
+
+    TargetScanned = 0
+    timer("ClearScreen", 1)
+}
+
+
+if(clk("ClearScreen")) {
+    resetScreens()
+    
+} else {
+    
+    local Target = ranger(75):entity()
+    
+    if (!TargetScanned & Target:isPlayer()) {
+        TargetScanned = 1
+        resetScreens()
+        stoptimer("ClearScreen")
+        
+        
+        Screen:writeString(Target:name() + "'s inventory:",0,2,888)
+        findInSphere(Target:pos(), 10)
+
+        #local Weapons = findToArray()
+        local Weapons = Target:getWeapons()
+        local FoundIllegalItems = 0
+        local XPos = 0
+        local LineOffset = 2
+        foreach(K,V:entity = Weapons)
+        {
+            if (!V:isWeapon()) { continue } # Skip over non-weapons
+            if (Allowed[V:type(), number] == 2) { continue } # Skip over default weapons
+
+            XPos++
+            if (!Allowed[V:type(), number]) {
+                FoundIllegalItems = 1
+                Color = 600
+            } else {
+                Color = 160
+            }
+            
+            local Name = V:getWeaponName()
+            if (XPos + LineOffset < 18)
+            {
+                Screen:writeString(Name, 0, LineOffset + XPos, Color)
+            } else {
+                Screen2:writeString(Name, 0, XPos - 14, Color)
+            }
+        }
+        
+        if (FoundIllegalItems)
+        {
+            soundPlay(1, 99, "buttons/weapon_cant_buy.wav")
+        } else {
+            soundPlay(1, 99, "buttons/button3.wav")
+        }
+        
+    } elseif (!Target:isPlayer()) {
+        TargetScanned = 0
+        timer("ClearScreen", 5000)
+    }
+}

@@ -1,0 +1,32 @@
+@name Freddie's gunshop signs
+@inputs A:wirelink 
+if(first() | duped()){
+printColor(vec(255,40,130), "Made By Anton.")}
+if(first() | duped()){
+printColor(vec(255,40,130), "Purchased by Freddie.")}
+
+A:egpClear()
+
+
+A:egpText(1,"Ammo",vec2(230,480))
+A:egpText(2,"150$",vec2(245,510))
+A:egpSize(1,25)
+A:egpSize(2,20)
+
+
+A:egpText(3,"Ammo",vec2(410,480))
+A:egpText(4,"150$",vec2(425,510))
+A:egpSize(3,25)
+A:egpSize(4,20)
+
+
+A:egpText(5,"Ammo",vec2(600,480))
+A:egpText(6,"150$",vec2(615,510))
+A:egpSize(5,25)
+A:egpSize(6,20)
+
+
+A:egpText(7,"Ammo",vec2(800,480))
+A:egpText(8,"150$",vec2(815,510))
+A:egpSize(7,25)
+A:egpSize(8,20)

@@ -1,0 +1,13 @@
+@name Everyone door
+@outputs Door
+
+interval(200)
+
+findInSphere(entity():pos(),50)
+findClipToClass("player")
+Target=findResult(1)
+if(Target:isAlive()) {
+    Door = 1
+}else{
+    Door = 0
+}

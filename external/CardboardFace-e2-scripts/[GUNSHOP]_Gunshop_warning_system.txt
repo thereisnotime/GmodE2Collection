@@ -1,0 +1,37 @@
+@name Gunshop warning system
+@inputs WarningButton
+@outputs WireLight:vector
+@persist [FlashCounter LightOn StartedWarning]:number
+@model models/cheeze/wires/speaker.mdl 
+@autoupdate
+
+#[
+    Trigger the button (non-toggling) to set off an alarm and turn a light on
+]#
+
+if (WarningButton == 1 && StartedWarning == 0) {
+    entity():soundPlay(1, 2, "NPC_AttackHelicopter.BadlyDamagedAlert")
+    soundVolume(1, 0.5)
+    WireLight = vec(255, 0, 0)
+    FlashCounter = 0
+    StartedWarning = 1
+    timer("flashLight", 200)
+    
+} elseif (clk("flashLight")) {
+    if (FlashCounter == 20) {
+        WireLight = vec(0, 0, 0)
+        StartedWarning = 0
+        
+    } else {
+        if (LightOn == 1) {
+            WireLight = vec(0, 0, 0)
+            LightOn = 0
+        } else {
+            LightOn = 1
+            WireLight = vec(255, 0, 0)
+        }
+        
+        FlashCounter += 1
+        timer("flashLight", 200)
+    }
+}

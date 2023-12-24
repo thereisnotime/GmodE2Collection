@@ -1,0 +1,57 @@
+@name Floating prop
+@model models/weapons/w_rif_m4a1.mdl
+#@model models/weapons/w_357.mdl
+@persist E:entity
+@persist [VerticalPosCounter, GoingUp]:number
+@persist [FloatHeight, SpinSpeed]:number
+
+interval(40)
+if (first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+    
+    setName("Floating decoration
+    Price: $500,000
+    
+    Written by Freddie")
+    
+    E = entity()
+    E:setMass(1)
+    GoingUp = 1
+    SpinSpeed = 1
+    if(entity():model() == "models/weapons/w_357.mdl")
+    {
+        SpinSpeed = 0.1
+    }
+    
+    VerticalPosCounter = 0
+    
+    FloatHeight = E:pos():z() + 15
+}
+
+# Keep the E2's roll stable and slowly spin the prop:
+Angle=-E:angles() * 15 - E:angVel() * 2
+E:applyAngForce(ang(vec(0, SpinSpeed, (Angle * E:inertia():length()):roll())))
+
+# Make the prop hover and rise up and down:
+E:applyForce(((VerticalPosCounter + FloatHeight) - E:pos():z()) * vec(0,0,1) * 10 - E:vel())
+
+
+if(VerticalPosCounter > 5)
+{
+    GoingUp = 0
+} elseif (VerticalPosCounter < -5) {
+    GoingUp = 1
+}
+
+if(GoingUp)
+{
+    VerticalPosCounter += 0.5
+} else {
+    VerticalPosCounter -= 0.5
+}

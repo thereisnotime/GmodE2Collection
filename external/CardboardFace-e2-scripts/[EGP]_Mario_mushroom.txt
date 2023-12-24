@@ -1,0 +1,200 @@
+@name Mario EGP
+@inputs A:wirelink
+
+if(first() | dupefinished()) {
+    #printColor(1, vec(100,100,100), "Made by Pepsi Dealer Licensed under Attribution-NonCommercial-ShareAlike 4.0 International. To wire just get out the advanced wiring tool then click on A:wirelink from the E2 and wire it to an EGP emitter")
+    setName("Mario EGP
+    Author: Pepsi Dealer
+    Version: v 1.5.0")
+    
+    setName("Mario EGP
+    Price: Free at bybservers.co.uk
+    
+    Written by Pepsi Dealer")
+    
+    #[
+        print(_HUD_PRINTCONSOLE,
+        "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International
+        http://creativecommons.org/licenses/by-nc-sa/4.0/
+    
+    
+        You are free:
+        to Share: to copy, distribute and transmit the work
+        to Remix: to adapt the work")
+        print(_HUD_PRINTCONSOLE,
+        "Under the following conditions:
+        Attribution: You must attribute the work in the manner specified 
+        by the author or licensor (but not in any way that suggests that they endorse you or your use of the work).")
+        print(_HUD_PRINTCONSOLE,
+        "Noncommercial: You may not use this work for commercial purposes.
+        Share-Alike: If you alter, transform, or build upon this work, you may 
+        distribute the resulting work only under the same or similar license to this one.")
+    ]#
+
+    A:egpClear()
+    
+    A:egpBox(1, vec2(250,450), vec2(100,10))
+    A:egpColor(1,0,0,0,255)
+    
+    A:egpBox(2, vec2(305,440), vec2(10,10))
+    A:egpColor(2,0,0,0,255)
+    
+    A:egpBox(3, vec2(195,440), vec2(10,10))
+    A:egpColor(3,0,0,0,255)
+    
+    A:egpBox(4, vec2(185,430), vec2(10,10))
+    A:egpColor(4,0,0,0,255)
+    
+    A:egpBox(5, vec2(315,430), vec2(10,10))
+    A:egpColor(5,0,0,0,255)
+    
+    A:egpBox(6, vec2(325,415), vec2(10,20))
+    A:egpColor(6,0,0,0,255)
+    
+    A:egpBox(7, vec2(175,415), vec2(10,20))
+    A:egpColor(7,0,0,0,255)
+    
+    A:egpBox(8, vec2(175,400), vec2(30,10))
+    A:egpColor(8,0,0,0,255)
+    
+    A:egpBox(9, vec2(325,400), vec2(30,10))
+    A:egpColor(9,0,0,0,255)
+    
+    A:egpBox(10, vec2(250,390), vec2(120,10))
+    A:egpColor(10,0,0,0,255)
+    
+    A:egpBox(13, vec2(250,427), vec2(100,36))
+    A:egpColor(13,255,255,255,255)
+    
+    A:egpBox(14, vec2(310,415), vec2(20,20))
+    A:egpColor(14,255,255,255,255)
+    
+    A:egpBox(15, vec2(190,415), vec2(20,20))
+    A:egpColor(15,255,255,255,255)
+    
+    A:egpBox(16, vec2(195,430), vec2(10,10))
+    A:egpColor(16,255,255,255,255)
+    
+    A:egpBox(17, vec2(305,430), vec2(10,10))
+    A:egpColor(17,255,255,255,255)
+    
+    A:egpBox(18, vec2(250,405), vec2(40,20))
+    A:egpColor(18,255,255,255,255)
+    
+    A:egpBox(19, vec2(200,405), vec2(20,20))
+    A:egpColor(19,255,255,255,255)
+    
+    A:egpBox(20, vec2(300,405), vec2(20,20))
+    A:egpColor(20,255,255,255,255)
+    
+    A:egpBox(21, vec2(285,405), vec2(10,20))
+    A:egpColor(21,255,255,255,255)
+    
+    A:egpBox(22, vec2(220,404), vec2(20,18))
+    A:egpColor(22,255,255,255,255)
+    
+    A:egpBox(23, vec2(225,400), vec2(10,18))
+    A:egpColor(23,0,0,0,255)
+    
+    A:egpBox(24, vec2(275,400), vec2(10,18))
+    A:egpColor(24,0,0,0,255)
+    
+    A:egpBox(25, vec2(345,365), vec2(10,60))
+    A:egpColor(25,0,0,0,255)
+    
+    A:egpBox(26, vec2(155,365), vec2(10,60))
+    A:egpColor(26,0,0,0,255)
+    
+    A:egpBox(27, vec2(165,325), vec2(10,20))
+    A:egpColor(27,0,0,0,255)
+    
+    A:egpBox(28, vec2(335,325), vec2(10,20))
+    A:egpColor(28,0,0,0,255)
+    
+    A:egpBox(29, vec2(325,310), vec2(10,10))
+    A:egpColor(29,0,0,0,255)
+    
+    A:egpBox(30, vec2(175,310), vec2(10,10))
+    A:egpColor(30,0,0,0,255)
+    
+    A:egpBox(31, vec2(190,300), vec2(20,10))
+    A:egpColor(31,0,0,0,255)
+    
+    A:egpBox(32, vec2(310,300), vec2(20,10))
+    A:egpColor(32,0,0,0,255)
+    
+    A:egpBox(33, vec2(250,290), vec2(100,10))
+    A:egpColor(33,0,0,0,255)
+    
+    A:egpBox(34, vec2(250,340), vec2(100,90))
+    A:egpColor(34,255,0,0,255)
+    
+    A:egpBox(35, vec2(190,345), vec2(20,80))
+    A:egpColor(35,255,0,0,255)
+    
+    A:egpBox(36, vec2(335,365), vec2(10,60))
+    A:egpColor(36,255,0,0,255)
+    
+    A:egpBox(37, vec2(165,365), vec2(10,60))
+    A:egpColor(37,255,0,0,255)
+    
+    A:egpBox(38, vec2(310,345), vec2(20,80))
+    A:egpColor(38,255,0,0,255)
+    
+    A:egpBox(39, vec2(175,350), vec2(10,70))
+    A:egpColor(39,255,0,0,255)
+    
+    A:egpBox(40, vec2(325,350), vec2(10,70))
+    A:egpColor(40,255,0,0,255)
+    
+    A:egpBox(41, vec2(320,390), vec2(20,10))
+    A:egpColor(41,255,0,0,255)
+    
+    A:egpBox(42, vec2(180,390), vec2(20,10))
+    A:egpColor(42,255,0,0,255)
+    
+    A:egpBox(43, vec2(270,350), vec2(70,40))
+    A:egpColor(43,255,255,255,255)
+    
+    A:egpBox(44, vec2(270,325), vec2(50,10))
+    A:egpColor(44,255,255,255,255)
+    
+    A:egpBox(45, vec2(270,375), vec2(50,10))
+    A:egpColor(45,255,255,255,255)
+    
+    A:egpBox(46, vec2(335,370), vec2(10,40))
+    A:egpColor(46,255,255,255,255)
+    
+    A:egpBox(47, vec2(325,370), vec2(10,20))
+    A:egpColor(47,255,255,255,255)
+    
+    A:egpBox(48, vec2(180,365), vec2(40,20))
+    A:egpColor(48,255,255,255,255)
+    
+    A:egpBox(49, vec2(180,350), vec2(20,10))
+    A:egpColor(49,255,255,255,255)
+    
+    A:egpBox(50, vec2(180,380), vec2(20,10))
+    A:egpColor(50,255,255,255,255)
+    
+    A:egpBox(51, vec2(185,330), vec2(30,10))
+    A:egpColor(51,255,255,255,255)
+    
+    A:egpBox(52, vec2(190,320), vec2(40,10))
+    A:egpColor(52,255,255,255,255)
+    
+    A:egpBox(53, vec2(200,310), vec2(40,10))
+    A:egpColor(53,255,255,255,255)
+    
+    A:egpBox(54, vec2(210,300), vec2(20,10))
+    A:egpColor(54,255,255,255,255)
+    
+    A:egpBox(55, vec2(325,330), vec2(10,10))
+    A:egpColor(55,255,255,255,255)
+    
+    A:egpBox(56, vec2(320,320), vec2(20,10))
+    A:egpColor(56,255,255,255,255)
+    
+    A:egpBox(57, vec2(310,310), vec2(20,10))
+    A:egpColor(57,255,255,255,255)
+}

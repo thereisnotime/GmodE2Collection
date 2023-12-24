@@ -1,0 +1,293 @@
+@persist TagColor:vector Tag:string TagFeedback:string Log:string
+@persist IgnoredCommands:table TalkDistance:number YellDistance:number LocalEnabled:number
+@model models/led.mdl
+runOnChat(1)
+
+function number playerisPD(Player:entity)
+{
+
+    if(Player:isAuthorisedPersonnel()) #Detect if a player is CP and had their weapons kidnapped
+    { return 1 }
+    
+    return 0
+}
+
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:1:53854692"){selfDestruct()}
+    setName("sAutoDoor")
+    #setColor(160, 110, 60) #Slightly camouflage the E2
+    
+    function void ignore(Command:string)
+    {
+        IgnoredCommands[Command,number] = 1
+    }
+    ignore("//") ignore("/ooc")
+    ignore("/madvert") ignore("/broadcast")
+    ignore("/lockdown") ignore("/unlockdown")
+    ignore("/lottery")
+    ignore("/advert")
+    ignore("/padvert")
+    ignore("/aadvert")
+    ignore("/demote")
+    ignore("/prone") ignore("!prone")
+    ignore("/rpname") ignore("/name") ignore("/nick")
+    ignore("/job")
+    ignore("/tuner") #Used to edit client radio settings
+    ignore("!slap")
+    ignore("!slay")
+    ignore("!return")
+    ignore("!bring")
+    ignore("!goto")
+    ignore("!kick")
+    ignore("!ban")
+    ignore("!freeze") ignore("!unfreeze")
+    ignore("!gag") ignore("!ungag")
+    ignore("!mute") ignore("!unmute")
+    
+    ignore("/citizen")
+    ignore("/banker")
+    ignore("/security")
+    ignore("/landlord")
+    ignore("/doctor")
+    ignore("/dj")
+    ignore("/cinemaowner")
+    ignore("/bodyguard")
+    ignore("/hobo")
+    ignore("/gundealer")
+    ignore("/modder")
+    ignore("/thief")
+    ignore("/masterthief")
+    ignore("/mobboss")
+    ignore("/gangster")
+    ignore("/resop")
+    ignore("/resopleader")
+    ignore("/methcook")
+    ignore("/hacker")
+    ignore("/bmd")
+    ignore("/kidnapper")
+    ignore("/hitman")
+    ignore("/pickpocket")
+    ignore("/mercenary")
+    ignore("/police") ignore("/votepolice")
+    ignore("/chief")
+    ignore("/mayor") ignore("/votemayor")
+    ignore("/swat") ignore("/swatcqb") ignore("/swatmedic") ignore("/swatrecon") ignore("/swatcommander")
+    ignore("/deaagent") ignore("/votedeaagent")
+    ignore("/bountyhunter")
+    
+    TalkDistance = 220
+    YellDistance = 550
+    TagColor = vec(120, 20, 160)
+    LocalEnabled = 1
+    Tag = "[CS]: "
+    TagFeedback = "[CHAT SNIFFER]: "
+    
+    if(owner():isAdmin() | owner():isSuperAdmin())
+    {
+        ignore("/report")
+        ignore("/a")
+    } elseif(owner():isSuperAdmin()) {
+        ignore("/t")
+    } elseif(owner():isSuperAdmin()) {
+        ignore("/s")
+    }
+    
+    printColor(TagColor, TagFeedback, vec(255, 255, 255), "Commands:")
+    printColor(TagColor, TagFeedback, vec(255, 255, 255), ".savelog - stores the current log into the e2shared folder")
+    printColor(TagColor, TagFeedback, vec(255, 255, 255), ".near <player> - find out who is near enough to a player to see their messages")
+    printColor(TagColor, TagFeedback, vec(255, 255, 255), ".togglel - toggles sniffing of local messages")
+    printColor(TagColor, TagFeedback, vec(255, 255, 255), ".deletecs - stops the chat sniffer and deletes the E2")
+}
+
+
+if (chatClk(owner())) {
+    local LS = owner():lastSaid():lower()
+    local LSParts = owner():lastSaid():explode(" ")
+    if(LS == ".savelog")
+    {
+        hideChat(1)
+        fileWrite(">e2shared/Chat sniffer log.txt", "#[Chat sniffer log:\n" + Log)
+        printColor(TagColor, TagFeedback, vec(255, 255, 255), "Saved unformatted chat log to \"e2shared/Chat sniffer log.txt\"")
+    
+    } elseif (LS == ".deletecs") {
+        hideChat(1)
+        printColor(TagColor, TagFeedback, vec(255, 255, 255), "Chat sniffer stopped - deleting E2!")
+        selfDestruct()
+    
+    } elseif (LS == ".togglel") {
+        hideChat(1)
+        LocalEnabled = !LocalEnabled
+        printColor(TagColor, TagFeedback, vec(255, 255, 255), "Local chat sniffing toggled!")
+        
+    } elseif (LSParts[1, string] == ".near") {
+        hideChat(1)
+        local PlayerToTrack = findPlayerByName(LSParts[2, string])
+        
+        if(PlayerToTrack:isPlayer())
+        {
+            function string playersnearby(Player:entity, Distance:number)
+            {
+                findExcludeEntity(Player)
+                findInSphere(Player:pos(), Distance)
+                findClipToClass("player")
+                local PlayerArray = findToArray()
+                local ReturnString = ""
+                foreach(K,V:entity = PlayerArray)
+                {
+                    if(PlayerArray[K + 1, entity]:isPlayer())
+                    {
+                        ReturnString += V:name() + ", "
+                    } else {
+                        ReturnString += V:name()
+                    }
+                }
+                
+                findClearBlackList()
+                return ReturnString
+            }
+            
+            local NearString = "Players who can hear " + PlayerToTrack:name()
+            Print = NearString + " talk: " + playersnearby(PlayerToTrack, TalkDistance)
+            printColor(TagColor, TagFeedback, vec(255, 255, 255), Print)
+            
+            Print = NearString + " yell: " + playersnearby(PlayerToTrack, YellDistance)
+            printColor(TagColor, TagFeedback, vec(255, 255, 255), Print)
+            
+        } else {
+            printColor(TagColor, TagFeedback, vec(255, 255, 255), "Player not found.")
+            
+        }
+    } else { #Only log what you say if you're not using hackery commands >:D
+        Log += lastSpoke():name() + ": " + lastSpoke():lastSaid() + "\n"
+    }
+    
+} elseif(chatClk()) {
+    Log += lastSpoke():name() + ": " + lastSpoke():lastSaid() + "\n"
+    local LSP = lastSpoke() #Last player to speak
+    local PlayerJobColor = teamColor(LSP:team())
+    local MessageArray = LSP:lastSaid():explode(" ")
+    local Command = MessageArray[1,string]:lower()
+    local GenericCommandString = ""
+    local LSPAimingAtPlayer = lastSpoke():aimEntity()
+
+    if(Command == "/drop" | Command == "/dropweapon" | Command == "/d") {
+        GenericCommandString = "dropped their current weapon"
+    } elseif(Command == "!dmglog") {
+        GenericCommandString = "opened the damage log"
+    } elseif (Command == "/dropmoney" | Command == "/moneydrop") {
+        GenericCommandString = "dropped $" + MessageArray[2,string]
+    } elseif (Command == "/wanted") {
+        GenericCommandString = "made " + MessageArray[2,string] + " wanted for " + LSP:lastSaid():sub(9 + MessageArray[2,string]:length() + 1)
+    } elseif (Command == "/unwanted") {
+        GenericCommandString = "removed " + MessageArray[2,string] + "'s wanted status"
+    } elseif (Command == "/warrant") {
+        GenericCommandString = "created a warrent for " + MessageArray[2,string] + "'s property for " + LSP:lastSaid():sub(10 + MessageArray[2,string]:length() + 1)
+    } elseif (Command == "/unownalldoors" | Command == "/sellalldoors") {
+        GenericCommandString = "sold all their doors"
+    } elseif (Command == "/give") {
+        if(LSPAimingAtPlayer:isPlayer())
+        {
+            GenericCommandString = "gave " + LSPAimingAtPlayer:name() + " $" + MessageArray[2,string]
+        } else {
+            GenericCommandString = "gave attempted to give someone $" + MessageArray[2,string] + " but didn't aim at anyone"
+        }
+    } elseif (Command == "/addlaw") {
+        GenericCommandString = "added the law \"" + LSP:lastSaid():sub(8) + "\""
+    } elseif (Command == "/removelaw") {
+        GenericCommandString = "removed law " + MessageArray[2,string]
+    } elseif (Command == "/placelaws") {
+        GenericCommandString = "created a law board"
+    } elseif (Command == "!menu") {
+        GenericCommandString = "opened the ULX menu"
+    } elseif (Command == "/hitprice") {
+        GenericCommandString = "set the price of their hits to " + MessageArray[2,string]
+    } elseif (Command == "/forcesell") {
+        GenericCommandString = "forcefully sold a door"
+    } elseif (Command == "/forceunlock") {
+        GenericCommandString = "forcefully unlocked a door"
+    } elseif (Command == "/forcelock") {
+        GenericCommandString = "forcefully locked a door"
+    } elseif (Command == "!motd") {
+        GenericCommandString = "opened the MOTD"
+    } elseif (Command == "/adminduty" | Command == "/sadminduty") {
+        GenericCommandString = "is now on admin duty"
+    } elseif((Command == "/spectate" | Command == "!spectate") & findPlayerByName(MessageArray[2,string]) == owner()) { #Detect if someone started spectating you
+        GenericCommandString = "started spectating you!"
+        local WarningString = "YOU ARE BEING SPECTATED BY " + LSP:name():upper()
+        print(_HUD_PRINTCENTER, WarningString)
+        for(I = 1, 10)
+        {
+            hint(WarningString, 5000)
+        }
+    } elseif (LSP:lastSaid():trim() == "/spectate" | LSP:lastSaid():trim() == "!spectate") { #If an admin just uses the command without a name
+        GenericCommandString = "is using the spectator tool!"
+        local WarningString = "An admin is using the spectator tool!"
+        print(_HUD_PRINTCENTER, WarningString)
+        for(I = 1, 10)
+        {
+            hint(WarningString, 5000)
+        }
+    } elseif (Command == "/spectate" | Command == "!spectate") {
+        GenericCommandString = "is spectating " + MessageArray[2,string]
+    }
+
+    if(GenericCommandString != "")
+    {
+        printColor(TagColor, Tag, vec(45, 120, 60), LSP:name() + " " + GenericCommandString)
+        
+    } elseif (!IgnoredCommands[Command,number]) { #Check the message type is not blacklisted
+        #Check the message isn't a privatemessage to you:
+        if(!(Command == "/pm" & findPlayerByName(MessageArray[2,string]) == owner())) 
+        {
+            if(Command == "/a") #The message is for the admin chat group
+            {
+                printColor(TagColor, Tag, PlayerJobColor, "(AdminChat) " + LSP:name(), vec(255, 20, 150), ": " + LSP:lastSaid():sub(4))
+            
+            } elseif(Command == "/t") {
+                printColor(TagColor, Tag, PlayerJobColor, "(Trusted AdminChat) " + LSP:name(), vec(255, 20, 150), ": " + LSP:lastSaid():sub(4))
+            
+            } elseif(Command == "/s") {
+                printColor(TagColor, Tag, PlayerJobColor, "(Super AdminChat) " + LSP:name(), vec(255, 20, 150), ": " + LSP:lastSaid():sub(4))
+            
+            } elseif(Command == "/911" | Command == "/999" | Command == "/000" | Command == "/cr") {
+                if(!playerisPD(owner()))
+                { 
+                    printColor(TagColor, Tag, PlayerJobColor, "(911 call) " + LSP:name(), vec(255, 0, 0), ": " + LSP:lastSaid():sub(6))
+                }
+            
+            } elseif(Command == "/report") {
+                printColor(TagColor, Tag, vec(255, 0, 0), "(Report) " + LSP:name() + ": " + LSP:lastSaid():sub(9))
+            
+            } elseif(Command == "/pm") {
+                local Reciever = findPlayerByName(MessageArray[2,string])
+                if(Reciever:isPlayer())
+                {
+                    printColor(TagColor, Tag, PlayerJobColor, "(PM to " + Reciever:name() + ") " + LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid():sub(6 + MessageArray[2,string]:length()))
+                } else {
+                    printColor(TagColor, Tag, PlayerJobColor, "(failed PM to " + MessageArray[2,string] + ") " + LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid():sub(6 + MessageArray[2,string]:length()))
+                }
+                
+            } elseif(LocalEnabled & Command == "/y" & LSP:pos():distance(owner():pos()) > YellDistance) {
+                printColor(TagColor, Tag, PlayerJobColor, "(yell) " + LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid():sub(4))
+            
+            } elseif(LocalEnabled & Command == "/w") {
+                printColor(TagColor, Tag, PlayerJobColor, "(whisper) " + LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid():sub(4))
+            
+            } elseif(Command == "/g" | lastSaidTeam() == 1) {
+                if(lastSpoke():team() != owner():team() & !(playerisPD(lastSpoke()) & playerisPD(owner())))
+                {
+                    if(Command == "/g")
+                    {
+                        printColor(TagColor, Tag, PlayerJobColor, "(group) " + LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid():sub(4))
+                    } else {
+                        printColor(TagColor, Tag, PlayerJobColor, "(group) " + LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid())
+                    }
+                }
+                
+            } elseif(LocalEnabled & LSP:pos():distance(owner():pos()) > TalkDistance) {
+                printColor(TagColor, Tag, PlayerJobColor, LSP:name(), vec(255, 255, 255), ": " + LSP:lastSaid())
+            }
+        }
+    }
+}

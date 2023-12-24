@@ -1,0 +1,279 @@
+# Description: A game of tag
+
+@name Tag
+@inputs 
+@outputs 
+@persist AntiSpam Start Time TimeCheck
+@persist Member:array [TempMember, It]:entity
+@trigger 
+
+if(first()){   
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"
+- /add <name> | Adds a player to the game
+- /remove <name> | Removes a player from the game
+- /addall | Adds all players to the game
+- /removeall | Removes all players from the game
+- /start | Starts the game")
+printColor(vec(255,255,255),"- /stop | Stops/pauses the game
+- /timeset <number> | Sets time limit for the game (in seconds)
+- /timeleft | Tells how much time is left
+- /it <name> | Sets a specific person to be it
+- /list | Lists the players in the game")
+
+    AntiSpam = 1
+    Member[1,entity] = owner()
+    It = owner()
+    Start = 0
+    Time = 0
+    TimeCheck = 0
+    
+    holoCreate(1)
+    holoScale(1, vec(0.5,0.5,0.5))
+    holoColor(1, vec(255,0,0))
+    holoDisableShading(1,1)
+    holoMaterial(1, "debug/debugportals")
+    holoAlpha(1,0)
+    
+    holoCreate(2)
+    holoScale(2, vec(0.5,0.5,2))
+    holoColor(2, vec(255,0,0))
+    holoDisableShading(1,1)
+    holoMaterial(2, "debug/debugportals")
+    holoAlpha(2,0)
+    
+    holoCreate(3)
+    holoModel(3, "hq_sphere")
+    holoScale(3, vec(-5.5,-5.5,-5.5))
+    holoColor(3, vec(255,0,0))
+    holoDisableShading(3,1)
+    holoAlpha(3,0)
+}
+
+interval(100)
+runOnChat(1)
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner()) & LS[1,string] == "/add"){
+    hideChat(1)
+    TempMember = findPlayerByName(LS[2,string])
+    if(TempMember:isPlayer()){
+        for(I = 1,Member:count()){
+            if(TempMember == Member[I,entity]){
+                MemberCheck = 1
+                printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),""+TempMember:name()+" has already been added to the game")
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            Member:pushEntity(TempMember)
+            printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),""+TempMember:name()+" was added to the game")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),"Can't find "+LS[2,string]+"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/remove"){
+    hideChat(1)
+    TempMember = findPlayerByName(LS[2,string])
+    if(TempMember:isPlayer()){
+        for(I = 1,Member:count()){
+            if(TempMember == Member[I,entity]){
+                Member:remove(I)
+                MemberCheck = 1
+                printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),""+TempMember:name()+" has been removed from the game")
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),""+TempMember:name()+" has already been removed or was never added")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),"Can't find "+LS[2,string]+"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/addall"){
+    hideChat(1)
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"All players were added to the game")
+    Member = players()
+}
+
+if(chatClk(owner()) & LS[1,string] == "/removeall"){
+    hideChat(1)
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"All players were removed from the game")
+    Member:clear()
+}
+
+if(chatClk(owner()) & LS[1,string] == "/list"){
+    hideChat(1)
+    timer("list",500)
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"Added Players:")
+}
+
+if(clk("list")){
+    for(I = 1, Member:count()){
+        printColor(vec(255,255,255),Member[I,entity]:name())
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/start" & Start == 0){
+    hideChat(1)
+    timer("start",5000)
+    TimeCheck = 1
+    concmd("say The game of tag is about to start! If you are it, press E on another player to tag them!")
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"The game is about to start...")
+}
+
+if(chatClk(owner()) & LS[1,string] == "/stop" & Start == 1){
+    hideChat(1)
+    Start = 0
+    stoptimer("time")
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"The game has been stopped")
+}
+
+if(clk("start")){
+    Start = 1
+    concmd("say "+It:name()+" is it!")
+    printColor(vec(255,0,255),"[Tag] ",vec(0,255,0),"The game has started!")
+}
+
+if(Start == 0){
+    holoAlpha(1,0)
+    holoAlpha(2,0)
+    holoAlpha(3,0)
+}
+
+if(Start == 1){
+    holoAlpha(1,255)
+    holoAlpha(2,255)
+    holoAlpha(3,10)
+}
+
+holoPos(1,It:pos() + vec(0,0,90))
+holoParent(1,It)
+holoPos(2,It:pos() + vec(0,0,110))
+holoParent(2,It)
+holoPos(3,It:attachmentPos("eyes") + vec(0,0,-10))
+holoParentAttachment(3,It,"eyes")
+
+if(Start == 1){
+    if(AntiSpam == 1){
+        if(It:keyUse()){
+            Target = It:aimEntity()
+            Distance = It:pos():distance(Target:pos())
+            if(Target:isPlayer()){
+                for(I=1,Member:count()){
+                    if(Target == Member[I,entity]){
+                        if(It:pos():distance(Target:pos()) < 100){
+                            It = Target
+                            concmd("say "+It:name()+" is now it!")
+                            holoVisible(3,players(),0)
+                            holoVisible(3,It,1)
+                            holoEntity(1):soundPlay(1,1,"misc/banana_slip.wav")
+                            timer("spam",2000)
+                            AntiSpam = 0
+                            printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),""+It:name()+" is now it")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/it"){
+    hideChat(1)
+    ItTemp = findPlayerByName(LS[2,string])
+    if(ItTemp:isPlayer()){
+        for(I = 1,Member:count()){
+            if(ItTemp == Member[I,entity]){
+                MemberCheck = 1
+                It = ItTemp
+                printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),""+It:name()+" is now it")
+                if(Start == 1){
+                    concmd("say "+It:name()+" is now it!")
+                    holoVisible(3,players(), 0)
+                    holoVisible(3,It, 1)
+                    holoEntity(1):soundPlay(1,1,"misc/banana_slip.wav")
+                    timer("spam",2000)
+                    AntiSpam = 0
+                }
+                break
+            }
+            else{
+                MemberCheck = 1
+            }
+            MemberCheck = 0
+        }
+        if(MemberCheck == 0){
+            printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),""+ItTemp:name()+" isn't in the game")
+        }
+    }
+    else{
+        printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),"Couldn't find a player named \""+LS[2,string]+"\"")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/timeset"){
+    hideChat(1)
+    TimeTemp = LS[2,string]:toNumber()
+    if(TimeTemp == 0 | TimeTemp < 1){
+        printColor(vec(255,0,255),"[Tag] ",vec(255,0,0),"Please input a valid time")
+    }
+    else{
+        Time = TimeTemp
+        TimeCheck = 1
+        printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"Time limit set to "+Time+" seconds")
+    }
+}
+
+if(chatClk(owner()) & LS[1,string] == "/timeleft"){
+    hideChat(1)
+    if(Time == 0){
+        printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"Time is set to infinite")
+    }
+    else{
+        printColor(vec(255,0,255),"[Tag] ",vec(255,255,255),"Time left: "+Time+"")
+    }
+}
+
+if(Time > 0 & Start == 1 & TimeCheck == 1){
+    stoptimer("time")
+    Timer = Time * 1000
+    timer("time", Timer)
+    timer("counter", 0)
+    TimeCheck = 0
+}
+
+if(clk("counter") & Time > 0 & Start == 1){
+    if(Time == 60){
+        concmd("say 1 minute remaining!")
+    }
+    if(Time == 10){
+        concmd("say 10 seconds remaining!")
+    }
+    Time--
+    timer("counter",1000)
+}
+
+if(clk("time")){
+    Start = 0
+    printColor(vec(255,0,255),"[Tag] ",vec(255,255,0),"The game has ended! "+It:name()+" loses!")
+    concmd("say The game has ended! "+It:name()+" loses!")
+}
+
+if(clk("spam")){
+    AntiSpam = 1
+}

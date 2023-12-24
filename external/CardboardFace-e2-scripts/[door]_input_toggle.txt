@@ -1,0 +1,13 @@
+@name [DOOR] Multi-input simple toggle
+@inputs WireGate:number
+@outputs FadingDoor:number
+@trigger WireGate
+
+
+if (first() || dupefinished()) {
+    FadingDoor = 0
+}
+
+if (WireGate) {
+    FadingDoor = !FadingDoor
+}

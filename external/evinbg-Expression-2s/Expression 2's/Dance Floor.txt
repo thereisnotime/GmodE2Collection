@@ -1,0 +1,120 @@
+# Description: Creates a scalable dance floor out of holograms
+
+@name Dance Floor
+@inputs 
+@outputs 
+@persist Size Holos Speed Scale I MoveUp MoveSide CreateSpeed Offset:vector
+@trigger 
+
+if(first()){
+    Size = 8
+    Holos = Size * Size
+    Speed = 1
+    Scale = 3
+    CreateSpeed = 20
+    Offset = vec((-(Scale * 12) * Size / 2) + Scale * 6, (-(Scale * 12) * Size / 2) + Scale * 6, 0)
+    
+    printColor(vec(255,0,255),"[Floor] ",vec(255,255,255),"Commands:
+- /speed <1 - 100>
+- /scale <0.01 - 50>
+- /size <1 - 12>")
+    
+    MoveUp = 0
+    MoveSide = 0
+    
+    I = 1
+    
+    timer("create", 200)
+}
+
+interval(100)
+runOnChat(1)
+
+if(clk("create")){
+    holoCreate(I)
+    holoScale(I, vec(Scale, Scale, 0.02))
+    holoPos(I, entity():pos() + vec((Scale * 12) * MoveSide, (Scale * 12) * MoveUp,0) + Offset)
+    holoDisableShading(I, 1)
+    if(I == 1){
+        holoParent(I, entity())
+    }
+    else{
+        holoParent(I, holoEntity(1))
+    }
+    MoveSide++
+    if(I % Size == 0){
+        MoveUp++
+        MoveSide = 0
+    }
+    I++
+    if(I <= Holos){
+        timer("create", CreateSpeed)
+    }
+    if(I > Holos){
+        timer("done", 200)
+        entity():setAlpha(0)
+        printColor(vec(255,0,255),"[Floor] ",vec(0,255,0),"Done creating floor")
+    }
+}
+
+if(clk("done")){
+    timer("color", 200)
+}
+
+if(clk("color")){
+    for(H = 1, Holos){
+        holoColor(H, hsv2rgb((360 / Holos) * H * curtime() * Speed,1,1))
+    }
+    timer("color", 20)
+}
+
+LS = owner():lastSaid():lower():explode(" ")
+
+if(chatClk(owner())){
+    if(LS[1,string] == "/speed"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 1 | LS[2,string]:toNumber() > 200){
+            printColor(vec(255,0,255),"[Floor] ",vec(255,0,0),"Please enter a percentage between 1 - 200")
+        }
+        else{
+            Speed = LS[2,string]:toNumber() / 100
+            printColor(vec(255,0,255),"[Floor] ",vec(255,255,255),"Speed: "+LS[2,string]:toNumber()+"%")
+        }
+    }
+    if(LS[1,string] == "/scale"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 0.01 | LS[2,string]:toNumber() > 50){
+            printColor(vec(255,0,255),"[Floor] ",vec(255,0,0),"Please enter a number between 0.01 - 50")
+        }
+        else{
+            Scale = LS[2,string]:toNumber()
+            I = 1
+            MoveUp = 0
+            MoveSide = 0
+            Offset = vec((-(Scale * 12) * Size / 2) + Scale * 6, (-(Scale * 12) * Size / 2) + Scale * 6, 0)
+            stoptimer("color")
+            timer("create", 200)
+            printColor(vec(255,0,255),"[Floor] ",vec(255,255,255),"Scale: "+LS[2,string]:toNumber()+"")
+        }
+    }
+    if(LS[1,string] == "/size"){
+        hideChat(1)
+        if(LS[2,string]:toNumber() < 1 | LS[2,string]:toNumber() > 12){
+            printColor(vec(255,0,255),"[Floor] ",vec(255,0,0),"Please enter a whole number between 1 - 12")
+        }
+        elseif(LS[2,string]:toNumber() % 1 != 0){
+            printColor(vec(255,0,255),"[Floor] ",vec(255,0,0),"Please enter a whole number between 1 - 12")
+        }
+        else{
+            Size = LS[2,string]:toNumber()
+            I = 1
+            MoveUp = 0
+            MoveSide = 0
+            Holos = Size * Size
+            Offset = vec((-(Scale * 12) * Size / 2) + Scale * 6, (-(Scale * 12) * Size / 2) + Scale * 6, 0)
+            stoptimer("color")
+            timer("create", 200)
+            printColor(vec(255,0,255),"[Floor] ",vec(255,255,255),"Size: "+LS[2,string]:toNumber()+"")
+        }
+    }
+}

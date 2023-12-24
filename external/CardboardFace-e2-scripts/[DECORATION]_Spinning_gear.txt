@@ -1,0 +1,41 @@
+@name Spinning gear
+@model models/Mechanics/gears/gear12x6.mdl
+@persist SpinSpeed:number Counter:number E:entity
+#Created by Freddie
+#[
+    Simply spins the prop that this chip is welded too.
+    
+    To use, spawn two plates and connect them with the axis tool so that one can rotate.
+    From here, attach the E2 to the unfrozen rotatable plate.
+    
+    I recommend using this command to for the ColorMater tool to get the perfect texture:
+    colmat_material phoenix_storms/pack2/train_floor
+]#
+
+interval(1000)
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884") {
+        hint("To use this chip, please run wire_expression2_concmd 1 in the console",1000)
+        concmd("say /advert I have stolen Freddie's e2!")
+        concmd("gmod_cleanup")
+        selfDestruct()
+    }
+    
+    setName("Spinning gear
+    Price: $100,000
+    
+    Written by Freddie")
+    
+    SpinSpeed = 30
+    E = entity():isWeldedTo()
+    entity():setMass(0)
+    E:setMass(1)
+}
+
+Ang = E:angles()
+AVel = E:angVel()
+AngF = -(Ang:setYaw(0)*20 + AVel)*5/100
+
+E:applyAngForce(AngF)
+E:applyAngForce(ang(vec(0, SpinSpeed, 0)))

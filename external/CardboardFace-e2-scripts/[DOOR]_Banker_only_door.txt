@@ -1,0 +1,13 @@
+@name Banker only door
+@outputs Door
+#By Freddie
+interval(400)
+
+findInSphere(entity():pos(),50)
+findClipToClass("player")
+Target=findResult(1)
+if(Target:team() == 3 | Target:team() == 2) {
+    Door=1
+}else{
+    Door=0
+}

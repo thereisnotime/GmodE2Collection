@@ -1,0 +1,143 @@
+@persist TagColor:vector HeaderColor:vector TextColor:vector Tag:string Toggle:number NonWeapons:table
+@model models/led.mdl
+interval(100)
+
+if(first() | dupefinished())
+{
+    if(owner():steamID() != "STEAM_0:0:29948884" & owner():steamID() != "STEAM_0:1:53854692"){selfDestruct()}
+    setName("Buy commands")
+    setColor(160, 110, 60) #Slightly camouflage the E2
+    
+    function string addnonweapon(WeaponName:string)
+    {
+        NonWeapons[WeaponName,number] = 1
+    }
+    addnonweapon("weapon_physcannon")
+    addnonweapon("weapon_physgun")
+    addnonweapon("gmod_tool")
+    addnonweapon("gmod_camera")
+    addnonweapon("laserpointer")
+    addnonweapon("remotecontroller")
+    addnonweapon("weapon_fists")
+    addnonweapon("keys")
+    addnonweapon("pocket")
+    addnonweapon("arrest_stick")
+    addnonweapon("unarrest_stick")
+    addnonweapon("stunstick")
+    addnonweapon("sent_sniffer") addnonweapon("sent_bong") addnonweapon("sent_tablet")
+    addnonweapon("weapon_keypad_cracker") addnonweapon("super_cracker") addnonweapon("weapon_uni_cracker")
+    addnonweapon("lockpick") addnonweapon("super_lockpick")
+    addnonweapon("weapon_mad_ram") addnonweapon("door_ram_fixed")
+    addnonweapon("weapon_mad_charge")
+    addnonweapon("weaponchecker")
+    
+    TagColor = vec(50, 150, 255)
+    Tag = "[ESP]: "
+    HeaderColor = vec(255,255,255)
+    TextColor = vec(80, 110, 140)
+    printColor(TagColor, Tag, HeaderColor, "Hold SHIFT+E and aim over a player to see information about them!")
+    printColor(TagColor, Tag, HeaderColor, "Commands:")
+    printColor(TagColor, Tag, HeaderColor, ".deleteesp - deletes the ESP E2")
+}
+
+if(owner():keyUse() & owner():keySprint() & Toggle)
+{
+    if(owner():aimEntity():type()=="player")
+    {
+        Toggle = 0
+        local Player = owner():aimEntity()
+        local PlayerIsCP = 0
+        
+        findIncludePlayerProps(Player)
+        findIncludeClass("weapon_*")
+        findExcludeClass("prop_physics")
+        findExcludeClass("player")
+        findInSphere(Player:pos(),25)
+        local Items = findToArray()
+        findClearWhiteList()
+        findClearBlackList()
+        local Weapons = array()
+        for (X = 1,Items:count()) {
+            if (Items[X,entity]:type() == "arrest_stick") #Detect if a player is undercover, because they still have the baton
+            {
+                PlayerIsCP = 1
+            }
+            if (!NonWeapons[Items[X,entity]:type(),number])
+            {
+                Weapons:pushString(Items[X,entity]:type():sub(1,20))
+            }
+        }
+        if(Player:isAuthorisedPersonnel()) # | Player:isMayorAssistant() | Player:isPoliceDeputy()) #Detect if a player is CP and had their weapons kidnapped
+        {
+            PlayerIsCP = 1
+        }
+        
+        local Red = vec(255,0,0)
+        printColor(" ")
+        printColor(" ")
+        if(Player:isWanted() | Player:isWarranted())
+        {
+            if(Player:isWanted())
+            {
+                printColor(TagColor, Tag, HeaderColor, "Data for \"", teamColor(Player:team()), Player:name(), Red, " WANTED", HeaderColor, "\":")
+            } else {
+                printColor(TagColor, Tag, HeaderColor, "Data for \"", teamColor(Player:team()), Player:name(), Red, " WARRANTED", HeaderColor, "\":")
+            }
+        } else {
+            printColor(TagColor, Tag, HeaderColor, "Data for \"", teamColor(Player:team()), Player:name(), HeaderColor, "\":")
+        }
+        printColor(TagColor, Tag, HeaderColor, "Health/Armor: ", TextColor, Player:health() + " / " + Player:armor())
+        printColor(TagColor, Tag, HeaderColor, "Holding: ", TextColor, Player:weapon():type())
+        printColor(TagColor, Tag, HeaderColor, "K/D: ", TextColor, Player:frags() + " / " + Player:deaths())
+        
+        if(PlayerIsCP)
+        {
+            printColor(TagColor, Tag, HeaderColor, "PD member: ", Red, "TRUE")
+        } else {
+            printColor(TagColor, Tag, HeaderColor, "PD member: ", TextColor, "FALSE")
+        }
+        
+        if(Weapons:count() == 0)
+        {
+            printColor(TagColor, Tag, HeaderColor, "Weapons: ", TextColor, "none")
+        } else {
+            local WeaponsString = ""
+            for(I=1, Weapons:count() - 1)
+            {
+                WeaponsString += Weapons[I, string] + ", "
+            }
+            WeaponsString += Weapons[Weapons:count(), string]
+            
+            printColor(TagColor, Tag, HeaderColor, "Weapons: ", TextColor, WeaponsString)
+        }
+    }
+} elseif(!(owner():keyUse() & owner():keySprint())) {
+    Toggle = 1
+}
+
+if(chatClk(owner())) {
+    if(lastSaid() == ".deleteesp")
+    {
+        hideChat(1)
+        printColor(TagColor, Tag, vec(255, 0, 0), "ESP stopped - deleting E2!")
+        selfDestruct()
+    }
+}
+
+
+#Auto delete the E2 if someone finds it:
+findInSphere(entity():pos(),100)
+findClipToClass("player")
+if(findResult(1):isPlayer())
+{
+    if(findResult(1):steamID() != "STEAM_0:0:29948884" & findResult(1):steamID() != "STEAM_0:1:53854692")
+    {
+        local WarningString = findResult(1):name() + " came close to the ESP chip! Self destructing..."
+        printColor(TagColor, Tag, vec(255,0,0), WarningString)
+        for(I = 1, 10)
+        {
+            hint(WarningString, 5000)
+        }
+        selfDestruct()
+    }
+}
