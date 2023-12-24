@@ -1,0 +1,15 @@
+@name Warp E2
+
+# Say "/warp e2" to teleport your e2
+# Say "/warp" to teleport to your aimpos (CAN GET STUCK IF DONE ON WALLS)
+
+runOnChat(1)
+
+if((owner():lastSaid()=="/warp e2")&chatClk(owner())){
+    hideChat(1)
+    owner():teleport(entity():pos()+vec(0,0,0))   
+}
+if((owner():lastSaid()=="/warp")&chatClk(owner())){
+    hideChat(1)
+    owner():teleport(owner():aimPos()+owner():aimNormal()*owner():height())   
+}

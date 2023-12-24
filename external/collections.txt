@@ -5,3 +5,4 @@ https://github.com/evinbg/Expression-2s
 https://github.com/AlexALX/wiremod_e2_os
 https://github.com/aemarkov/gmod_stuff
 https://gitlab.com/CardboardFace/e2-scripts
+https://github.com/Grissess/gmod-data
