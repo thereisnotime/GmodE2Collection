@@ -38,6 +38,14 @@ jobs:
             fi
             done < ./external/collections.txt
 
+      - name: Rename .git to .gitoff
+        run: |
+          for d in ./external/*/; do
+            if [ -d "$d.git" ]; then
+              mv "$d.git" "$d.gitoff"
+            fi
+          done
+
       - name: Commit and Push Changes
         run: |
           git config --global user.name 'github-actions[bot]'
