@@ -1,0 +1,49 @@
+@name EGP PlayerList v1
+@inputs EGP:wirelink [P1, P2, P3, P4, P5, P6, P7, P8, P9, P10]:entity
+@outputs 
+@persist [RED ORANGE YELLOW WHITE]:vector4
+@trigger
+
+interval(1000)
+
+# Constants
+if(first()) {
+    RED = vec4(255, 0, 0, 255)
+    ORANGE = vec4(255, 128, 0, 255)
+    YELLOW = vec4(255, 255, 0, 255)
+    WHITE = vec4(0, 0, 0, 255)
+}
+
+E = array(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)
+TextY = 0
+EGP:egpClear()
+CHIP = entity()
+
+for(I = 0, E:count() - 1, 1) { 
+    CurP = E[I, entity]
+    if(CurP != noentity()) {
+        # Distance and Weapon String calculations
+        Dist = round(toUnit("yd", CHIP:pos():distance(CurP:pos())), 1)
+        Weapon = CurP:weapon():type()
+        
+        # Color Calculations
+        if(Dist < 20) {
+            EGP:egpColor(I, RED)
+        } elseif(Dist < 60) {
+            EGP:egpColor(I, ORANGE)
+        } elseif(Dist < 80) {
+            EGP:egpColor(I, YELLOW)
+        } else {
+            EGP:egpColor(I, WHITE)
+        }
+        
+        # Differentiate nonexistent weapon
+        if(Weapon != "") {
+            Weapon = "holding '" + Weapon + "'"
+        } else {
+            Weapon = "and hasn't spawned in yet."
+        }
+        EGP:egpText(I, CurP:name() + " is " + Dist + " yards away " + Weapon , vec2(10, I + TextY))
+        TextY += 30
+    }
+}

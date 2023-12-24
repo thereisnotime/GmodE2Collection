@@ -1,0 +1,317 @@
+@name Radio v.3
+@inputs 
+@outputs Length
+@persist Length Mode Temp Count Holo:entity [USE_KEY OPEN_MENU_KEY]:string Menu OO:entity Test:vector Holo_Aim:entity Key Active [TempVec]:vector [Inside Outside Hover]:vector4
+@persist RadioSender:array
+@trigger none
+
+interval(140)
+runOnChat(1)
+runOnLast(1)
+
+E = entity()
+Ply = players()
+O = owner()
+
+Last = O:lastSaid():explode(" ")
+
+########################################################################################################################################################################  
+
+if(first()){
+    
+    
+    Menu = 0
+    
+    #Colors
+    Inside  = vec4(0,0,0,255)
+    Outside = vec4(255,255,255,255)
+    Hover   = vec4(200,200,200,255)
+    
+    #Settings
+    Mode    = 1 # 1 = The Menu Will Follow You || 2 = The Menu Will Stay Where You Opened It
+    Model   = "models/sprops/geometry/fhex_18.mdl" #models/sprops/geometry/fhex_18.mdl - octagon
+    Count   = 4 # 1 - 9
+    TMat    = "models/debug/debugwhite" #Material
+    Radius  = 16.75 #Radius
+    Scale_Mul = 0.6 #Scaling Mul
+    Outline = 1.02#1.05 #outline size
+    USE_KEY = "E" #Use key
+    OPEN_MENU_KEY = "g" #Use key
+    Rotation = 180 #Rotates outerprops around the center
+    Center  = 1 #1 = holo in center || 0 = no holo
+    CenterS = 1 #The size of the center prop
+
+
+    Scaling = vec(1.5,0.3,1.5)*Scale_Mul
+    Center_Scaling = Scaling*CenterS
+    Angle_Offset = ang(0,90,0)
+    
+    RadioSender[1,string] = "http://stream01.iloveradio.de/iloveradio1.mp3"
+    RadioSender[2,string] = "http://stream.sunshine-live.de/live/mp3-192/Webradio-Player/"
+    RadioSender[3,string] = "http://mp3.ad.mdn.nacamar.net/ps-radiogalaxy/livestream.mp3"
+    RadioSender[4,string] = "http://online.radiorecord.ru:8102/club_128"
+  
+    streamVolume(1,1000)
+    streamRadius(1,1000)
+    streamDisable3D(1)
+    
+    entity():propShadow(0)
+    entity():propNotSolid(1)
+    entity():propDraw(0)
+    
+    function entity c(Index:number,Posi:vector,Scale:vector,Angle:angle,Colo:vector,Model:string,Material:string,Parent:entity,Alpha:number){
+        holoCreate(Index) holoPos(Index,Posi) holoScale(Index,Scale) holoAng(Index,Angle) holoColor(Index,Colo) holoModel(Index,Model) holoMaterial(Index,Material) 
+        holoParent(Index,Parent) holoAlpha(Index,Alpha) 
+        return holoEntity(Index)  
+    }
+    
+    
+    function number chat(N,S:string){
+        return (chatClk(owner())&owner():lastSaid():explode(" "):string(N)==S)    
+    }
+    
+    function printC(S:string){
+        printColor(vec(255),"[ ",vec(255,0,0),"E2",vec(255)," ] ",vec(255,255,0),S)
+    }
+    
+    function opri(Message2:string,ColorM2:vector){
+        printColor(vec(255),"[",vec(255,0,0),"RDv3",vec(255),"] ",vec(255,255,0),ColorM2,Message2)
+    }  
+    
+    function string formatname(URL:string) {
+        local Path = URL:explode("//")
+        local File = Path[Path:count(), string]:replace(".mp3", " ")
+        local File = File:right(File:length()-0)
+        
+        return File:replace("%20", " ")
+    }
+    
+    function streamPlay(Ent:entity,Index:number,SoundArt:array,SoundName:string,SoundN:number) {
+        Ent:streamStart(Index,SoundArt[SoundN,string],1000)
+        opri(SoundName+" Nr."+SoundN+"  ["+formatname(SoundArt[SoundN,string])+"]",vec(255,255,0))
+    }
+    
+    
+    function void drawText(String:string,Index,Holo:entity,Scale,Case){
+        
+        c(1000,Holo:pos()+vec(10,0,0),vec(1,0.1,3),ang(90,0,0),vec(0),"","",noentity(),255)
+        holoDisableShading(1000,1) 
+        c(1001,Holo:pos()+vec(10,0,0),-vec(1.03,0.12,3.03),ang(90,0,0),vec(0),"","",holoEntity(1000),255)
+        holoColor(1001,Outside)
+        holoDisableShading(1001,1)
+            
+
+        String = String:replace(" ","")
+        String = String:sub(1,10)
+        Explode = String:explode("")
+        Length = Explode:count()
+
+        for(I=1,Length){
+            if(Case==0){ 
+                c(Index+I,holoEntity(1000):pos()  +vec(I*3.2 - 19,0,0),vec(Scale)+vec(0,0.4,0),ang(0,180,0),vec(0),"models/sprops/misc/alphanum/alphanum_l_"+Explode[I,string]+".mdl","models/debug/debugwhite",holoEntity(1000),255)
+            }
+            elseif(Case==1){
+                c(Index+I,holoEntity(1000):pos()  +vec(I*3.2 - 19,0,0),vec(Scale)+vec(0,0.4,0),ang(0,180,0),vec(0),"models/sprops/misc/alphanum/alphanum_"+Explode[I,string]+".mdl","models/debug/debugwhite",holoEntity(1000),255)
+            }
+            holoDisableShading(Index+I,1)
+            holoColor(Index+I,Outside)
+        } 
+        holoPos(1000,Holo:pos()-Holo:right()*45)   
+        #holoAng(1000,Holo:angles()+ang(10,60,0))
+        holoAng(1000,ang(60,90,0) + (owner():pos() - holoEntity(1000):pos()):toAngle())
+        holoParent(1000,Holo)
+    } 
+    
+    function void hideText(Index){
+        
+        holoPos(1000,vec(0))
+        for(I=1,Length){
+            holoAlpha(Index+I,0)
+        }
+        
+    } 
+    
+    function void button(Button){
+    
+        switch(Button){
+        
+            #Button 1 is pressed
+            case 1,
+                hideText(500)
+                drawText("iloveradio",500,holoEntity(900),0.3,1)#String Text, Starting Holo Index, Base Menu Holo, Scale, Lower-Upper Case.
+                streamPlay(holoEntity(12687),1,RadioSender,"Radio",1)
+            break
+        
+            #Button 2 is pressed
+            case 2,
+                hideText(500)
+                drawText("sunshine",500,holoEntity(900),0.3,1)#String Text, Starting Holo Index, Base Menu Holo, Scale, Lower-Upper Case.
+                streamPlay(holoEntity(12687),1,RadioSender,"Radio",2)
+            break
+        
+            #Button 3 is pressed
+            case 3,
+                hideText(500)
+                drawText("radiogalaxy",500,holoEntity(900),0.3,1)#String Text, Starting Holo Index, Base Menu Holo, Scale, Lower-Upper Case.
+                streamPlay(holoEntity(12687),1,RadioSender,"Radio",3)
+            break
+        
+            #Button 4 is pressed
+            case 4,
+                hideText(500)
+                drawText("club 128",500,holoEntity(900),0.3,1)#String Text, Starting Holo Index, Base Menu Holo, Scale, Lower-Upper Case.
+                streamPlay(holoEntity(12687),1,RadioSender,"Radio",4)
+            break
+        
+            #Button 5 is pressed
+            case 5,
+                hideText(500)
+                #drawText("5",500,holoEntity(900),0.3,1)#String Text, Starting Holo Index, Base Menu Holo, Scale, Lower-Upper Case.
+                streamStop(1)
+            break
+        
+        }
+           
+    }    
+    
+    
+    function holoMenu(){
+        
+        if(first()){
+            c(0,vec(0),vec(1),ang(0),vec(255),"models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl","",noentity(),255)
+            holoDisableShading(0,1)
+            holoScaleUnits(0,vec(0))
+        
+            c(12687,owner():shootPos()+vec(0,0,10),vec(0),ang(90,0,0),vec(0),"","",owner(),0)
+
+            #Menu
+            HCenter = E:pos() + vec(0,0,60) #+ owner():forward()*50
+            c(900,HCenter,vec(1),ang(90,0,0),vec(255),"models/sprops/cuboids/height12/size_1/cube_12x12x12.mdl",TMat,noentity(),0)
+            holoScaleUnits(900,vec(1))
+        
+            if(Center){
+                c(200+Count+1,HCenter,Center_Scaling,Angle_Offset,vec(0),Model,TMat,holoEntity(900),255) holoColor(200+Count+1,Inside)
+                c(101,HCenter,-Center_Scaling*Outline,Angle_Offset,vec(0),Model,TMat,holoEntity(900),255) holoColor(101,Outside)
+                holoDisableShading(200+Count+1,1) holoDisableShading(101,1) 
+            }
+     
+    
+            #holoScale(0, vec(1,1,0.1))
+            #holoAng(0, entity():toWorld(ang(-40,0,0)))   
+            for(I=201,200+Count){
+                Temp = Temp + 1
+                #print(I)
+                local TempVec = Radius * vec(cos(I*(360/Count)),sin(I*(360/Count)),0):rotate(holoEntity(900):angles()+ang(Rotation,-90,-90)) + holoEntity(900):pos()
+        
+                c(I,TempVec,Scaling,Angle_Offset,vec(0),Model,TMat,holoEntity(900),255)
+                holoColor(I,Inside)
+        
+                c(I+50,holoEntity(I):pos(),-Scaling*Outline,holoEntity(I):angles(),vec(0),holoEntity(I):model(),TMat,holoEntity(I),255)
+                holoColor(I+50,Outside)
+                holoDisableShading(I+50,1)
+        
+                String = "models/sprops/misc/alphanum/alphanum_"+(Temp):toString()+".mdl"
+                #print(Temp)0
+                #print(String)
+                holoCreate(I+100,holoEntity(I):pos(),vec(0.7),holoEntity(I):angles()+ang(0,180,0),vec(255),"models/sprops/misc/alphanum/alphanum_"+Temp:toString()+".mdl") 
+                holoMaterial(I+100,TMat)
+                holoDisableShading(I+100,1)
+                holoParent(I+100,I)
+        
+            }
+    
+    
+            rangerPersist(1)
+            rangerFilter(owner())
+            Holo = holoEntity(900) 
+        
+        }
+        
+
+
+        local Key = owner():keyPressed(OPEN_MENU_KEY)
+        if(changed(Key) & Key){
+            Active = !Active
+            if(!Active){
+                holoPos(900,vec(0))
+                Counter = 0
+            }
+            TempVec = owner():pos() + vec(0,0,50) + owner():forward()*80
+            TempAng = holoEntity(900):angles()
+        }
+
+        if(changed(Active) & Active == 1){
+            Aim=rangerOffset(100, owner():shootPos(), owner():eye())
+            holoPos(900, Aim:position())
+        }
+
+        if(Active){
+      
+            if(Mode==1){
+    
+                holoPos(900,owner():pos() + vec(0,0,50) + owner():forward()*80)
+                holoAng(900,ang(45,0,0) + (owner():pos() - holoEntity(900):pos()):toAngle())
+                #holoAng(1000,ang(0,0,0) + (owner():pos() - holoEntity(900):pos()):toAngle())
+                holoAng(0,holoEntity(900):angles())
+    
+            }elseif(Mode==2){
+                holoPos(900,TempVec)
+                holoAng(900,ang(45,0,0) + (owner():pos() - holoEntity(900):pos()):toAngle())
+                #holoAng(1000,ang(60,90,0) + (owner():pos() - holoEntity(1000):pos()):toAngle())
+                holoAng(0,holoEntity(900):angles())
+            }
+        
+    
+            ShootPos = owner():shootPos()
+            EyeDir = owner():eye()
+
+            #How does line-plane intersection work?
+            PlanePoint = Holo:pos() #Get a point in the plane
+            Normal = Holo:up() #Get the normal (a vector perpendicular to the surface) of the plane
+            LinePoint1 = ShootPos #Get a point on the line
+            LinePoint2 = ShootPos+EyeDir #Get a point on the line "after" point 1#
+            X = (Normal:dot(PlanePoint-LinePoint1))/(Normal:dot(LinePoint2-LinePoint1)) #Not really sure how, but it returns how many times the distance from point 1 to point 2 you need to go from point 1 to reach the intersection
+            Vec = LinePoint1+X*(LinePoint2-LinePoint1) #Get the intersections position using f(X) = LinePoint1+X*(LinePoint2-LinePoint1)
+            #
+    
+            holoPos(0,Vec)
+    
+            for(I=201,200+Count+1){
+                if(Vec:distance(holoEntity(I):pos())<8){
+                    holoColor(I,Hover)
+                    if(changed(owner():keyPressed(USE_KEY))&owner():keyPressed(USE_KEY)){
+                        button(I-200)
+                    }
+                }else{
+                    holoColor(I,Inside)
+                }
+    
+            }
+    
+        }else{
+            holoPos(0,vec(0))
+        }
+
+
+        
+    }
+ 
+
+########################################################################################################################################################################  
+
+    function runE2(){
+    
+        holoMenu()
+    
+    }   
+}
+
+if(last()){ propDeleteAll() streamStop(1) }
+
+
+########################################################################################################################################################################  
+
+if(opcounter()<(softQuota()) & perf()){
+    runE2()
+}
+

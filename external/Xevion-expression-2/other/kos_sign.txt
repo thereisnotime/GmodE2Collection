@@ -1,0 +1,80 @@
+@name KOS Sign
+@inputs E:wirelink
+@outputs 
+
+timer("Reset",60000)
+function mainScreen(){
+E:egpClear()
+
+E:egpBox(16,vec2(256,350),vec2(740,350))
+E:egpColor(16,vec(1,200,255))
+E:egpMaterial(16, "models/shadertest/shader3")
+
+E:egpBox(15,vec2(256,350),vec2(740,350))
+E:egpColor(15,vec(1,200,255))
+E:egpAlpha(15,55)
+
+E:egpText(1,owner():name():left(13)+"'s Base",vec2(256,220))
+E:egpFont(1,"coolvetica",75)
+E:egpAlign(1,1,1) 
+E:egpColor(1,vec(0,0,0))
+
+E:egpText(2,"You Are KOS Beyond This Point",vec2(256,275))
+E:egpFont(2,"coolvetica",50)
+E:egpAlign(2,1,1) 
+E:egpColor(2,vec(255,0,0))
+
+E:egpText(3,"You Are Also KOS If:",vec2(256,320))
+E:egpFont(3,"coolvetica",50)
+E:egpAlign(3,1,1) 
+E:egpColor(3,vec(255,255,255))
+
+E:egpText(4,"1. Holding Raiding Tools",vec2(256,360))
+E:egpFont(4,"coolvetica",50)
+E:egpAlign(4,1,1) 
+E:egpColor(4,vec(255,255,255))
+
+E:egpText(5,"2. Suspicious Actions",vec2(256,420))
+E:egpFont(5,"coolvetica",50)
+E:egpAlign(5,1,1) 
+E:egpColor(5,vec(255,255,255))
+
+E:egpText(6,"3. Preparing to raid",vec2(256,480))
+E:egpFont(6,"coolvetica",50)
+E:egpAlign(6,1,1) 
+E:egpColor(6,vec(255,255,255))
+
+E:egpBox(7,vec2(-100,346),vec2(35,393))
+E:egpColor(7,vec(200,0,0))
+   
+E:egpBox(8,vec2(610,346),vec2(35,393))
+E:egpColor(8,vec(200,0,0))
+
+E:egpBox(9,vec2(256,525),vec2(700,35))
+E:egpColor(9,vec(200,0,0))
+
+E:egpBox(10,vec2(256,167),vec2(700,35))
+E:egpColor(10,vec(200,0,0))
+  
+E:egpBox(11,vec2(256,167),vec2(710,5))
+E:egpColor(11,vec(1,200,255))
+ 
+E:egpBox(12,vec2(256,525),vec2(710,5))
+E:egpColor(12,vec(1,200,255))
+   
+E:egpBox(13,vec2(610,346),vec2(5,362))
+E:egpColor(13,vec(1,200,255))
+
+E:egpBox(14,vec2(-100,346),vec2(5,362))
+E:egpColor(14,vec(1,200,255))
+}
+
+if(first()){ 
+entity():createWire(entity():isWeldedTo(),"E","wirelink")
+mainScreen()
+}
+
+if(clk("Reset")){
+reset()
+mainScreen()
+}
