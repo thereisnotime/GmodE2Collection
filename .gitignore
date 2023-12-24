@@ -1,3 +1,6 @@
+# locals
+_local/
+
 # Compiled Lua sources
 luac.out
 
