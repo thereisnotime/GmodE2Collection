@@ -15,28 +15,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-    - name: Process Repositories
-    run: |
-        while IFS= read -r repo || [ -n "$repo" ]; do
-        repo_name=$(basename -s .git "$repo")
-        repo_author=$(basename $(dirname "$repo"))
-        repo_path="./external/${repo_author}-${repo_name}"
-        if [ -d "$repo_path" ]; then
-            echo "Updating repository $repo_path"
-            if [ -d "$repo_path/.gitoff" ]; then
-            mv "$repo_path/.gitoff" "$repo_path/.git"
-            git -C "$repo_path" fetch --all
-            git -C "$repo_path" reset --hard HEAD
-            git -C "$repo_path" pull --rebase
-            mv "$repo_path/.git" "$repo_path/.gitoff"
+      - name: Process Repositories
+        run: |
+            while IFS= read -r repo || [ -n "$repo" ]; do
+            repo_name=$(basename -s .git "$repo")
+            repo_author=$(basename $(dirname "$repo"))
+            repo_path="./external/${repo_author}-${repo_name}"
+            if [ -d "$repo_path" ]; then
+                echo "Updating repository $repo_path"
+                if [ -d "$repo_path/.gitoff" ]; then
+                mv "$repo_path/.gitoff" "$repo_path/.git"
+                git -C "$repo_path" fetch --all
+                git -C "$repo_path" reset --hard HEAD
+                git -C "$repo_path" pull --rebase
+                mv "$repo_path/.git" "$repo_path/.gitoff"
+                else
+                echo ".gitoff not found in $repo_path, skipping update."
+                fi
             else
-            echo ".gitoff not found in $repo_path, skipping update."
+                echo "Cloning repository $repo"
+                git clone "$repo" "$repo_path" && echo "Cloned $repo_path" || echo "Failed to clone $repo"
             fi
-        else
-            echo "Cloning repository $repo"
-            git clone "$repo" "$repo_path" && echo "Cloned $repo_path" || echo "Failed to clone $repo"
-        fi
-        done < ./external/collections.txt
+            done < ./external/collections.txt
 
       - name: Commit and Push Changes
         run: |
