@@ -15,20 +15,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Update Existing Repositories
-        run: |
-          for d in ./external/*/ ; do
-              (cd "$d" && mv .gitoff .git && git fetch --all && git reset --hard HEAD && git pull --rebase && mv .git .gitoff)
-          done
-
-      - name: Clone New Repositories
+      - name: Process Repositories
         run: |
           while IFS= read -r repo; do
             repo_name=$(basename -s .git "$repo")
             repo_author=$(basename $(dirname "$repo"))
             repo_path="./external/${repo_author}-${repo_name}"
-            if [ ! -d "$repo_path" ]; then
+            if [ -d "$repo_path" ]; then
+              echo "Updating repository $repo_path"
+              mv "$repo_path/.gitoff" "$repo_path/.git"
+              git -C "$repo_path" fetch --all
+              git -C "$repo_path" reset --hard HEAD
+              git -C "$repo_path" pull --rebase
+              mv "$repo_path/.git" "$repo_path/.gitoff"
+            else
               echo "Cloning repository $repo"
               git clone "$repo" "$repo_path"
             fi
           done < ./external/collections.txt
+
+      - name: Commit and Push Changes
+        run: |
+            git config --global user.name 'github-actions[bot]'
+            git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add .
+            git commit -m "Update external collections"
+            git push origin HEAD:${{ github.ref }}
