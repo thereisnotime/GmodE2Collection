@@ -1,0 +1,7 @@
+@name HSV to RGB
+@inputs HSV:vector
+@outputs RGB:vector
+@persist 
+@trigger 
+
+RGB=hsv2rgb(HSV)

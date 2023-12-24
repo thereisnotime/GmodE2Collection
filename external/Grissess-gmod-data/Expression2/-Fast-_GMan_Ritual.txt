@@ -1,0 +1,40 @@
+@name -Fast- GMan Ritual
+@inputs 
+@outputs 
+@persist NUM Base:entity Env:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    NUM=7
+    Base=entity()
+    function vector offsetFunction(Time:number, Which:number) {
+        local In=Time+(2*pi()*Which)/(NUM+1)
+        return 64*vec(sinr(In), cosr(In), 0.2*(1+sinr(In*7)))
+    }
+    function void rebase(Args:table, Ret:table) {
+        Base=Args[1, entity]
+    }
+    for(I=1, NUM) {
+        holoCreate(I, Base:pos()+offsetFunction(curtime(), I))
+        holoModel(I, "models/gman.mdl")
+        holoAnim(I, 15)
+    }
+    runOnTick(1)
+    runOnChat(1)
+    Env=newEnv()
+    Env:envAddCommand(newCommand("rebase", "rebase", "e"))
+}
+
+if(tickClk()) {
+    for(I=1,NUM) {
+        holoPos(I, Base:pos()+offsetFunction(curtime(), I))
+        holoAng(I, ((holoEntity(I):pos()-Base:pos()):toAngle()+ang(90, -90, 0)):setPitch(0):setRoll(0))
+    }
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}

@@ -1,0 +1,93 @@
+@name libETrack
+
+function table newTracker() {
+    local RetT=table()
+    #These probably don't do anything, but they're here for posterity.
+    RetT["Class", string]=""
+    RetT["Radius", number]=0
+    RetT["BaseEnt", entity]=noentity()
+    RetT["Current", table]=table()
+    RetT["Next", table]=table()
+    RetT["OnAdd", string]=""
+    RetT["OnRemove", string]=""
+    RetT["OnIter", string]=""
+    RetT["Arg", table]=table()
+    return RetT
+}
+
+function string table:trClass() {
+    return This["Class", string]
+}
+
+function number table:trRadius() {
+    return This["Radius", number]
+}
+
+function entity table:trBaseEnt() {
+    return This["BaseEnt", entity]
+}
+
+function table table:trCurrent() {
+    return This["Current", table]
+}
+
+function table table:trNext() {
+    return This["Next", table]
+}
+
+function string table:trOnAdd() {
+    return This["OnAdd", string]
+}
+
+function string table:trOnRemove() {
+    return This["OnRemove", string]
+}
+
+function string table:trOnIter() {
+    return This["OnIter", string]
+}
+
+function table table:trArg() {
+    return This["Arg", table]
+}
+
+function void table:trSetClass(Class:string) {
+    This["Class", string]=Class
+}
+
+function void table:trSetRadius(Radius:number) {
+    This["Radius", number]=Radius
+}
+
+function void table:trSetBaseEnt(BaseEnt:entity) {
+    This["BaseEnt", entity]=BaseEnt
+}
+
+function void table:trSetCurrent(Current:table) { #Use with caution! This won't run updaters...
+    This["Current", table]=Current
+}
+
+function void table:trSetNext(Next:table) {
+    This["Next", table]=Next
+}
+
+function void table:trSetOnAdd(OnAdd:string) {
+    This["OnAdd", string]=OnAdd
+}
+
+function void table:trSetOnRemove(OnRemove:string) {
+    This["OnRemove", string]=OnRemove
+}
+
+function void table:trSetOnIter(OnIter:string) {
+    This["OnIter", string]=OnIter
+}
+
+function void table:trSetArg(Arg:table) {
+    This["Arg", table]=Arg
+}
+
+function void table:trRoutine(Routine:table, Sched:table) {
+    local Next=This:trNext()
+    if(Next:count()) {
+        

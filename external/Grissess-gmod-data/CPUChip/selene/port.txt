@@ -1,0 +1,28 @@
+#ifndef SELENE_PORT
+#define SELENE_PORT
+
+#define IOLOG_BASE -10
+
+void ports_reset() {
+    preserve EDI;
+    for(EDI = -8; EDI <= -1; EDI++) {
+        MOV [ES:EDI], 0;
+    }
+}
+
+#define IOLOG_LEN -9
+
+void iolog_init() {
+    MOV [ES:IOLOG_LEN], 0;
+}
+
+void iolog_putc(char c) {
+    preserve EDI, ESI;
+    MOV ESI, [ES:IOLOG_LEN];
+    MOV EDI, IOLOG_BASE;
+    SUB EDI, ESI;
+    MOV [ES:EDI], c;
+    INC [ES:IOLOG_LEN];
+}
+
+#endif

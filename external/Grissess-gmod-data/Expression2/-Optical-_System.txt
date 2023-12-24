@@ -1,0 +1,58 @@
+@name -Optical- System
+@inputs 
+@outputs 
+@persist AimE:entity Health Armor Name:string Weapon:string Check CheckA CheckString:string
+@trigger 
+@model models/props_c17/consolebox05a.mdl
+interval(500)
+if(first())
+{
+    hint("Make By Console Engineer",5)
+}
+AimE = owner():aimEntity()
+
+Name = AimE:name()
+Health = AimE:health()
+Armor = AimE:armor()
+Job = AimE:team():teamName()
+Weapon = AimE:weapon():type()
+Tool = AimE:tool()
+
+
+
+if(AimE:isAlive())
+{
+    Check = 1
+}else
+{
+    Check = 0
+}
+
+if(AimE:isAdmin())
+{
+    CheckString = "Admin"
+    CheckA = 1
+}else
+{
+    CheckA = 0
+}
+
+if(AimE:isSuperAdmin())
+{
+    CheckString = "Super Admin"
+    CheckA = 1
+}else
+{
+    CheckA = 0
+}
+
+if(CheckA == 0)
+{
+    CheckString = "User"
+}
+if(Check == 1)
+{
+    print(_HUD_PRINTCENTER,Name+"\n"+"Health: "+Health+"\n"+"Armor: "+Armor+"\n"+"Job: "+Job+"\n"+"Weapon: "+Weapon+"\n"+"Tool: "+Tool+"\n"+CheckString)
+}
+
+

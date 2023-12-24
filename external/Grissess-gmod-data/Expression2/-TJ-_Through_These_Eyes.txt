@@ -1,0 +1,76 @@
+@name -TJ- Through These Eyes
+@persist Env:table Target:entity
+
+if( first() | duped() ) {
+    #include "lib/command"
+    
+    runOnChat(1)
+    
+    function useATM(Args:table, Ret:table) {
+        
+    }
+    
+    function envCall(Action:string) {
+        Action(table(), table())
+    }
+    
+    function vector entity:camPos() {
+        return This:pos() + This:eye() * 15 + This:up() * This:height()
+    }
+    
+    function vector entity:teamColor() {
+        return teamColor(This:team())
+    }
+    
+    function table camAs(Args:table, Ret:table) {
+        Target = Args:popEntity()
+        
+        if( !Target ) {
+            Ret["Reason", string] = "Player does not exist!"
+            Ret["Status", number] = 0
+            return Ret
+        }
+        
+        printColor(vec(0,0,255), "As ", Target:teamColor(), Target:name())
+        cameraCreate(1, Target:camPos(), Target:eyeAngles())
+        cameraToggle(1, 1)
+        runOnTick(1)
+        
+        return Ret
+    }
+    
+    function table camReset(Args:table, Ret:table) {
+        Target = noentity()
+        cameraToggle(1, 0)
+        cameraRemove(1)
+        runOnTick(0)
+        
+        return Ret
+    }
+    
+    function useATM(Args:table, Ret:table) {
+        findByClass("ATM_Machine")
+        local ATM = findClosest(owner():pos())
+        ATM:isSteamFriends()
+    }   
+    
+    Env = newEnv(":")
+    Env:pushTable(newCommand("as", "camAs", "p"))
+    Env:pushTable(newCommand("off", "camReset", ""))
+    Env:pushTable(newCommand("atm", "useATM", ""))
+}
+
+if( chatClk(owner()) ) {
+    if(Env:envExec(lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if( tickClk() ) {
+    if( Target ) {
+        cameraAng(1, Target:eyeAngles())
+        cameraPos(1, Target:camPos())
+    } else {
+        envCall("camReset")
+    }
+}

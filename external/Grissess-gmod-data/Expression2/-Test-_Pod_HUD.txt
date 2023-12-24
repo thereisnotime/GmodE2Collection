@@ -1,0 +1,36 @@
+@name -Test- Pod HUD
+@inputs Enabled EGP:wirelink XY:vector2 Kbd:wirelink Operator:entity
+@outputs 
+@persist CmdLine:string
+@trigger 
+
+runOnTick(1)
+
+if(Enabled) {
+    XY=XY:setY(-XY:y())
+    EGP:egpLine(1, XY-vec2(5, 0), XY+vec2(5, 0))
+    EGP:egpLine(2, XY-vec2(0, 5), XY+vec2(0, 5))
+    EGP:egpColor(1, vec(255, 0, 0))
+    EGP:egpColor(2, vec(255, 0, 0))
+    while(Kbd[0]) {
+        #print("KCode: "+Kbd[1]:toString())
+        if(Kbd[1]==10|Kbd[1]==13) {
+            concmd("say "+CmdLine)
+            CmdLine=""
+        } elseif(Kbd[1]==127) {
+            CmdLine=CmdLine:left(CmdLine:length()-1)
+        } elseif(Kbd[1]>=32&Kbd[1]<127) {
+            CmdLine=CmdLine+toChar(Kbd[1])
+        }
+        Kbd[0]=Kbd[0]-1
+    }
+    CurChar=""
+    if(curtime()>round(curtime())) {
+        CurChar="_"
+    }
+    EGP:egpBox(3, vec2(egpScrW(Operator:driver())/2, egpScrH(Operator:driver())-20), vec2(egpScrW(Operator:driver()), 40))
+    EGP:egpColor(3, vec(63, 63, 63))
+    EGP:egpText(4, "[> "+CmdLine+CurChar, vec2(0, egpScrH(Operator:driver())-40))
+    EGP:egpColor(4, vec(0, 255, 0))
+    EGP:egpFont(4, "Courier New", 40)
+}

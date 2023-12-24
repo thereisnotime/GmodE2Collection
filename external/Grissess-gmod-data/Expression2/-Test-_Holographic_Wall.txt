@@ -1,0 +1,24 @@
+@name -Test- Holographic Wall
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()|duped()) {
+    holoCreate(1)
+    holoModel(1, "plane")
+    #holoPos(1, entity():isWeldedTo():boxCenterW())
+    #holoAng(1, entity():isWeldedTo():angles())
+    #holoScaleUnits(1, entity():isWeldedTo():boxSize())
+    holoScaleUnits(1, vec(1024, 1024, 2))
+    #holoParent(1, entity():isWeldedTo())
+    holoParent(1, entity())
+    holoMaterial(1, "models/debug/debugwhite")
+    #holoClip(1, 1, vec(0, 0, 0), vec(0, 0, 1), 0)
+    #holoClipEnabled(1, 1, 1)
+    runOnTick(1)
+}
+
+if(tickClk()) {
+    entity():aSetPos(entity():pos()+entity():angles():up())
+}

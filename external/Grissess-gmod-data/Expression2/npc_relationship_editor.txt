@@ -1,0 +1,18 @@
+@name NPC Relationship Editor
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()|duped()) {
+    timer("Edit", 2000)
+}
+
+if(clk("Edit")) {
+    findByClass("npc_*")
+    Arr=findToArray()
+    for(I=1,Arr:count()) {
+        Arr[I, entity]:npcRelationship("player", "hate", 999)
+    }
+    timer("Edit", 2000)
+}

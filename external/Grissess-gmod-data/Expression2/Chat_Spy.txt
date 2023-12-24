@@ -1,0 +1,69 @@
+@name Chat Spy
+@inputs DD:wirelink Clk
+@outputs 
+@persist Env:table
+@trigger 
+
+if(first()|duped()) {
+    #include "util/obfuscate"
+    #include "lib/command"
+    
+    function void csListPlayers(Args:table, Ret:table) {
+        local Players=players()
+        for(I=1, Players:count()) {
+            printColor(vec(0, 0, 255), "[CSPY] ", Players[I, entity], vec(0, 127, 127), ": ", Players[I, entity]:toString())
+        }
+    }
+    
+    runOnChat(1)
+    Env=newEnv()
+    Env:envAddCommand(newCommand("lsply", "csListPlayers", ""))
+}
+
+if(chatClk()) {
+    if(lastSpoke()==owner()) {
+        if(Env:envExec(owner():lastSaid())) {
+            hideChat(1)
+        }
+        exit()
+    }
+    printColor(vec(0, 0, 255), "[CSPY] ", lastSpoke(), vec(255, 255, 255), ": ", lastSaid())
+}
+
+if(->DD) {
+    DD["Entities", array]=players()
+    entity():createWire(DD:entity(), "Clk", "Clk")
+}
+
+if(Clk&~Clk) {
+    #print("Executed on damage clock")
+    Attacker=DD["Attacker", entity]
+    Victim=DD["Victim", entity]
+    Type=DD["Type", string]
+    Damage=DD["Damage", number]
+    if(Attacker) {
+        if(Attacker:isPlayer()) {
+            AName=Attacker:name()
+            ACol=teamColor(Attacker:team())
+        } else {
+            AName=Attacker:type()+" "+Attacker:id():toString()+" ("+Attacker:owner():name()+")"
+            ACol=vec(0, 255, 255)
+        }
+    } else {
+        AName="The world"
+        ACol=vec(127, 0, 255)
+    }
+    if(Victim:isAlive()) {
+        Verb=" attacked "
+        VCol=vec(0, 127, 127)
+    } else {
+        Verb=" killed "
+        VCol=vec(255, 0, 0)
+    }
+    if(Type=="Bullet"&Attacker) {
+        Weapon=" using "+Attacker:weapon():type()
+    } else {
+        Weapon=""
+    }
+    printColor(vec(0, 0, 255), "[CSPY] ", ACol, AName, VCol, Verb, teamColor(Victim:team()), Victim:name(), VCol, " with ", vec(0, 255, 0), floor(Damage):toString(), " ", vec(255, 255, 0), DD["Type", string], VCol, " damage", Weapon)
+}

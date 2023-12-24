@@ -1,0 +1,6 @@
+@name utilObfuscate
+
+#Obfuscates the chip names where included to prevent suspicion of dropped chips
+#or names in the remote uploader.
+
+setName(hash():toString())

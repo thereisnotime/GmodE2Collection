@@ -1,0 +1,26 @@
+@name Holographic Beacon
+@inputs Position:vector
+@outputs 
+@persist Scale
+@trigger 
+
+if(first()|duped()) {
+    runOnTick(1)
+    Scale=1
+    holoCreate(1, Position, vec(1, 1, 1), ang(), vec(0, 255, 0), "hq_icosphere")
+}
+
+if(tickClk()) {
+    Scale=Scale+3
+    if(Scale>255) {
+        Scale=0
+    }
+    if(->Position) {
+        P=Position
+    } else {
+        P=entity():pos()
+    }
+    holoPos(1, Position)
+    holoScale(1, vec(Scale, Scale, Scale)/10)
+    holoAlpha(1, 255-Scale)
+}

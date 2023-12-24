@@ -1,0 +1,93 @@
+@name Chat Logger
+@inputs Cns:wirelink
+@outputs 
+@persist LastSender:entity SaneMode BlackList:table Env:table
+@trigger 
+
+if(first()) {
+    #include "lib/cns_tty"
+    #include "lib/command"
+    #dsJoinGroup("#test")
+    #dsSetScope(2)
+    runOnChat(1)
+    Cns:cnSetCursorPos(vec2(0, 0))
+    Cns:cnClear()
+    SaneMode=1
+    
+    function void blAdd(Args:table, Ret:table) {
+        BlackList[Args[1, entity]:id(), number]=1
+        Cns:cnWrite(Args[1, entity]:name()+" was blacklisted\n", 900)
+    }
+    
+    function void blRemove(Args:table, Ret:table) {
+        BlackList[Args[1, entity]:id(), number]=0
+        Cns:cnWrite(Args[1, entity]:name()+" was unblacklisted\n", 90)
+    }
+    
+    function void clSane(Args:table, Ret:table) {
+        SaneMode=1
+        Cns:cnWrite("Now in sane mode\n", 90)
+    }
+    
+    function void clInsane(Args:table, Ret:table) {
+        SaneMode=0
+        Cns:cnWrite("Now in insane mode\n", 900)
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("bladd", "blAdd", "p"))
+    Env:envAddCommand(newCommand("blremove", "blRemove", "p"))
+    Env:envAddCommand(newCommand("clsane", "clSane", ""))
+    Env:envAddCommand(newCommand("clinsane", "clInsane", ""))
+}
+
+#[if(dsClk("Chat")) {
+    Tbl=dsGetTable()
+    Cns:cnWrite("["+dsGetGroup()+"] ", 9)
+    Cns:cnWrite("<"+Tbl["Sender", entity]:name()+"> ", 90)
+    if(Tbl["Special", number]) {
+        Col=99
+    } else {
+        Col=999
+    }
+    Cns:cnWrite(Tbl["Message", string]+"\n", Col)
+}]#
+
+if(chatClk()) {
+    if(SaneMode) {
+        Render=0
+        if(lastSaid():left(1)=="/") {
+            if(lastSaid():left(3)=="// "|lastSaid():left(5)=="/ooc "|lastSaid():left(3)=="/a ") {
+                Render=1 #OOC
+            } elseif(lastSaid():left(8)=="/advert ") {
+                Render=2 #Advert
+            } elseif(lastSaid():left(3)=="/y ") {
+                Render=3 #Yell
+            } else {
+                exit()
+            }
+        }
+        if(BlackList[lastSpoke():id(), number]) {
+            exit()
+        }
+    }
+    if(lastSpoke()==owner()) {
+        if(Env:envExec(owner():lastSaid())&SaneMode) {
+            hideChat(1)
+            exit()
+        }
+    }
+    Cns:cnWrite("<"+lastSpoke():name()+"> ", cnsColor(teamColor(lastSpoke():team())))
+    if(Render==1) {
+        Color=cnsColor(teamColor(lastSpoke():team()))
+    } elseif(Render==2) {
+        Color=960
+    } elseif(Render==3) {
+        Color=909
+    } else {
+        Color=999
+    }
+    Cns:cnWrite(lastSaid()+"\n", Color)
+    Cns:writeString("             ", 0, Cns:cnHeight())
+    Cns:writeString(opcounter():toString(), 0, Cns:cnHeight(), 900, 999, 1)
+}

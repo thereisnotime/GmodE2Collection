@@ -1,0 +1,163 @@
+@name PLFR1001 Interaface
+@inputs In HasSignal
+@outputs TxF RxF Out
+@persist Env:table LastIn Cmd:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    
+    function void plSetTxF(Args:table, Ret:table) {
+        TxF = Args[1, number]
+    }
+    
+    function void plSetRxF(Args:table, Ret:table) {
+        RxF = Args[1, number]
+    }
+    
+    function void plReset(Args:table, Ret:table) {
+        Cmd = table()
+        printColor(vec(0, 255, 255), "Set mode to reset")
+        Out = 0
+    }
+    
+    function void plPing(Args:table, Ret:table) {
+        Cmd = table()
+        Cmd["cmd", string] = "ping"
+        printColor(vec(0, 255, 255), "Set mode to ping")
+        Out = 1
+    }
+    
+    function void plSet(Args:table, Ret:table) {
+        Cmd = table()
+        Cmd["cmd", string] = "set"
+        Cmd["addr", number] = Args[1, number]
+        Cmd["val", number] = Args[2, number]
+        Cmd["state", number] = 0
+        printColor(vec(0, 255, 255), "Set mode to set")
+        Out = 2
+    }
+    
+    function void plGet(Args:table, Ret:table) {
+        Cmd = table()
+        Cmd["cmd", string] = "get"
+        Cmd["addr", number] = Args[1, number]
+        Cmd["state", number] = 0
+        printColor(vec(0, 255, 255), "Set mode to get")
+        Out = 3
+    }
+    
+    function void plRxStatus(Args:table, Ret:table) {
+        Cmd = table()
+        Cmd["cmd", string] = "rxstatus"
+        printColor(vec(0, 255, 255), "Set mode to rxstatus")
+        Out = 4
+    }
+    
+    function void plSn(Args:table, Ret:table) {
+        Cmd = table()
+        Cmd["cmd", string] = "sn"
+        printColor(vec(0, 255, 255), "Set mode to sn")
+        Out = 5
+    }
+    
+    Env = newEnv()
+    Env:envAddCommand(newCommand("plsettxf", "plSetTxF", "n"))
+    Env:envAddCommand(newCommand("plsetrxf", "plSetRxF", "n"))
+    Env:envAddCommand(newCommand("plreset", "plReset", ""))
+    Env:envAddCommand(newCommand("plping", "plPing", ""))
+    Env:envAddCommand(newCommand("plset", "plSet", "nn"))
+    Env:envAddCommand(newCommand("plget", "plGet", "n"))
+    Env:envAddCommand(newCommand("plrxstatus", "plRxStatus", ""))
+    Env:envAddCommand(newCommand("plsn", "plSn", ""))
+    
+    TxF = 25
+    RxF = 45
+    Out = 0
+    LastIn = 0
+    
+    runOnChat(1)
+    timer("Operate", 100)
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if(clk("Operate")) {
+    timer("Operate", 100)
+    if(!HasSignal) {
+        exit()
+    }
+    if(LastIn == In) {
+        #printColor(vec(255, 0, 255), "LastIn " + toString(LastIn) + " In " + toString(In))
+        exit()
+    }
+    if(Cmd["cmd", string] == "ping") {
+        if(In == -1) {
+            printColor(vec(0, 255, 255), "A PLFR acks your ping")
+            Out = 0
+        }
+    } elseif(Cmd["cmd", string] == "set") {
+        if(Cmd["state", number] == 0) {
+            if(In == -2) {
+                printColor(vec(0, 255, 255), "A PLFR acks your request to set")
+                Out = -1
+                Cmd["state", number] = 1
+            }
+        } elseif(Cmd["state", number] == 1) {
+            if(In == -1) {
+                printColor(vec(0, 255, 255), "A PLFR is ready for your address")
+                Out = Cmd["addr", number]
+                Cmd["state", number] = 2
+            }
+        } elseif(Cmd["state", number] == 2) {
+            if(In == -2) {
+                printColor(vec(0, 255, 255), "A PLFR is ready for your value")
+                Out = Cmd["val", number]
+                Cmd["state", number] = 3
+            }
+        } elseif(Cmd["state", number] == 3) {
+            printColor(vec(0, 255, 255), "The PLFR says that it set address " + toString(In))
+            Out = 2
+            Cmd["state", number] = 4
+        } elseif(Cmd["state", number] == 4) {
+            printColor(vec(0, 255, 255), "The PLFR says that it set value " + toString(In))
+            Out = 0
+            Cmd["state", number] = 5
+        }
+    } elseif(Cmd["cmd", string] == "get") {
+        if(Cmd["state", number] == 0) {
+            if(In == -3) {
+                printColor(vec(0, 255, 255), "A PLFR acks your request to get")
+                Out = -1
+                Cmd["state", number] = 1
+            }
+        } elseif(Cmd["state", number] == 1) {
+            if(In == -1) {
+                printColor(vec(0, 255, 255), "A PLFR is ready for your address")
+                Out = Cmd["addr", number]
+                Cmd["state", number] = 2
+            }
+        } elseif(Cmd["state", number] == 2) {
+            if(In == -3) {
+                printColor(vec(0, 255, 255), "The PLFR is ready to read out your address")
+                Out = 3
+                Cmd["state", number] = 3
+            }
+        } elseif(Cmd["state", number] == 3) {
+            printColor(vec(0, 255, 255), "The PLFR says the value is " + toString(In))
+            Out = 0
+            Cmd["state", number] = 4
+        }
+    } elseif(Cmd["cmd", string] == "rxstatus") {
+        printColor(vec(0, 255, 255), "PLFR RXSTATUS (dBmW): " + toString(In))
+    } elseif(Cmd["cmd", string] == "sn") {
+        printColor(vec(0, 255, 255), "PLFR SN: " + toString(In))
+        Out = 0
+        Cmd = table()
+    }
+    LastIn = In
+}

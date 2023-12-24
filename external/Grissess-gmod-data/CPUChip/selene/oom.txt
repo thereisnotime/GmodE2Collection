@@ -1,0 +1,10 @@
+#ifndef SELENE_OOM
+#define SELENE_OOM
+
+#include <selene/panic.txt>
+
+void out_of_pmemory() {
+	panic("out of phymem (%d pages)\n", pmalloc_pages);
+}
+
+#endif

@@ -1,0 +1,21 @@
+@name Eye Pod Rotator
+@inputs XY:vector2 YawRight YawLeft Ent:entity
+@outputs 
+@persist Desired:quaternion
+@trigger 
+
+if(first()|duped()) {
+    runOnTick(1)
+    Desired=quat(Ent)
+    #print(Ent:inertia())
+}
+
+if(tickClk()) {
+    #Set rotations based on inputs
+    Roll=YawRight-YawLeft
+    Rotator=qRotation(Desired:right(), XY:x()/6)*qRotation(Desired:forward(), XY:y()/6)*qRotation(Desired:up(), Roll/2)
+    Desired=Rotator*Desired
+    #Calculate a torque vector
+    Torque=Ent:toLocal(rotationVector(Desired/quat(Ent))+Ent:pos())
+    Ent:applyTorque((Torque*20-Ent:angVelVector()*3)*Ent:inertia():length())
+}

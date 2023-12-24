@@ -1,0 +1,23 @@
+@name Damage Detector
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()|duped()) {
+    runOnHook(1)
+    registerHook("EntityTakeDamage")
+    
+    function gmEntityTakeDamage(Args:array) {
+        local Target=Args[1, entity]
+        #local DmgInfo=Args[2, table]
+        printColor(vec(127, 0, 127), Target, "damaged:")
+        #printTable(DmgInfo)
+    }
+}
+
+if(getHook()) {
+    print(getHook())
+    #gmEntityTakeDamage(getHookArgs())
+    ("gm"+getHook())(getHookArgs())
+}

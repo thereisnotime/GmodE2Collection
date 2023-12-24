@@ -1,0 +1,38 @@
+@name Entity Type Counter
+@inputs 
+@outputs Count 
+@persist Class:string
+@trigger 
+
+if(first()|duped()) {
+    runOnChat(1)
+    timer("Count", 2000)
+}
+
+if(chatClk(owner())) {
+    if(owner():lastSaid():left(7)=="!count ") {
+        Class=owner():lastSaid():sub(8)
+        findByClass(Class)
+        Count=findToArray():count()
+        print(Count)
+        hideChat(1)
+    } elseif(owner():lastSaid():left(7)=="!elist ") {
+        Class=owner():lastSaid():sub(8)
+        findByClass(Class)
+        Arr=findToArray()
+        for(I=1,Arr:count()) {
+            print(Arr[I, entity]:toString()+Arr[I, entity]:pos():toString())
+        }
+        Count=Arr:count()
+        print(Count)
+        hideChat(1)
+    }
+}
+
+if(clk("Count")) {
+    if(findCanQuery()) {
+        findByClass(Class)
+        Count=findToArray():count()
+    }
+    timer("Count", 2000)
+}

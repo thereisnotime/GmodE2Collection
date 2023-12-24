@@ -1,0 +1,38 @@
+//LunOS -- Lunar Operating System
+//string -- String Manipulation
+
+//Provides basic string manipulation routines.
+
+#ifndef LUNOS_STRING
+#define LUNOS_STRING
+
+#define CHAR_0 48
+
+#include <lunos/math.txt>
+
+//Write the integer to the character string pointed to by s. At most
+//n characters are written; the last character will always be a
+//null terminator. Should s be too small to hold the resulting
+//string, only the n-1 least significant digits will be written.
+void StrFInt(char i, char *s, char n) {
+    char *p, x;
+    p=s;
+    x=i;
+    while(n>1&&x>0) {
+        x=FTrunc(x/10);
+        n--;
+        p++;
+    }
+    if(x>0) {
+        p++;
+    }
+    p[0]=0;
+    p--;
+    while(p!=s) {
+        p[0]=CHAR_0+i%10;
+        i=FTrunc(i/10);
+        p--;
+    }
+}
+
+#endif

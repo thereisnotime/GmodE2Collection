@@ -1,0 +1,68 @@
+@name Simple Door Controller
+@inputs 
+@outputs Actuate Reason:string
+@persist Radius Allow:table Env:table 
+@trigger 
+
+interval(250)
+
+if(first()|duped()) {
+    #include "lib/command"
+    
+    Radius=64
+    
+    function void dcRadius(Args:table, Ret:table) {
+        Radius=Args[1, number]
+    }
+    
+    function void dcAdd(Args:table, Ret:table) {
+        Allow[Args[1, entity]:id(), number]=1
+    }
+    
+    function void dcRemove(Args:table, Ret:table) {
+        Allow[Args[1, entity]:id(), number]=0
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("dcrad", "dcRadius", "n"))
+    Env:envAddCommand(newCommand("dcadd", "dcAdd", "p"))
+    Env:envAddCommand(newCommand("dcrem", "dcRemove", "p"))
+    runOnChat(1)
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+    exit()
+}
+
+if(!findCanQuery()) {
+    exit()
+}
+
+findInSphere(entity():pos(), Radius)
+findClipToClass("player")
+Players=findToArray()
+
+Actuate=0
+
+if(!Players:count()) {
+    Reason="No players detected."
+    exit()
+}
+
+Reason="Not allowed."
+for(I=1,Players:count()) {
+    local PID=Players[I, entity]:id()
+    if(Allow[PID, number]) {
+        Actuate=1
+        Reason="Allowed."
+        for(J=I,Players:count()) {
+            if(!Allow[Players[J, entity]:id(), number]) {
+                Actuate=0
+                Reason="Foreign player too close."
+            }
+        }
+    }
+}

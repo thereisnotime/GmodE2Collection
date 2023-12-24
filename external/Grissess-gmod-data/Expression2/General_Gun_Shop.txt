@@ -1,0 +1,28 @@
+@name General Gun Shop
+@inputs EGP:wirelink User:entity S1:entity S2:entity S3:entity S4:entity S5:entity S6:entity S7:entity S8:entity
+@outputs 
+@persist State
+@persist ST_HOME ST_SHOP ST_SETTINGS ST_BUY
+@persist Shipments:table
+@persist Selection:number
+@trigger 
+
+if(first()|duped()) {
+    ST_HOME=0
+    ST_SHOP=1
+    ST_SETTINGS=2
+    ST_BUY=3
+    
+    State=ST_HOME
+    Selection=1
+}
+
+if(!->EGP) {
+    exit()
+}
+
+if(->EGP&!->User) {
+    entity():createWire(EGP:entity(), "User", "User")
+}
+
+

@@ -1,0 +1,140 @@
+@name libSort
+
+#Array sort function
+
+function number sortDefaultCmp(A:number, B:number) {
+    if(A>B) {
+        return 1
+    }
+    if(A<B) {
+        return -1
+    }
+    return 0
+}
+
+function number sortDefaultKey(I:number) {
+    return I
+}
+
+function table table:sort(Key:string, Cmp:string, Reverse:number) {
+    if(Key=="") {
+        Key="sortDefaultKey"
+    }
+    if(Cmp=="") {
+        Cmp="sortDefaultCmp"
+    }
+    local Types=This:typeids()
+    #printTable(Types)
+    local Elements=array()
+    for(I=1,This:count()) {
+        local Res=0
+        if(Types[I, string]=="n") {
+            Res=Key(This[I, number])[number]
+        } elseif(Types[I, string]=="s") {
+            Res=Key(This[I, string])[number]
+        } elseif(Types[I, string]=="e") {
+            Res=Key(This[I, entity])[number]
+        } elseif(Types[I, string]=="v") {
+            Res=Key(This[I, vector])[number]
+        } elseif(Types[I, string]=="t") {
+            Res=Key(This[I, table])[number]
+        } elseif(Types[I, string]=="a") {
+            Res=Key(This[I, array])[number]
+        }
+        Elements:pushNumber(Res)
+    }
+    local Copy=This:clone()
+    local Sorted=table(Elements:shiftNumber())
+    local Result=table()
+    if(Types[1, string]=="n") {
+        Result:pushNumber(Copy[1, number])
+    } elseif(Types[1, string]=="s") {
+        Result:pushString(Copy[1, string])
+    } elseif(Types[1, string]=="e") {
+        Result:pushEntity(Copy[1, entity])
+    } elseif(Types[1, string]=="v") {
+        Result:pushVector(Copy[1, vector])
+    } elseif(Types[1, string]=="t") {
+        Result:pushTable(Copy[1, table])
+    } elseif(Types[1, string]=="a") {
+        Result:pushArray(Copy[1, array])
+    }
+    Copy:shift()
+    Types:shift()
+    #print("Preloop")
+    #printTable(Result)
+    while(Copy:count()>0) {
+        #print("Inloop")
+        #printTable(Result)
+        local Item=Elements:shiftNumber()
+        local Found=0
+        for(I=1,Result:count()) {
+            local CmpRes=Cmp(Item, Sorted[I, number])[number]
+            if(Reverse>0) {
+                CmpRes=-CmpRes
+            }
+            if(CmpRes<0) {
+                Sorted:insertNumber(I, Item)
+                #print("Insertion at ", I)
+                if(Types[1, string]=="n") {
+                    Result:insertNumber(I, Copy[1, number])
+                } elseif(Types[1, string]=="s") {
+                    Result:insertString(I, Copy[1, string])
+                } elseif(Types[1, string]=="e") {
+                    Result:insertEntity(I, Copy[1, entity])
+                } elseif(Types[1, string]=="v") {
+                    Result:insertVector(I, Copy[1, vector])
+                } elseif(Types[1, string]=="t") {
+                    Result:insertTable(I, Copy[1, table])
+                } elseif(Types[1, string]=="a") {
+                    Result:insertArray(I, Copy[1, array])
+                }
+                Copy:shift()
+                Types:shift()
+                Found=1
+                break
+            }
+        }
+        #print("Inner loop break")
+        if(Found==0) {
+            #print("Appending")
+            Sorted:pushNumber(Item)
+            if(Types[1, string]=="n") {
+                Result:pushNumber(Copy[1, number])
+            } elseif(Types[1, string]=="s") {
+                Result:pushString(Copy[1, string])
+            } elseif(Types[1, string]=="e") {
+                Result:pushEntity(Copy[1, entity])
+            } elseif(Types[1, string]=="v") {
+                Result:pushVector(Copy[1, vector])
+            } elseif(Types[1, string]=="t") {
+                Result:pushTable(Copy[1, table])
+            } elseif(Types[1, string]=="a") {
+                Result:pushArray(Copy[1, array])
+            }
+            Copy:shift()
+            Types:shift()
+        }
+    }
+    return Result
+}
+
+function table table:sort(Key:string, Reverse:number) {
+    return This:sort(Key, "", Reverse)
+}
+
+function table table:sort(Key:string, Cmp:string) {
+    return This:sort(Key, Cmp, 0)
+}
+
+function table table:sort(Reverse:number) {
+    return This:sort("", "", Reverse)
+}
+
+function table table:sort(Key:string) {
+    return This:sort(Key, "", 0)
+}
+
+function table table:sort() {
+    return This:sort("", "", 0)
+}

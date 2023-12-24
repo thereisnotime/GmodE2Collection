@@ -1,0 +1,19 @@
+//LunOS -- Lunar Operating System
+//test -- Testing
+//local -- Local Code
+//crt_basic -- C RunTime
+
+//This just calls main and halts. It can be used as basic set up for any CRT environment.
+
+//This must be included as the first import of program.
+
+//#pragma set OutputDebugListing true
+//#pragma set OutputBinaryListing true
+//#pragma set OutputTokenListing true
+//#pragma set OutputCodeTree true
+//#pragma set OutputFinalListing true
+#pragma set OutputResolveListing true
+#pragma set NoUnreferencedLeaves false
+
+//jmp main;
+//int 1;

@@ -1,0 +1,39 @@
+@name -Fast- Screen Renderer
+@inputs Screen:wirelink
+@outputs 
+@persist Width Height X Y
+@trigger 
+
+if(first()) {
+    X=0
+    Y=0
+    function number vec2color(Color:vector) {
+        return Color:x()*65536+Color:y()*256+Color:z()
+    }
+    timer("Init", 250)
+}
+
+if(clk("Init")) {
+    if(->Screen) {
+        Width=Screen[1048573]
+        Height=Screen[1048572]
+        Screen[1048569]=2
+        runOnTick(1)
+    } else {
+        timer("Init", 250)
+    }
+}
+
+if(tickClk()) {
+    while(perf()) {
+        Screen[Y*Width+X]=vec2color(ranger(32768, X/Width-0.5, Y/Height-0.5):entity():getColor())
+        X++
+        if(X>Width) {
+            X=0
+            Y++
+            if(Y>Height) {
+                Y=0
+            }
+        }
+    }
+}

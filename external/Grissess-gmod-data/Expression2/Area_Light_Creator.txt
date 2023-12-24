@@ -1,0 +1,76 @@
+@name Area Light Creator
+@inputs 
+@outputs 
+@persist NextLight LastUse Mode CurColor:vector
+@persist MODE_OFF MODE_CREATING
+@persist Env:table
+@trigger 
+
+if(first()) {
+    #include "lib/command"
+    #include "util/obfuscate"
+    
+    runOnTick(1)
+    runOnChat(1)
+    
+    MODE_OFF=0
+    MODE_CREATING=1
+    
+    Mode=MODE_OFF
+    CurColor=vec(255, 255, 255)
+    
+    function void alTick() {
+        if(Mode==MODE_CREATING&owner():keyUse()&!LastUse) {
+            lightCreate(NextLight, owner():aimPos(), CurColor, 16386, 128)
+            NextLight+=1
+        }
+        LastUse=owner():keyUse()
+    }
+    
+    function void alStart(Args:table, Ret:table) {
+        Mode=MODE_CREATING
+    }
+    
+    function void alFinish(Args:table, Ret:table) {
+        Mode=MODE_OFF
+    }
+    
+    function void alClear(Args:table, Ret:table) {
+        lightRemoveAll()
+        NextLight=1
+    }
+    
+    function void alColor(Args:table, Ret:table) {
+        CurColor=Args[1, vector]
+    }
+    
+    function void alOff(Args:table, Ret:table) {
+        for(I=1,NextLight) {
+            lightToggle(I, 0)
+        }
+    }
+    
+    function void alOn(Args:table, Ret:table) {
+        for(I=1,NextLight) {
+            lightToggle(I, 1)
+        }
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("alstart", "alStart", ""))
+    Env:envAddCommand(newCommand("alfinish", "alFinish", ""))
+    Env:envAddCommand(newCommand("alclear", "alClear", ""))
+    Env:envAddCommand(newCommand("alcolor", "alColor", "v"))
+    Env:envAddCommand(newCommand("aloff", "alOff", ""))
+    Env:envAddCommand(newCommand("alon", "alOn", ""))
+}
+
+if(tickClk()) {
+    alTick()
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}

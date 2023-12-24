@@ -1,0 +1,83 @@
+#ifndef SELENE_MM
+#define SELENE_MM
+
+#include <selene/std.txt>
+
+struct mm_header {
+    char size;
+    char flags;
+};
+#define SIZEOF_MM_HEADER 2
+#define MMF_USED 1
+#define MMF_FINAL 2
+
+char mm_init(char *start, char size) {
+    mm_header *arena = start;
+    arena.size = size - SIZEOF_MM_HEADER;
+    arena.flags = MMF_FINAL;
+    return 0;
+}
+
+char *mm_split(char *hdr, char size) {
+    mm_header *reg = hdr, *new;
+    if(reg.size < size + 2 * SIZEOF_MM_HEADER) return NULL;
+    new = reg + size + SIZEOF_MM_HEADER;
+    new.flags = 0;
+    if(reg.flags & MMF_FINAL) {
+        new.flags = bits_add(new.flags, MMF_FINAL);
+        reg.flags = bits_remove(reg.flags, MMF_FINAL);
+    }
+    new.size = reg.size - size - SIZEOF_MM_HEADER;
+    reg.size = size;
+    return new;
+}
+
+char mm_join(char *hdr) {
+    mm_header *reg = hdr, *next;
+    if(reg.flags & MMF_FINAL) return 1;
+    next = reg + reg.size + SIZEOF_MM_HEADER;
+    if(next.flags & MMF_FINAL) {
+        reg.flags = bits_add(reg.flags, MMF_FINAL);
+    }
+    reg.size += next.size + SIZEOF_MM_HEADER;
+    return 0;
+}
+
+char *mm_malloc(char *hdr, char size) {
+    mm_header *cur = hdr, *tmp;
+    while(1) {
+        if(!(cur.flags & MMF_USED)) {
+            tmp = mm_split(cur, size);
+            if(tmp) {
+                cur.flags = bits_add(cur.flags, MMF_USED);
+                return cur + SIZEOF_MM_HEADER;
+            }
+        }
+        if(cur.flags & MMF_FINAL) return NULL;  // Out of memory
+        cur += cur.size + SIZEOF_MM_HEADER;
+    }
+}
+
+char mm_defrag(char *hdr) {
+    mm_header *cur = hdr, *next;
+    char count = 0;
+    while(1) {
+        next = cur + cur.size + SIZEOF_MM_HEADER;
+        if(!((cur.flags & MMF_USED) || (next.flags & MMF_USED))) {
+            if(mm_join(cur)) break;
+            count++;
+        } else {
+            cur = next;
+        }
+        if(cur.flags & MMF_FINAL) break;
+    }
+    return count;
+}
+
+void mm_free(char *hdr, char *mem) {
+    mm_header *reg = mem - SIZEOF_MM_HEADER;
+    reg.flags = bits_remove(reg.flags, MMF_USED);
+    mm_defrag(hdr);
+}
+
+#endif

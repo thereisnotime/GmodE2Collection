@@ -1,0 +1,557 @@
+#ifndef SELENE_CPU
+#define SELENE_CPU
+
+//There are some undocumented changes to the interrupt handling mechanism in the ZVM.
+//The third, reserved byte of this four-byte vector is now useful depending on two
+//additional undocumented flags:
+//2**7 (128) - Load the IVEC_PTBL byte into PTBL (setting the page table). PTBE is unaffected.
+//2**8 (256) - Load 1 into the PTBE (set the number of entries to 1). PTBL is unaffected.
+//These are mutually exclusive, but bit 7 is preferred. The behavior of bit 8 is probably
+//a bug.
+
+#define INT_RESET 0
+//Reset the processor. Only raised by code.
+#define INT_HALT 1
+//Halt the execution--doesn't necessarily work in debug environments. Only raised by code.
+#define INT_EOC 2
+//End of code--called to handle opcode 0. Parameter is 0.
+#define INT_DIV0 3
+//Division by 0. Parameter is 0 if this happened during DIV, or 1 if this happened during FINV.
+#define INT_OPCODE 4
+//Unknown opcode; parameter is the offending opcode.
+#define INT_INTERNAL 5
+//Raised when the processor encounters a VM inconsistency. Parameters are in the INTERR below.
+#define INT_STACK 6
+//Stack overflow/underflow; parameter is ESP pointing at a valid position.
+#define INT_IO 7
+//Memory read/write fault; raised when a page is disabled, or an external access fails.
+//The parameter is the offending address.
+#define INT_MEMBUS 8
+//Bus fault, never actually occurs in the VM.
+#define INT_PPWRITE 9
+//Write violation, called when a write attempt is made to a write-protected page. Parameter is
+//the offending address.
+#define INT_PORTBUS 10
+//IO bus fault, never actually occurs in the VM.
+#define INT_PPACCESS 11
+//Page access violation, called by instructions like CPG, SPG, etc., that modify the page table
+//entries, when the runlevel of the calling page is too low to affect that page. Parameter is
+//the PAGE NUMBER that failed to have an attribute set.
+#define INT_PPREAD 12
+//Page read violation, called when a read attempt is made to a read-protected page. Also, oddly
+//called by all ROM paging functions when the memory to be accessed is out of bounds. In the
+//former case, the parameter is the offending address; in the latter, it is 0.
+#define INT_GPF 13
+//General processor fault. Called under plenty of conditions; consult the GPF enum below for
+//parameter meanings.
+#define INT_PPEXEC 14
+//Page execute violation, called when an attempt is made to run code in a page that is marked
+//non-executable from a page with a runlevel other than 0. The parameter is the PAGE NUMBER
+//of the current page (oddly).
+#define INT_ADDR 15
+//Raised when an address is specified invalidly; according to the current implementation, this
+//occurs when the address is not between (-2^48+1, 2^48) (id est, it cannot fit in a signed
+//48-bit integer), when it is a floating point number, or if it simply isn't a number at all
+//(which should never happen). The parameter is the offending address.
+#define INT_MEMRD 28
+//Raised with MEMADDR set to the address to be read, and LADD set to the value actually read
+//(after page remapping, only if the page is not disabled). User code may observe that
+//MEMRQ == 4 in this case. When this interrupt returns, the value in LADD becomes the value
+//returned from the original read. (Note that LADD can be CPUSET.)
+#define INT_MEMWR 29
+//Raised with MEMADDR set to the address to be written, and LADD set to the value to be written
+//(*before* page permission checks and mapping, *but* the cached PTE that resulted in a
+//MF_OVERRIDE is consulted regardless of what MEMADDR is set to, so if that page is, e.g.,
+//disabled or not writable, the write is doomed to fail anyway.) User code may observe
+//MEMRQ == 5 in this case. When the interrupt returns, the value in MEMADDR is loaded into the
+//writing address, and the value in LADD is loaded as the new written value, allowing the
+//interrupt to override either (but see the PTE cache bug before). Both can be CPUSET.
+#define INT_PFAULT 30
+//Raised with the faulting address whenever the MF_TRAP flag is set for the requested page. After the
+//interrupt returns, the operation continues as normal, *but does not invalidate the cached PTE from
+//the beginning*, so this cannot be used to modify the PTE. Instead, use the MEMxx interrupts above.
+//Note that the docs have a bug--this is not called as an external interrupt.
+#define INT_DEBUG 31
+//Debug trap; raised during CPU debugging. Intercepting this breaks the CPU's debugger (not that
+//it needs the help.)
+
+#define INTERR_PCALL 1
+//The ZVM has a Lua bug! A pcall failed to run the instruction.
+#define INTERR_INSTR 12
+//Raised when the ZVM encounters a read error trying to decode an instruction or associated RM.
+#define INTERR_IMM1 22
+//Raised when the ZVM encounters a read error trying to get the first immediate value.
+#define INTERR_IMM2 32
+//Raised when the ZVM encounters a read error trying to get the second immediate value.
+
+#define GPF_WRITECS 1
+//Running code attempted to write to the CS register. (Use JMPF/CALLF instead.)
+#define GPF_NOIVEC 2
+//An attempt was made to read the interrupt vector, but this attempt failed, so the interrupt cannot be called.
+#define GPF_BADINT 3
+//The interrupt number is out of bounds (not in [0, 255])
+#define GPF_EXTFAIL 4
+//An attempt was made to call a non-external interrupt as an external interrupt.
+#define GPF_NOMEM 5
+//The internal RAM has less than 512 bytes (4 pages) while the page flag is set.
+#define GPF_STACKFAIL 6
+//An error occured while trying to manipulate the stack during an interrupt.
+#define GPF_CALLFAIL 7
+//An error occured while trying to call the interrupt handler during an interrupt.
+#define GPF_NOPAGE 8
+//An attempt was made to read the page table, but this attempt failed, so the page is inaccessible.
+//--------------
+//The rest of these are runlevel-0 opcodes that conflict with the above namespace. Rest assured that these
+//won't be called for opcodes in the current ZVM condition. Rather, the following will:
+#define GPF_R0_RD 16
+//RD DST, PTR -- read a value directly from memory without paging, deference, or external access.
+#define GPF_R0_WD 17
+//WD PTR, SRC -- write a value directly to memory without paging, deference, or external access.
+#define GPF_R0_SPG 28
+//SPG PAGE -- make a page read-only
+#define GPF_R0_CPG 29
+//CPG PAGE -- make a page readable and writable
+#define GPF_R0_STI 42
+//STI -- enable interrupts
+#define GPF_R0_CLI 43
+//CLI -- disable interrupts
+#define GPF_R0_STP 44
+//STP -- enable protected mode
+#define GPF_R0_CLP 45
+//CLP -- disable protected mode
+#define GPF_R0_RESERVED1 46
+//An undefined, reserved opcode.
+#define GPF_R0_STEF 48
+//STEF -- enable extended mode
+#define GPF_R0_CLEF 49
+//CLEF -- disable extended mode
+#define GPF_R0_EXTINT 70
+//EXTINT INT -- external interrupt
+#define GPF_R0_ERPG 95
+//ERPG PAGE -- erase ROM page
+#define GPF_R0_WRPG 96
+//WRPG PAGE -- write ROM page
+#define GPF_R0_RDPG 97
+//RDPG PAGE -- read ROM page
+#define GPF_R0_LIDTR 99
+//LIDTR PTR -- load interrupt table
+#define GPF_R0_RESERVED2 100
+//Another reserved opcode.
+#define GPF_R0_RESERVED3 109
+//Yet another reserved opcode.
+#define GPF_R0_EXTRET 110
+//EXTRET -- return from an external interrupt
+#define GPF_R0_IDLE 111
+//IDLE -- skip some processor cycles (and give the VM a chance to catch up)
+#define GPF_R0_STD2 116
+//STD2 -- enable hardware debugging
+#define GPF_R0_STM 118
+//STM -- enable extended memory
+#define GPF_R0_CLM 119
+//CLM -- disable extended memory
+#define GPF_R0_CPUGET 120
+//CPUGET DST, I -- get an internal register
+#define GPF_R0_CPUSET 121
+//CPUSET I, SRC -- set an internal register
+#define GPF_R0_SPP 122
+//SPP PAGE, I -- set a page flag
+#define GPF_R0_CPP 123
+//CPP PAGE, I -- clear a page flag
+#define GPF_R0_SRL 124
+//SRL PAGE, I -- set page runlevel
+#define GPF_R0_CRL 125
+//CRL DST, PAGE -- get page runlevel
+#define GPF_R0_SMAP 131
+//SMAP PAGE, I -- map virtual to physical page
+#define GPF_R0_GMAP 132
+//GMAP DST, PAGE -- get virtual page map
+#define GPF_R0_IRETP 136
+//IRETP PTBL -- leave interrupt and set PTBL
+#define GPF_R0_EXTRETP 137
+//EXTRETP PTBL -- leave external interrupt and set PTBL
+
+struct ivec {
+    char ip_;
+    char cs_;
+    char ptbl;
+    char flags;
+};
+#define SIZEOF_IVEC 4
+
+#define IF_CMPR 8
+//Set CMPR when the interrupt occurs.
+#define IF_NEAR 16
+//Do not set CS (it is still pushed onto the frame, but the value is unaffected).
+#define IF_ACTIVE 32
+//Interrupt enabled. (Affects all other functionality except IF_CMPR.)
+#define IF_EXT 64
+//Interrupt can be invoked externally. Note that it doesn't HAVE to be, but trying to
+//invoke an external interrupt without this flag raises interrupt 13:4 instead.
+#define IF_SETPTBL 128
+//Set PTBL to IVEC_PTBL's entry when invoked. PTBE is unaffected, and the old PTBL is
+//NOT restored on return.
+#define IF_SETPTBE 256
+//Set PTBE to 1 when invoked. PTBL is unaffected, and the old PTBE is NOT restored on
+//return. The use of 1 is probably a bug.
+#define IF_PUSHR 512
+//Push all R0..R31 when this is invoked externally. Requires IF_EXT to be set as well.
+
+//Regardless of which interrupt method is used, the last two bytes on the stack are
+//the CS:IP pair to return to. Both EXTRET and IRET eventually behave as RETF, though
+//EXTRET does some additional work.
+
+//HOWEVER, after observing the ZVM code (and not saying BP is braindead or anything,
+//it's just a necessary evil for sharing the interrupt mechanism), EXTRET ignores
+//these two bytes for the CS:IP pair that is redundantly in the register frame. Still,
+//these two bytes must be present for the frame to be valid.
+
+//Note that ESP always points *below* the last pushed datum.
+
+#define INT_CS 1
+#define INT_IP 2
+
+//This is the regular structure of offsets from ESP for an EXTRET frame.
+
+//NB: Again, redundant registers--although SS and ESP are in this frame,
+//their values are entirely ignored, as it would break the code that reads
+//the frame back into the registers. AFAICT, the values you put in here do
+//nothing, but this may not be the case forever, so they are "reserved."
+
+#define XINT_IP 3
+#define XINT_CMPR 4
+#define XINT_EAX 5
+#define XINT_EBX 6
+#define XINT_ECX 7
+#define XINT_EDX 8
+#define XINT_ESP 9
+#define XINT_ESI 10
+#define XINT_EDI 11
+#define XINT_CS 12
+#define XINT_SS 13
+#define XINT_DS 14
+#define XINT_FS 15
+#define XINT_GS 16
+#define XINT_ES 17
+#define XINT_KS 18
+#define XINT_LS 19
+
+struct iframe {
+    char _top;
+    char cs_;
+    char ip_;
+}
+#define SIZEOF_IFRAME 3
+
+struct xiframe {
+    char _top;
+    char cs_;
+    char ip_;
+    char _ip_;
+    char cmpr_;
+    char eax_;
+    char ebx_;
+    char ecx_;
+    char edx_;
+    char _esp_;
+    char esi_;
+    char edi_;
+    char _cs_;
+    char _ss_;
+    char ds_;
+    char fs_;
+    char gs_;
+    char es_;
+    char ks_;
+    char ls_;
+}
+#define SIZEOF_XIFRAME 20
+
+struct xirframe {
+    char _top;
+    char cs_;
+    char ip_;
+    char r[32];
+    char _ip_;
+    char cmpr_;
+    char eax_;
+    char ebx_;
+    char ecx_;
+    char edx_;
+    char _esp_;
+    char esi_;
+    char edi_;
+    char _cs_;
+    char _ss_;
+    char ds_;
+    char fs_;
+    char gs_;
+    char es_;
+    char ks_;
+    char ls_;
+}
+#define SIZEOF_XIRFRAME 52
+
+struct pushaframe {
+    char _top;
+    char eax_;
+    char ebx_;
+    char ecx_;
+    char edx_;
+    char _esp_;
+    char ebp_;
+    char esi_;
+    char edi_;
+}
+#define SIZEOF_PUSHAFRAME 9
+
+#define REG_IP 0
+//Local Instruction Pointer.
+#define REG_EAX 1
+//General Purpose Register A. (Usually: accumulators, cdecl return value.)
+#define REG_EBX 2
+//General Purpose Register B. (Usually: base pointers.)
+#define REG_ECX 3
+//General Purpose Register C. (Usually: counters.)
+#define REG_EDX 4
+//General Purpose Register D. (Usually: data or destination pointers.)
+#define REG_ESI 5
+//Source index.
+#define REG_EDI 6
+//Destination index.
+#define REG_ESP 7
+//Stack Pointer. (Generally used in PUSH/POP. Points to next free location; grows down.)
+#define REG_EBP 8
+//Base Pointer. (Points to the top of a cdecl call frame.)
+#define REG_ESZ 9
+//Stack size. (Interrupt 6:ESP is generated instead if popping would result in an ESP>ESZ.)
+//--------------------------
+#define REG_CS 16
+//Code segment. (Implicit segment of the IP register.)
+#define REG_SS 17
+//Stack segment. (Implicit segment of the ESP register.)
+#define REG_DS 18
+//Data segment. (Implicit segment of all general purpose registers.)
+#define REG_ES 19
+//Extra segment. (Non-normative name, only ever explicitly used.)
+#define REG_GS 20
+//General segment. (Non-normative name, only ever explicitly used.)
+#define REG_FS 21
+//F segment. (Non-normative name, only ever explicitly used.)
+#define REG_KS 22
+//Key segment. (Non-normative name, only ever explicitly used.)
+#define REG_LS 23
+//Library segment. (Non-normative name, only ever explicitly used.)
+//--------------------------
+#define REG_IDTR 24
+//Interrupt vector table pointer. (Absolute physical address. Usually set with LIDTR.)
+#define REG_CMPR 25
+//Comparison register.
+#define REG_XEIP 26
+//Absolute instruction pointer. (Read only.)
+#define REG_LADD 27
+//Additional interrupt parameter. (When not specified or done directly from [EXT]INT, this is XEIP of the interrupting instruction.)
+#define REG_LINT 28
+//Interrupt number.
+#define REG_TMR 29
+//Cycle timer. (Counts intructions.)
+#define REG_TIMER 30
+//Real Time Clock. (Counts seconds elapsed.)
+#define REG_CPAGE 31
+//Current page. (Used in the page protection logic. Read only.)
+#define REG_IF 32
+//Interrupt Flag. (Usually cleared with CLI. Locally enables/disables interrupts. See REG_NIF for STI.)
+#define REG_PF 33
+//Protected Flag. (Set/cleared with STP/CLP. Prevents certain potentially-system-compromising features.)
+#define REG_EF 34
+//Extended Flag. (Usually set/cleared with STEF/CLEF respectively. Locally enables/disables various advanced features.)
+#define REG_NIF 35
+//Next Interrupt Flag. (Set by STI; if set during the next instruction fetch, IF is set, and this is cleared. This logic prevents
+//interrupts during the final IRET/EXTRET/etc. of an interrupt handler.)
+#define REG_MF 36
+//Memory Flag. (Usually set/cleared with STM/CLM respectively. Locally enables/disables memory paging.)
+#define REG_PTBL 37
+//Page table pointer. (Absolute physical address.)
+#define REG_PTBE 38
+//Page table size. (Specified in entries. The table must have one more entry than this to accomodate the "default" entry at index 0.)
+//Defaults to 0--only the default entry would be considered.
+#define REG_PCAP 39
+//Paging Capability. (Set by default to enable logical addressing rather than physical addressing in most cases when MF is set.)
+//Unset by the processor in a few important places:
+//- When processor logic is reading/writing the page table (id est, accesses to the PTBL are absolute);
+//- When the processor is reading an interrupt vector (id est, the interrupt table is absolute)
+//User code may unset it, causing further accesses to be absolute until it is set. The effect is similar to (arguably superfluous to) MF.
+#define REG_RQCAP 40
+//Memory request delay capability. (Set by default to enable page trapping on read/write. Delays actual memory flushing--like a cache.)
+//------------------------
+#define REG_PPAGE 41
+//Previous page. (Used in the page protection logic. Read only.)
+#define REG_MEMRQ 42
+//Memory request. (When RQCAP is set, 1 indicates a delayed operation. 2-5 represent read and write requests; see INT_MEMxx above.)
+//------------------------
+#define REG_RAMSize 43
+//Internal RAM size. (Amount installed on-chip, not including memory devices outside the chip. Read only.)
+#define REG_External 44
+//External flag. (Set when handling an external IO operation.)
+#define REG_BusLock 45
+//Bus Lock flag. (Set when the bus is locked for memory operations. This is usually during an instruction, but almost never between them.)
+#define REG_Idle 46
+//Idle flag. (Set when the processor has been instructed to idle; used to synchronize with engine framerate.)
+#define REG_INTR 47
+//Interrupt flag. (Set when handling an interrupt.)
+//-------------------------
+#define REG_SerialNo 48
+//Serial number. (Uniquely assigned per-processor at creation. Read only.)
+#define REG_CODEBYTES 49
+//Code bytes. (Monotonically increasing number of bytes processed by the instruction fetch so far. Read only.)
+#define REG_BPREC 50
+//Binary precision. (Number of bits to preserve during base-2 operations such as AND, XOR, etc.)
+#define REG_IPREC 51
+//Integer precision. (Number of bits to preserve during integer operations such as ADD, DIV, etc.)
+#define REG_NIDT 52
+//Interrupt vector table size. (Number of entries in the interrupt table. Interrupts above this value are ignored or deferred to
+//"basic" processing--where int 0 resets the processor, and int 1 halts it.)
+#define REG_BlockStart 53
+//Block start. (Set by the first parameter of the BLOCK instruction, then cleared by the next block-aware instruction.)
+#define REG_BlockSize 54
+//Block size. (Set by the second parameter of the BLOCK instruction, then cleared by the next block-aware instruction.)
+#define REG_VMODE 55
+//Vector mode. (Sets the size of vectors in vector operations. Only supported values are integers in [2, 3].)
+#define REG_XTRL 56
+//External runlevel. (The effective runlevel of IO access from external devices. May trigger faults wherein the External register is set.)
+#define REG_HaltPort 57
+//Halt Port. (This register is NO LONGER USED OR SUPPORTED IN ANY WAY.)
+#define REG_HWDEBUG 58
+//Hardware Debug. (Set by the STD2 instruction; not in the VM, but probably used by the debugger mode of the CPU tool.)
+#define REG_DBGSTATE 59
+//Debug State. (Set by the STD2 instruction; not in the VM, but probably used by the debugger mode of the CPU tool.)
+#define REG_DBGADDR 60
+//Debug Address. (Not in the VM, but probably used by the debugger mode of the CPU tool.)
+#define REG_CRL 61
+//Current Runlevel. (Used by page protection logic. Oddly, not read-only, but can't be set by unprivileged code.)
+#define REG_TimerDT 62
+//Timer Delta. (How much to increment TMR by for the currently cached instruction block.)
+#define REG_MEMADDR 63
+//Memory Address. (Valid when MEMRQ is set; refers to the address in the requested instruction.)
+//------------------------------
+#define REG_TimerMode 64
+//Timer Mode. (When 1, count down seconds using TIMER. When 2, count down instructions using TMR.)
+#define REG_TimerRate 65
+//Timer Rate. (Triggers an EXTINT when TIMER/TMR--depending on TimerMode--minus TimerPrevTime, exceeds this value.)
+#define REG_TimerPrevTime 66
+//Timer Previous Time. (The value of TIMER/TMR--depending on TimerMode--when the timer was set.)
+#define REG_TimerAddress 67
+//Timer Address. (The EXTINT number to trigger on expiry.)
+#define REG_TimerPrevMode 68
+//Timer Previous Mode. (Used to check if the timer's previous mode has changed, and update the TimerPrevTime register accordingly.)
+//------------------------------
+#define REG_R0 96
+//General Purpose Register 0. (All other registers, up to REG_R_SZ-1, of number i reside in internal location REG_R0+i.)
+#define REG_R_SZ 32
+//Number of general purpose registers. Values of R0 through R(n-1) are valid, where n is this constant.
+
+//Various useful enums for dealing with these registers
+
+//For TimerMode:
+#define TIMER_MODE_OFF 0
+//Don't time.
+#define TIMER_MODE_SECONDS 1
+//Time using TIMER as a time source (count seconds).
+#define TIMER_MODE_CYCLES 2
+//Time using TMR as a time source (count cycles/instructions).
+
+//For MEMRQ:
+#define MEMRQ_DELAYED 1
+//A delayed access.
+#define MEMRQ_READ_BEGINNING 2
+//A read access was just invoked.
+#define MEMRQ_WRITE_BEGINNING 3
+//A write access was just invoked.
+#define MEMRQ_READ 4
+//A read access is being handled (code observes this state)
+#define MEMRQ_WRITE 5
+//A write access is being handled (code observes this state)
+
+
+#define CPUID_VERSION 0
+// Version of the ZVM. At the time of this writing, nominally 1000.
+#define CPUID_RAMSIZE 1
+// How much internal RAM this has. As an address, this refers to the first "byte" outside the address space of the CPU--the first external address. "Hi-speed" components will interpret this as an operation on address 0.
+#define CPUID_TYPE 2
+// Which processor hardware we're running on (determines some of the ISA). Currently defined:
+// 0: ZCPU (basic)
+// 1: ZGPU (with graphics instructions)
+// 2: ZSPU (with audio instructions)
+#define CPUID_ROMSIZE 3
+// How much internal ROM this has. Usually the same as the internal RAM (which is loaded herefrom on reset). Normally written by the CPU tool itself, but can also be written programmatically (RDPG, WRPG, ERPG -- which writes 0s)
+
+#define PAGEBITS 7
+//#define PAGESIZE (1 << PAGEBITS)
+#define PAGESIZE 128
+//#define PAGEMASK (PAGESIZE - 1)
+#define PAGEMASK 127
+
+#define MF_DISABLE 1
+//Disables the page--accesses to it fail with an IO fault (INT_IO).
+#define MF_REMAP 2
+//Causes access to the page to remap to another physical page (no further mapping is done).
+//The target page is specified by the second byte of the two-byte page entry.
+#define MF_TRAP 4
+//Raises INT_PFAULT (see above), but does not halt the access. See the interrupt above for
+//important details, such as a PTE cache bug. Note that the docs have a bug--this is not
+//an external interrupt.
+#define MF_OVERRIDE 8
+//Sets the MEMRQ register (see above), and raises INT_MEMRD for reading or INT_MEMWR for writing.
+//On reading, the actually returned data will be whatever is in the LADD register (which may be
+//set with CPUSET). On writing, the actually written data will be whatever is in the LADD register
+//at whatever is in the MEMADDR register. See both interrupts above for important details, such as
+//a PTE cache bug while writing.
+#define MF_NOREAD 32
+//Causes a read access violation (INT_PPREAD) when an attempt is made to read and halts access.
+#define MF_NOWRITE 64
+//Causes a write access violation (INT_PPWRITE) when an attempt is made to write and halts access.
+#define MF_NOEXEC 128
+//Cause an execution access violation (INT_PPEXEC) when an attempt is made to execute (from runlevel!=0)
+//and halts the jump (id est, the jump becomes a NOP).
+
+#define MF_RUNLEVEL_SHIFT 8
+//How far to right-shift the flags to get the (unmasked) runlevel.
+#define MF_RUNLEVEL_MASK 255
+//The AND mask to apply to the resulting shift to get the runlevel.
+#define MF_MAX_RUNLEVEL 255
+
+char insn_cpuid(char param) {
+    CPUID param;
+}
+
+float insn_max(float a, float b) {
+    mov EAX, [EBP:2];
+    max EAX, [EBP:3];
+}
+
+float insn_min(float a, float b) {
+    mov EAX, [EBP:2];
+    min EAX, [EBP:3];
+}
+
+float insn_timer() {
+    TIMER EAX;
+}
+
+float insn_ffrac(float val) {
+    MOV EAX, [EBP:2];
+    FFRAC EAX;
+}
+
+float insn_fpi() {
+    FPI EAX;
+}
+
+float insn_cpuget(char reg) {
+    CPUGET EAX, [EBP:2];
+}
+
+void insn_cpuset(char reg, float val) {
+    CPUSET [EBP:2], [EBP:3];
+}
+
+#endif

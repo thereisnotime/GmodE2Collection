@@ -1,0 +1,15 @@
+@name -Fast- Hyperthruster
+@inputs 
+@outputs 
+@persist Dir:vector
+@trigger 
+
+if(first()|duped()) {
+    runOnTick(1)
+    entity():setMass(1000)
+    Dir=owner():eye()
+}
+
+if(tickClk()) {
+    entity():isWeldedTo():applyForce(1000*entity():mass()*Dir)
+}

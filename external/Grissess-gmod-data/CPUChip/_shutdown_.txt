@@ -1,0 +1,27 @@
+CALL main;
+CLEF;
+INT 1;
+
+#include <selene/uvm.txt>
+#include <selene/pmalloc.txt>
+#include <selene/devtree.txt>
+#include <selene/port.txt>
+
+void main() {
+    char pasize;
+    MOV ES, 0;  // For IO addressing
+    ports_reset();
+    iolog_init();
+    printk_init();
+    printk_set_debug(1);
+    interrupt_init();
+    pmalloc_init(text_end);
+    pasize = devtree_init();
+    printkln("%p (%d) b phymem; %d free pages\n", pasize, pasize, pmalloc_pages);
+    uvm_init(pasize);
+    //printkln("Testing spurious interrupt\n");
+    //INT 21;
+    printk("Halting system.\n");
+}
+
+text_end:

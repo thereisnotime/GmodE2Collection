@@ -1,0 +1,32 @@
+#ifndef LUNOS_BASIC
+#define LUNOS_BASIC
+//LunOS -- Lunar Operating System
+//basic -- Basic
+
+//Just includes an amalgam of basic typedefs and constants used across the system.
+
+//Typedefs:
+#define VOID_P char*
+#define VOID_P_P char**
+#define SIZE_T char
+#define STATUS_T char
+
+//Constants:
+#define NULL 0
+
+//Error codes:
+#define E_SUCCESS 0
+//Success.
+#define E_NOMEM 1
+//No memory or space exists to carry out the operation.
+#define E_NOACCESS 2
+//Access to the resource is not allowed by the current policy.
+#define E_NOEXIST 3
+//The referenced entity does not exist.
+#define E_EXISTS 4
+//The referenced entity exists.
+#define E_INVALID 5
+//An invalid parameter was encountered.
+#define E_BOUNDS 6
+//The operation would be performed outside of memory boundaries.
+#endif

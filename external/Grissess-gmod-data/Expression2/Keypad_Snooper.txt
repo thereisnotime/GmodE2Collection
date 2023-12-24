@@ -1,0 +1,101 @@
+@name Keypad Snooper
+@inputs 
+@outputs 
+@persist Keypads:table Keys:table PlUse:table KPCache:table Players:array
+@persist Env:table
+@trigger 
+
+if(first()|duped()) {
+    #include "lib/command"
+    #include "util/obfuscate"
+    
+    runOnChat(1)
+    
+    Players=players()
+    X=-50
+    Y=-100
+    Keys=table()
+    Keys["1", table]=table(X+5   , Y+100  , 25, 25, -2.2, 3.45,  1.3 ,  0)
+    Keys["2", table]=table(X+37.5, Y+100  , 25, 25, -0.6, 1.85,  1.3 ,  0)
+    Keys["3", table]=table(X+70  , Y+100  , 25, 25,  1.0, 0.25,  1.3 ,  0)
+    Keys["4", table]=table(X+5   , Y+132.5, 25, 25, -2.2, 3.45,  2.9 , -1.6)
+    Keys["5", table]=table(X+37.5, Y+132.5, 25, 25, -0.6, 1.85,  2.9 , -1.6)
+    Keys["6", table]=table(X+70  , Y+132.5, 25, 25,  1.0, 0.25,  2.9 , -1.6)
+    Keys["7", table]=table(X+5   , Y+165  , 25, 25, -2.2, 3.45,  4.55, -3.3)
+    Keys["8", table]=table(X+37.5, Y+165  , 25, 25, -0.6, 1.85,  4.55, -3.3)
+    Keys["9", table]=table(X+70  , Y+165  , 25, 25,  1.0, 0.25,  4.55, -3.3)
+    Keys["ACCEPT", table]=table(X+55  , Y+ 67.5, 40, 25,  0.3, 1.65, -0.3 ,  1.6)
+    Keys["RESET", table]=table(X+5   , Y+ 67.5, 40, 25, -2.2, 4.25, -0.3 ,  1.6)
+    
+    function ksQuery(Player:entity) {
+        #print("Query on "+Player:toString())
+        for(I=1,Keypads:count()) {
+            local Keypad=Keypads[I, entity]
+            if(Player:aimEntity()==Keypad) {
+                local HP=Keypad:toLocal(Player:aimPos())
+                foreach(Key,Params:table=Keys) {
+                    local X=(HP:y()-Params[5, number])/(Params[5, number]+Params[6, number])
+                    local Y=1-(HP:z()+Params[7, number])/(Params[7, number]+Params[8, number])
+                    if(inrange(X, 0, 1)&inrange(Y, 0, 1)) {
+                        if(Key=="ACCEPT") {
+                            if(KPCache[Keypad:id(), string]) {
+                                print(Player:name()+" probably entered "+KPCache[Keypad:id(), string]+" on keypad "+Keypad:id():toString())
+                                KPCache[Keypad:id(), string]=""
+                            }
+                        } elseif(Key=="RESET") {
+                            KPCache[Keypad:id(), string]=""
+                        } else {
+                            if(KPCache[Keypad:id(), string]:length()<4) {
+                                KPCache[Keypad:id(), string]=KPCache[Keypad:id(), string]+Key
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    function ksThink() {
+        for(I=1,Players:count()) {
+            local Pl=Players[I, entity]
+            local ID=Pl:id()
+            local Use=Pl:keyUse()
+            if(Use&!PlUse[ID, number]) {
+                ksQuery(Pl)
+            }
+            PlUse[ID, number]=Use
+        }
+    }
+    
+    function void ksAdd(Args:table, Ret:table) {
+        Keypads:pushEntity(owner():aimEntity())
+    }
+    
+    function void ksSetAll(Args:table, Ret:table) {
+        print("Listening to "+findByClass("keypad"):toString()+" keypads")
+        Keypads=findToTable()
+    }
+    
+    Env=newEnv()
+    Env:envAddCommand(newCommand("ksadd", "ksAdd", ""))
+    Env:envAddCommand(newCommand("kssetall", "ksSetAll", ""))
+    
+    timer("KS.UpdatePlayers", 2000)
+    timer("KS.Think", 20)
+}
+
+if(chatClk(owner())) {
+    if(Env:envExec(owner():lastSaid())) {
+        hideChat(1)
+    }
+}
+
+if(clk("KS.Think")) {
+    ksThink()
+    timer("KS.Think", 20)
+}
+
+if(clk("KS.UpdatePlayers")) {
+    Players=players()
+    timer("KS.UpdatePlayers", 2000)
+}

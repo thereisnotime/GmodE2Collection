@@ -1,0 +1,129 @@
+@name libCnsTTY
+
+#Console TTY access
+
+#Utility:
+function number cnsColor(Color:vector) {
+    Norm=9*Color/255
+    return 100*int(Norm:x())+10*int(Norm:y())+int(Norm:z())
+}
+
+function number wirelink:cnWidth() {
+    return This[2032]
+}
+
+function number wirelink:cnHeight() {
+    return This[2034]
+}
+
+function void wirelink:cnClear() {
+    This[2041]=1
+    This[2045]=0
+}
+
+function void wirelink:cnShift(Rows:number) {
+    This[2038]=Rows
+}
+
+function vector2 wirelink:cnCursorPos() {
+    local CPos=This[2045]
+    local Width=This:cnWidth()
+    return vec2(CPos%Width, floor(CPos/Width))
+}
+
+function void wirelink:cnSetCursorPos(CPos:vector2) {
+    local Width=This:cnWidth()
+    local Height=This:cnHeight()
+    if(CPos:y()>Height) {
+        This:cnShift(CPos:y()-Height)
+        CPos=CPos:setY(Height)
+    }
+    This[2045]=CPos:y()*Width+CPos:x()
+}
+
+function void wirelink:cnNewLine() {
+    local CPos=This:cnCursorPos()
+    This:cnSetCursorPos(CPos:setY(CPos:y()+1))
+}
+
+function void wirelink:cnCarriageReturn() {
+    This:cnSetCursorPos(This:cnCursorPos():setX(0))
+}
+
+function void wirelink:cnHorizontalTab() {
+    local CPos=This:cnCursorPos()
+    This:cnSetCursorPos(CPos:setX(5*ceil(CPos:x()/5)))
+}
+
+function void wirelink:cnPutChar(Char:string, FG:number, BG:number, Flash:number) {
+    local Pos=This[2045]
+    This[Pos*2]=toByte(Char)
+    This[Pos*2+1]=Flash*1000000+BG*1000+FG
+    This[2045]=Pos+1
+}
+
+function void wirelink:cnWriteRaw(Text:string, FG:number, BG:number, Flash:number) {
+    local Width=This:cnWidth()
+    local CPos=This:cnCursorPos()
+    local Offset=Width-CPos:x()
+    local Reps=0
+    while(Text:length()>0) {
+        if(maxquota()<50) {
+            print("Warning, quota issues in WriteRaw! Reps="+Reps:toString())
+            exit()
+        }
+        #print("Rep "+Reps:toString()+": Printing "+Offset:toString()+", "+Text:length():toString()+" remains.")
+        local Out=Text:left(Offset)
+        This:writeString(Out, CPos:x(), CPos:y(), FG, BG, Flash)
+        Text=Text:sub(Offset+1)
+        This[2045]=This[2045]+Out:length()
+        This:cnSetCursorPos(This:cnCursorPos()) #Force shifting
+        CPos=This:cnCursorPos()
+        Offset=Width-CPos:x()
+        Reps=Reps+1
+        if(Reps>100) {
+            print("Warning! Too many repetitions in WriteRaw?")
+            break
+        }
+    }
+}
+
+function void wirelink:cnWrite(Text:string, FG:number, BG:number, Flash:number) {
+    local StartIdx=1
+    local Reps=0
+    while(StartIdx<=Text:length()) {
+        local EndIdx=Text:findRE("[\n\t]")
+        if(EndIdx==0) {
+            EndIdx=Text:length()+1
+        }
+        #print("Writing between "+StartIdx:toString()+" and "+EndIdx:toString())
+        This:cnWriteRaw(Text:sub(StartIdx, EndIdx), FG, BG, Flash)
+        if(EndIdx<=Text:length()) {
+            local Char=Text:index(EndIdx)
+            if(Char=="\n") {
+                This:cnCarriageReturn()
+                This:cnNewLine()
+            } elseif(Char=="\t") {
+                This:cnHorizontalTab()
+            }
+        }
+        StartIdx=EndIdx+1
+        Reps=Reps+1
+        if(Reps>100) {
+            print("Warning! Too many repetitions in Write?")
+            break
+        }
+    }
+}
+
+function void wirelink:cnWrite(Text:string, FG:number, BG:number) {
+    This:cnWrite(Text, FG, BG, 0)
+}
+
+function void wirelink:cnWrite(Text:string, FG:number) {
+    This:cnWrite(Text, FG, This[2042])
+}
+
+function void wirelink:cnWrite(Text:string) {
+    This:cnWrite(Text, 999)
+}

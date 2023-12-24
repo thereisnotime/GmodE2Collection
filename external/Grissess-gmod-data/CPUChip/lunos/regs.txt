@@ -1,0 +1,172 @@
+//LunOS -- Lunar Operating System
+//regs -- Registers
+
+//This module defines all of the "internal registers" that can be mapped with
+//CPUSET and CPUGET. This includes all of the general purpose registers, too,
+//like EAX, ESI, and even IP (setting this is comparable to doing a near jump).
+//Only privileged code can actually use CPUSET, however, and some registers
+//are only accessible this way, protecting the system (in theory) from
+//unintentional or malicious user-space abuse.
+
+#ifndef LUNOS_REGS
+#define LUNOS_REGS
+
+#define REG_IP 0
+//Local Instruction Pointer.
+#define REG_EAX 1
+//General Purpose Register A. (Usually: accumulators, cdecl return value.)
+#define REG_EBX 2
+//General Purpose Register B. (Usually: base pointers.)
+#define REG_ECX 3
+//General Purpose Register C. (Usually: counters.)
+#define REG_EDX 4
+//General Purpose Register D. (Usually: data or destination pointers.)
+#define REG_ESI 5
+//Source index.
+#define REG_EDI 6
+//Destination index.
+#define REG_ESP 7
+//Stack Pointer. (Generally used in PUSH/POP. Points to next free location; grows down.)
+#define REG_EBP 8
+//Base Pointer. (Points to the top of a cdecl call frame.)
+#define REG_ESZ 9
+//Stack size. (Interrupt 6:ESP is generated instead if popping would result in an ESP>ESZ.)
+//--------------------------
+#define REG_CS 16
+//Code segment. (Implicit segment of the IP register.)
+#define REG_SS 17
+//Stack segment. (Implicit segment of the ESP register.)
+#define REG_DS 18
+//Data segment. (Implicit segment of all general purpose registers.)
+#define REG_ES 19
+//Extra segment. (Non-normative name, only ever explicitly used.)
+#define REG_GS 20
+//General segment. (Non-normative name, only ever explicitly used.)
+#define REG_FS 21
+//F segment. (Non-normative name, only ever explicitly used.)
+#define REG_KS 22
+//Key segment. (Non-normative name, only ever explicitly used.)
+#define REG_LS 23
+//Library segment. (Non-normative name, only ever explicitly used.)
+//--------------------------
+#define REG_IDTR 24
+//Interrupt vector table pointer. (Absolute physical address. Usually set with LIDTR.)
+#define REG_CMPR 25
+//Comparison register.
+#define REG_XEIP 26
+//Absolute instruction pointer. (Read only.)
+#define REG_LADD 27
+//Additional interrupt parameter. (When not specified or done directly from [EXT]INT, this is XEIP of the interrupting instruction.)
+#define REG_LINT 28
+//Interrupt number.
+#define REG_TMR 29
+//Cycle timer. (Counts intructions.)
+#define REG_TIMER 30
+//Real Time Clock. (Counts seconds elapsed.)
+#define REG_CPAGE 31
+//Current page. (Used in the page protection logic. Read only.)
+#define REG_IF 32
+//Interrupt Flag. (Usually cleared with CLI respectively. Locally enables/disables interrupts.)
+#define REG_PF 33
+//Protected Flag. (Set whenever CPAGE's runlevel is greater than 0. Prevents certain potentially-system-compromising features.)
+#define REG_EF 34
+//Extended Flag. (Usually set/cleared with STEF/CLEF respectively. Locally enables/disables various advanced features.)
+#define REG_NIF 35
+//Next Interrupt Flag. (Set by STI; if set during the next instruction fetch, IF is set, and this is cleared. This logic prevents
+//interrupts during the final IRET/EXTRET of an interrupt handler.)
+#define REG_MF 36
+//Memory Flag. (Usually set/cleared with STM/CLM respectively. Locally enables/disables memory paging.)
+#define REG_PTBL 37
+//Page table pointer. (Absolute physical address.)
+#define REG_PTBE 38
+//Page table size. (Specified in entries. The table must have one more entry than this to accomodate the "default" entry at index 0.)
+#define REG_PCAP 39
+//Paging Capability. (Set by default to enable logical addressing rather than physical addressing in most cases when MF is set.)
+#define REG_RQCAP 40
+//Memory request delay capability. (Set by default to enable page trapping on read/write. Delays actual memory flushing--like a cache.)
+//------------------------
+#define REG_PPAGE 41
+//Previous page. (Used in the page protection logic. Read only.)
+#define REG_MEMRQ 42
+//Memory request. (When RQCAP is set, 1 indicates a delayed operation. 2 and 3 represent read and write requests, respectively.)
+//------------------------
+#define REG_RAMSize 43
+//Internal RAM size. (Amount installed on-chip, not including memory devices outside the chip. Read only.)
+#define REG_External 44
+//External flag. (Set when handling an external IO operation.)
+#define REG_BusLock 45
+//Bus Lock flag. (Set when the bus is locked for memory operations. This is usually during an instruction, but almost never between them.)
+#define REG_Idle 46
+//Idle flag. (Set when the processor has been instructed to idle; used to synchronize with engine framerate.)
+#define REG_INTR 47
+//Interrupt flag. (Set when handling an interrupt.)
+//-------------------------
+#define REG_SerialNo 48
+//Serial number. (Uniquely assigned per-processor at creation. Read only.)
+#define REG_CODEBYTES 49
+//Code bytes. (Monotonically increasing number of bytes processed by the instruction fetch so far. Read only.)
+#define REG_BPREC 50
+//Binary precision. (Number of bits to preserve during base-2 operations such as AND, XOR, etc.)
+#define REG_IPREC 51
+//Integer precision. (Number of bits to preserve during integer operations such as ADD, DIV, etc.)
+#define REG_NIDT 52
+//Interrupt vector table size. (Number of entries in the interrupt table. Interrupts above this value are ignored or deferred to
+//"basic" processing--where int 0 resets the processor, and int 1 halts it.)
+#define REG_BlockStart 53
+//Block start. (Set by the first parameter of the BLOCK instruction, then cleared by the next block-aware instruction.)
+#define REG_BlockSize 54
+//Block size. (Set by the second parameter of the BLOCK instruction, then cleared by the next block-aware instruction.)
+#define REG_VMODE 55
+//Vector mode. (Sets the size of vectors in vector operations. Only supported values are integers in [2, 3].)
+#define REG_XTRL 56
+//External runlevel. (The effective runlevel of IO access from external devices. May trigger faults wherein the External register is set.)
+#define REG_HaltPort 57
+//Halt Port. (This register is NO LONGER USED OR SUPPORTED IN ANY WAY.)
+#define REG_HWDEBUG 58
+//Hardware Debug. (Set by the STD2 instruction; not in the VM, but probably used by the debugger mode of the CPU tool.)
+#define REG_DBGSTATE 59
+//Debug State. (Set by the STD2 instruction; not in the VM, but probably used by the debugger mode of the CPU tool.)
+#define REG_DBGADDR 60
+//Debug Address. (Not in the VM, but probably used by the debugger mode of the CPU tool.)
+#define REG_CRL 61
+//Current Runlevel. (Used by page protection logic. Oddly, not read-only, but can't be set by unprivileged code.)
+#define REG_TimerDT 62
+//Timer Delta. (How much to increment TMR by for the currently cached instruction block.)
+#define REG_MEMADDR 63
+//Memory Address. (Valid when MEMRQ is set; refers to the address in the requested instruction.)
+//------------------------------
+#define REG_TimerMode 64
+//Timer Mode. (When 1, count down seconds using TIMER. When 2, count down instructions using TMR.)
+#define REG_TimerRate 65
+//Timer Rate. (Triggers an EXTINT when TIMER/TMR--depending on TimerMode--minus TimerPrevTime, exceeds this value.)
+#define REG_TimerPrevTime 66
+//Timer Previous Time. (The value of TIMER/TMR--depending on TimerMode--when the timer was set.)
+#define REG_TimerAddress 67
+//Timer Address. (The EXTINT number to trigger on expiry.)
+#define REG_TimerPrevMode 68
+//Timer Previous Mode. (Used to check if the timer's previous mode has changed, and update the TimerPrevTime register accordingly.)
+//------------------------------
+#define REG_R0 96
+//General Purpose Register 0. (All other registers, up to REG_R_SZ-1, of number i reside in internal location REG_R0+i.)
+#define REG_R_SZ 32
+//Number of general purpose registers. Values of R0 through R(n-1) are valid, where n is this constant.
+
+//Various useful enums for dealing with these registers
+
+//For TimerMode:
+#define TIMER_MODE_OFF 0
+//Don't time.
+#define TIMER_MODE_SECONDS 1
+//Time using TIMER as a time source (count seconds).
+#define TIMER_MODE_CYCLES 2
+//Time using TMR as a time source (count cycles/instructions).
+
+//For MEMRQ:
+#define MEMRQ_DELAYED 1
+//A delayed access.
+#define MEMRQ_READ 2
+//A read access.
+#define MEMRQ_WRITE 3
+//A write accedd.
+
+#endif
