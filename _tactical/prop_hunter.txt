@@ -1,0 +1,25 @@
+@name Player Killer
+@inputs
+@outputs
+@persist E:entity Ar:array F:vector Ents:entity Counter T Owner:entity
+@model models/props_phx/construct/metal_plate1.mdl
+interval(10)
+E:setColor(vec4(0, 0, 0,0))
+E:setMass(50000)
+Owner = owner()
+if (duped()) {reset()}
+findByClass("player")
+T++
+if (T > 100) {T=0,Counter++}
+if (Counter > findToArray():count()) {Counter = 1}
+
+E = entity()
+Ents = findToArray():entity(Counter)
+
+# Skip the owner player
+if (Ents != Owner) {
+    F = Ents:pos() + vec(0,0,60) - E:pos()
+    E:applyForce((F + $F * 5) * 50000)
+} else {
+    Counter++  # Move to the next entity if the current one is the owner
+}

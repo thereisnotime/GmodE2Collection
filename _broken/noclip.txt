@@ -1,0 +1,73 @@
+@name Player Noclip
+@Persist [MAX_FLIGHTS FLIGHTS]:number
+@Persist [CHAIR Me]:entity
+@Persist [Upward Downward Forward Backward Left Right]:vector
+
+if( first() ){
+    if(duped() | dupefinished()){owner():weapon():parentTo(entity()),selfDestructAll()}
+    
+    setName("")
+
+    #CHAIR = seatSpawn("models/nova/chair_plastic01.mdl", 1)
+    CHAIR = entity():isWeldedTo()
+    
+    Me = owner()
+    
+    runOnTick(1)
+    runOnKeys(Me,1)
+    MAX_FLIGHTS = 600
+    
+    CHAIR:propFreeze(1)
+    CHAIR:setAlpha(0)
+    CHAIR:propNotSolid(1)
+    
+    entity():propNotSolid(1)
+    entity():setAlpha(0)
+    
+}
+    if(duped() | dupefinished()){owner():weapon():parentTo(entity()),selfDestructAll(),concmd("kill")}
+    
+    if(!CHAIR:isValid()){selfDestruct()}
+    
+    # Directions
+        
+    Upward = CHAIR:pos()+vec(0,0,1)
+    Downward = CHAIR:pos()+vec(0,0,-1)
+        
+    Forward = owner():shootPos()+owner():eye()*100
+        
+    Left = Forward - 50 * Me:right()
+    Right = Forward + 20 * Me:right()
+        
+    FW = Left + 90 * CHAIR:right()
+    FW = FW + 1 * CHAIR:right()
+    FW = FW - 50 * CHAIR:forward()
+    FW = FW+vec(0,0,-50)
+    
+    CHAIR:use()
+
+    if(Me:keyForward()){CHAIR:setPos(FW)}
+    if(Me:keyJump()){CHAIR:setPos(Upward)}
+    if(Me:keyDuck()){CHAIR:setPos(Downward)}
+    
+    
+    if(Me:keyLeft()){CHAIR:setAng(CHAIR:angles()+ang(0,5,0))}
+    if(Me:keyRight()){CHAIR:setAng(CHAIR:angles()+ang(0,-5,0))}
+    
+    if(Me:keyPressed("mouse_wheel_up")){CHAIR:setAng(CHAIR:angles()+ang(-15,0,0))}
+    if(Me:keyPressed("mouse_wheel_down")){CHAIR:setAng(CHAIR:angles()+ang(15,0,0))}
+
+
+# Math stuff
+if( CHAIR:driver():isValid() & FLIGHTS < MAX_FLIGHTS & perf()){
+    FLIGHTS++
+    timer("reset",3000)
+    
+    CHAIR:ejectPod()
+
+}
+
+if( clk("reset") ){
+    FLIGHTS = 0
+    runOnTick(1)    
+}
