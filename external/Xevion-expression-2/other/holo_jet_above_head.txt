@@ -1,0 +1,268 @@
+@name Holo Jet Above Head
+@outputs Fire
+@inputs V:vector
+@persist [E O]:entity Fire
+
+if(first()){
+E=entity()
+O=owner()
+M="phoenix_storms/metal_plate"
+M2="phoenix_storms/metalbox2"
+E:setAlpha(0)
+runOnTick(1)
+holoCreate(1)
+holoPos(1,E:pos())
+holoModel(1,"hqcylinder2")
+holoAng(1,ang(0,90,90))
+holoScale(1, vec(0.5 * S, .2 * S, 1 * S))
+holoParent(1,E)
+holoMaterial(1,M)
+holoCreate(2)
+holoPos(2,E:pos()+vec(9,0,0))
+holoModel(2,"hqcone")
+holoAng(2,ang(0,90,90))
+holoScale(2, vec(0.5 * S, .2 * S, .5 * S))
+holoParent(2,E)
+holoMaterial(2,M)
+holoCreate(3)
+holoPos(3,E:pos()+vec(2,0,0))
+holoModel(3,"cube")
+holoAng(3,ang(0,90,90))
+holoScale(3, vec(1.5 * S, .05 * S, .3 * S))
+holoParent(3,E)
+holoMaterial(3,M2)
+holoColor(3,vec(75,75,75))
+holoCreate(4)
+holoPos(4,E:pos()+vec(2,-10.5,0))
+holoModel(4,"pyramid")
+holoAng(4,ang(0,0,90))
+holoScale(4, vec(0.3 * S, .05 * S, .25 * S))
+holoParent(4,E)
+holoMaterial(4,M2)
+holoColor(4,vec(155,155,155))
+holoCreate(5)
+holoPos(5,E:pos()+vec(2,10.5,0))
+holoModel(5,"pyramid")
+holoAng(5,ang(0,180,90))
+holoScale(5, vec(0.3 * S, .05 * S, .25 * S))
+holoParent(5,E)
+holoMaterial(5,M2)
+holoColor(5,vec(155,155,155))
+holoCreate(6)
+holoPos(6,E:pos()+vec(2,5,-1.2))
+holoModel(6,"hqcylinder2")
+holoAng(6,ang(0,90,90))
+holoScale(6, vec(0.1 * S, .1 * S, .3 * S))
+holoParent(6,E)
+holoMaterial(6,M)
+holoCreate(7)
+holoPos(7,E:pos()+vec(2,-5,-1.2))
+holoModel(7,"hqcylinder2")
+holoAng(7,ang(0,90,90))
+holoScale(7, vec(0.1 * S, .1 * S, .3 * S))
+holoParent(7,E)
+holoMaterial(7,M)
+holoCreate(8)
+holoPos(8,E:pos()+vec(2,-7,-1.6))
+holoModel(8,"hqcylinder2")
+holoAng(8,ang(0,90,90))
+holoScale(8, vec(0.1 * S, .1 * S, .3 * S))
+holoParent(8,E)
+holoMaterial(8,M)
+holoCreate(9)
+holoPos(9,E:pos()+vec(2,7,-1.6))
+holoModel(9,"hqcylinder2")
+holoAng(9,ang(0,90,90))
+holoScale(9, vec(0.1 * S, .1 * S, .3 * S))
+holoParent(9,E)
+holoMaterial(9,M)
+holoCreate(10)
+holoPos(10,E:pos()+vec(0.1,0,1))
+holoModel(10,"hqcylinder2")
+holoAng(10,ang(0,90,90))
+holoScale(10, vec(0.2 * S, .2 * S, .42 * S))
+holoParent(10,E)
+holoMaterial(10,M)
+holoCreate(11)
+holoPos(11,E:pos()+vec(-3.5,0,0.8))
+holoModel(11,"hqcylinder2")
+holoAng(11,ang(0,90,80))
+holoScale(11, vec(0.2 * S, .2 * S, .3 * S))
+holoParent(11,E)
+holoMaterial(11,M)
+holoCreate(12)
+holoPos(12,E:pos()+vec(4,0,0.8))
+holoModel(12,"hqcylinder2")
+holoAng(12,ang(0,90,-80))
+holoScale(12, vec(0.2 * S, .2 * S, .3 * S))
+holoParent(12,E)
+holoMaterial(12,M)
+holoCreate(13)
+holoPos(13,E:pos()+vec(6,0,0.8))
+holoModel(13,"dome2")
+holoAng(13,ang(0,90,10))
+holoScale(13, vec(0.2 * S, .5 * S, .2 * S))
+holoColor(13,vec(0,0,255))
+holoAlpha(13,(225))
+holoParent(13,E)
+holoCreate(14)
+holoPos(14,E:pos()+vec(-7.7,0,0))
+holoModel(14,"hqcone")
+holoAng(14,ang(0,90,-90))
+holoScale(14, vec(0.5 * S, .2 * S, .3 * S))
+holoParent(14,E)
+holoMaterial(14,M)
+holoCreate(15)
+holoPos(15,E:pos()+vec(-7.7,0,1.1))
+holoModel(15,"prism")
+holoAng(15,ang(45,0,180))
+holoScale(15, vec(0.5 * S, .05 * S, .3 * S))
+holoParent(15,E)
+holoMaterial(15,M)
+holoCreate(16)
+holoPos(16,E:pos()+vec(-5,0,0.5))
+holoModel(16,"hqcylinder2")
+holoAng(16,ang(0,90,80))
+holoScale(16, vec(0.2 * S, .2 * S, .3 * S))
+holoParent(16,E)
+holoMaterial(16,M)
+holoCreate(17)
+holoPos(17,E:pos()+vec(4.3,5,-1.2))
+holoModel(17,"cone")
+holoAng(17,ang(0,90,90))
+holoScale(17, vec(0.1 * S, .1 * S, .1 * S))
+holoParent(17,E)
+holoMaterial(17,M)
+holoCreate(18)
+holoPos(18,E:pos()+vec(4.3,-5,-1.2))
+holoModel(18,"cone")
+holoAng(18,ang(0,90,90))
+holoScale(18, vec(0.1 * S, .1 * S, .1 * S))
+holoParent(18,E)
+holoMaterial(18,M)
+holoCreate(19)
+holoPos(19,E:pos()+vec(4.3,-7,-1.6))
+holoModel(19,"cone")
+holoAng(19,ang(0,90,90))
+holoScale(19, vec(0.1 * S, .1 * S, .1 * S))
+holoParent(19,E)
+holoMaterial(19,M)
+holoCreate(20)
+holoPos(20,E:pos()+vec(4.3,7,-1.6))
+holoModel(20,"cone")
+holoAng(20,ang(0,90,90))
+holoScale(20, vec(0.1 * S, .1 * S, .1 * S))
+holoParent(20,E)
+holoMaterial(20,M)
+holoCreate(21)
+holoPos(21,E:pos()+vec(2,5,-0.8))
+holoModel(21,"cube")
+holoAng(21,ang(0,90,90))
+holoScale(21, vec(0.05 * S, .14 * S, .15 * S))
+holoParent(21,E)
+holoMaterial(21,M)
+holoCreate(22)
+holoPos(22,E:pos()+vec(2,-5,-0.8))
+holoModel(22,"cube")
+holoAng(22,ang(0,90,90))
+holoScale(22, vec(0.05 * S, .14 * S, .15 * S))
+holoParent(22,E)
+holoMaterial(22,M)
+holoCreate(23)
+holoPos(23,E:pos()+vec(2,-7,-0.7))
+holoModel(23,"cube")
+holoAng(23,ang(0,90,90))
+holoScale(23, vec(0.05 * S, .14 * S, .12 * S))
+holoParent(23,E)
+holoMaterial(23,M)
+holoCreate(24)
+holoPos(24,E:pos()+vec(2,7,-0.7))
+holoModel(24,"cube")
+holoAng(24,ang(0,90,90))
+holoScale(24, vec(0.05 * S, .14 * S, .12 * S))
+holoParent(24,E)
+holoMaterial(24,M)
+holoCreate(25)
+holoPos(25,E:pos()+vec(-7,0,1))
+holoModel(25,"cube")
+holoAng(25,ang(0,90,90))
+holoScale(25, vec(0.75 * S, .05 * S, .3 * S))
+holoParent(25,E)
+holoMaterial(25,M2)
+holoColor(25,vec(75,75,75))
+holoCreate(26)
+holoPos(26,E:pos()+vec(-7,-5,1))
+holoModel(26,"pyramid")
+holoAng(26,ang(0,0,90))
+holoScale(26, vec(0.3 * S, .05 * S, .1 * S))
+holoParent(26,E)
+holoMaterial(26,M2)
+holoColor(26,vec(155,155,155))
+holoCreate(27)
+holoPos(27,E:pos()+vec(-7,5,1))
+holoModel(27,"pyramid")
+holoAng(27,ang(0,180,90))
+holoScale(27, vec(0.3 * S, .05 * S, .1 * S))
+holoParent(27,E)
+holoMaterial(27,M2)
+}
+
+if(O:keyAttack2()){
+Fire=1
+}else{
+Fire=0
+}
+
+if(duped()){
+concmd("say Made by Tomo742 and you cannot haz naughty duper")
+timer("selfdestruct",100)
+}
+
+if(clk("selfdestruct")){
+selfDestruct()
+}
+
+
+##############################
+if(->V){
+Target=V
+}else{
+if(!O:keyUse()){
+#STABILISE
+TarQ = quat(O:eyeAngles()) #Calculate quaternion for target orientation
+CurQ = quat(E) #Calculate current orientation quaternion
+
+#TarQ/CurQ is a quaternion representing the rotation that will rotate the object from current orientation to the target one.
+Q = TarQ/CurQ
+
+#applyTorque() works on intrinsic vectors! Get the rotation vector and transform it.
+EP=E:pos()
+TTV = E:toLocal(rotationVector(Q)+EP)
+#Alternatively, can use "V = transpose(matrix(E))*rotationVector(Q)"
+
+#Apply torque. angVelVector() works like a delta term.
+#Factors 150 and 12 can be adjusted to achieve best effect.
+E:applyTorque((150*TTV - 12*E:angVelVector())*E:inertia())
+
+Target=O:shootPos()+vec(0,0,100) # Above the owner's head.
+}elseif(O:keyUse()){
+#STABILISE
+TarQ = quat(O:eyeAngles()) #Calculate quaternion for target orientation
+CurQ = quat(E) #Calculate current orientation quaternion
+
+#TarQ/CurQ is a quaternion representing the rotation that will rotate the object from current orientation to the target one.
+Q = TarQ/CurQ
+
+#applyTorque() works on intrinsic vectors! Get the rotation vector and transform it.
+EP=E:pos()
+TTV = E:toLocal(rotationVector(Q)+EP)
+#Alternatively, can use "V = transpose(matrix(E))*rotationVector(Q)"
+
+#Apply torque. angVelVector() works like a delta term.
+#Factors 150 and 12 can be adjusted to achieve best effect.
+E:applyTorque((150*TTV - 12*E:angVelVector())*E:inertia())
+
+Target=O:aimPos()+vec(0,0,100) # Above where the owner is looking.
+}
+}
+E:applyForce(((Target-E:pos())*10-E:vel())*E:mass()) 

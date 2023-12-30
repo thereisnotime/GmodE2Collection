@@ -1,0 +1,14 @@
+@name Oscilloscope Circle
+@outputs X:number Y:number
+@persist I:number
+@trigger 
+
+interval(10)
+
+if(first()) {
+    I = 0
+}
+
+I += 10 + sin(I)
+X = sin(I)
+Y = cos(I) 

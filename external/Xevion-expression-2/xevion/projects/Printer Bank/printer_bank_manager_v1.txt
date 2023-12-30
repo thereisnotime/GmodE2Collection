@@ -1,0 +1,459 @@
+@name Printer Bank Manager V1 by Xevion
+@inputs EGP:wirelink User:entity
+@persist SelectIndex:number BITMINER_POWER:table Selected:array TAX:number Mode:string OWNER_NAME:string PRINTER_MAX:table PRINTER_UGPRADE:table PRINTER_COSTS:table PRINTER_TYPE:string COLOR_CHATBLUE:vector
+@trigger 
+
+# Chat Commands
+# !tax <float> - Moves the tax to a certain level. 1.00 = +100%. Can be negative.
+# !clearinv - Forcefully clear selected items
+# !cleargui - Move to main menu
+# !clearall - clearinv & cleargui combined
+# !time <time> - Set the current contract time (in hours).
+# !sumcost - Print the raw cost of buying the selected items.
+# !sumtax - Print the inflicted payment upon buying the select items.
+# !sumcontract - The amount of money paid upon contract signature.
+# !name <name> - Sets the name of the Shop to the specificed name. Useful in-case of long names.
+
+# Begin program intervals, timers etc.
+runOnChat(1)
+
+# Constants and other first-only executions
+if (first()) {
+    print("first")
+    EGP:egpClear() # Clear in-case E2 is repasted
+    PRINTER_COSTS = table() # holds the constant costs of printers
+    PRINTER_MAX = table() # holds constants concerning the maximum of each printer
+    PRINTER_UPGRADE = table()
+    BITMINER_POWER = table()
+    TAX = 0.5
+    OWNER_NAME = owner():name()
+    
+    Mode = "main"
+    Selected = array()
+    
+    # Often used Colors
+    COLOR_CHATBLUE = vec(162, 162, 241)
+    
+    ### Configure printer costs (bitminer only)
+    # SERVER 7 x CPU ($2,000) = $14,000
+    # S2 -
+    # S1 - 3 Cores ($50,000), 7 CPUs ($2,000)
+        
+    ## Configure printer price costs here in-case they change
+    # Bitminers
+    PRINTER_COSTS["bitminer_rack", number] = 100000
+    PRINTER_COSTS["bitminer_server", number] = 50000
+    PRINTER_COSTS["bitminer_s2", number] = 25000
+    PRINTER_COSTS["bitminer_s1", number] = 5000
+    PRINTER_COSTS["bitminer_extensionlead", number] = 500
+    PRINTER_COSTS["bitminer_powerlead", number] = 500
+    PRINTER_COSTS["bitminer_generator", number] = 6000
+    PRINTER_COSTS["bitminer_fueltankline", number] = 11500
+    
+    # Moneyprinters
+    PRINTER_COSTS["printer_sapphire", number] = 20000
+    PRINTER_COSTS["printer_emerald", number] = 45000
+    PRINTER_COSTS["printer_ruby", number] = 60000
+    PRINTER_COSTS["printer_diamond", number] = 85000
+    PRINTER_COSTS["printer_platinum", number] = 150000
+    PRINTER_COSTS["printer_god", number] = 350000
+    
+    ## Configure printer maximums here in-case they change
+    # Bitminers
+    PRINTER_MAX["bitminer_rack", number] = 2
+    PRINTER_MAX["bitminer_server", number] = 16
+    PRINTER_MAX["bitminer_s2", number] = 4
+    PRINTER_MAX["bitminer_s1", number] = 4
+    PRINTER_MAX["bitminer_extensionlead", number] = 8
+    PRINTER_MAX["bitminer_powerlead", number] = 10
+    PRINTER_MAX["bitminer_generator", number] = 3
+    PRINTER_MAX["bitminer_fueltankline", number] = 2
+    
+    # Moneyprinters
+    PRINTER_MAX["printer_sapphire", number] = 2
+    PRINTER_MAX["printer_emerald", number] = 2
+    PRINTER_MAX["printer_ruby", number] = 2
+    PRINTER_MAX["printer_diamond", number] = 2
+    PRINTER_MAX["printer_platinum", number] = 1
+    PRINTER_MAX["printer_god", number] = 1
+    
+    ## Bitminer Power Requirements
+    # Bitminer
+    BITMINER_POWER["bitminer_server", number] = 100
+    BITMINER_POWER["bitminer_s2", number] = 250
+    BITMINER_POWER["bitminer_s1", number] = 100
+}
+
+## Calculation
+# addCommas - Returns a String from the Float or Integer Number provided WITH commas inserted.
+function string addCommas(Value:number) {
+    local Split = Value:toString():explode(".")
+    local String = Split[1, string]
+    local InsertPos = String:length() - 3
+    while(InsertPos > 0) {
+        String = String:left(InsertPos) + "," + String:right(String:length() - InsertPos)
+        InsertPos -= 3
+    }
+    if(Split[2, string]) {
+        return String + "." + Split[2, string]
+    } else {
+        return String
+    }
+}
+
+# Counts the number of matching values in the array (only works with String values)
+function number countValues(Array:array, Value:string) {
+    if(Array:count() > 0) {
+        local Count = 0
+        for(I = 1, Array:count(), 1) {
+            if(Array[I, string] == Value) {
+                Count++
+            }
+        }
+        return Count
+    } else {
+        return 0
+    }
+}
+
+function ensureMinimum(Item:string, N:number) {
+    local Count = countValues(Selected, Item)
+    if(Count < N) {
+        local Difference = N - Count
+        for(I = 1, Difference, 1) {
+            # add(Item)
+            Selected:pushString(Item)
+        }
+    }
+}
+
+# Complex function for calculating the number of generators requirement based on
+# Ports left per Generator (Allocation number)
+# PowerLeft 
+function number generatorsRequirement() {
+    local PowerLeft = array()
+    local Allocation = array()
+    
+    for(I = 0, PRINTER_MAX["bitminer_rack", number], 1) {PowerLeft:pushNumber(1000),Allocation:pushNumber(0)}
+    
+    print("-":repeat(15))
+    foreach(I, Item:string=Selected) {
+        if(BITMINER_POWER[Item, number] == 0) {continue}
+        print("Placing " + Item)
+        for(J = 1, PRINTER_MAX["bitminer_rack", number], 1) {
+            print("Trying to place in Generator " + J)
+            if(PowerLeft[J, number] >= BITMINER_POWER[Item, number] && Allocation[J, number] < 8) {
+                print("Placed in Generator " + J)
+                PowerLeft[J, number] = PowerLeft[J, number] - BITMINER_POWER[Item, number]
+                Allocation[J, number] = Allocation[J, number] + 1
+                break
+            }
+        }
+    }
+    
+    local GeneratorCount = 0
+    for(X = 1, Allocation:count(), 1) {
+        if(Allocation[X, number] > 0) {
+            GeneratorCount += 1
+        }
+    }
+    printTable(PowerLeft)
+    return GeneratorCount
+}
+
+function ensureRequirements(Item:string) {
+    local Count = generatorsRequirement()
+    ensureMinimum("bitminer_rack", Count)
+    ensureMinimum("bitminer_generator", Count)
+    ensureMinimum("bitminer_fueltankline", Count)
+    ensureMinimum("bitminer_powerlead", Count)
+    #[
+    if(Item == "bitminer_server") {
+        local ServerCount = countValues(Selected, Item)
+        # Generators, Racks, Powerleads, and FuelTanks + Fuel Lines
+        local Needed = ceil(ServerCount / 8)
+        ensureMinimum("bitminer_rack", Needed)
+        ensureMinimum("bitminer_generator", Needed)
+        ensureMinimum("bitminer_fueltankline", Needed)
+        ensureMinimum("bitminer_powerlead", Needed)
+    } elseif(Item == "bitminer_s2") {
+        local S2Count = countValues(Selected, Item)
+        local Needed = ceil(S2Count / 4)
+        ensureMinimum("bitminer_generator", Needed)
+        ensureMinimum("bitminer_fueltankline", Needed)
+        ensureMinimum("bitminer_extensionlead", Needed)
+        ensureMinimum("bitminer_powerlead", S2Count)
+    }
+    ]#
+}
+
+# Logic for adding items (bitminers/printers) to the inventory queue
+function void add(Item:string) {
+    if(countValues(Selected, Item) < PRINTER_MAX[Item, number]) {
+        Selected:pushString(Item)
+        ensureRequirements(Item)
+    }
+}
+
+# onClick - decides if the user has clicked a specific box
+function number onClick(ID){
+    local Position = EGP:egpPos(ID)
+    local Height = EGP:egpSize(ID)/2
+    local Cursor = EGP:egpCursor(User)
+    if(Position:x() == -1 || Position:y() == -1 || Height:x() == -1 || Height:y() == -1 || Cursor:x() == -1 || Cursor:y() == -1) {
+        return 0
+    } else {
+        # print(Position, Height, EGP:egpCursor(User))
+        return inrange(Cursor,Position-Height,Position+Height)
+    }
+}
+# sumCost - sums costs of Items provided
+function number sumCost(Items:array) {
+    local Cost = 0
+    if(Items:count() > 0) {
+        for(I = 0, Items:count(), 1) {
+            Cost += PRINTER_COSTS[Items[I, string], number]
+        }
+    }
+    return Cost
+}
+
+# sumTax - finds taxed cuts of Item costs
+function number sumTax(Items:array) {return sumCost(Items) * TAX}
+# sumContract
+function number sumContract(Items:array) {return sumCost(Items) * (1 + TAX)}
+# Function Overloads
+function number sumCost() {return sumCost(Selected)}
+function number sumTax() {return sumTax(Selected)}
+function number sumContract() {return sumContract(Selected)}
+
+## Graphics Drawing
+function top_title(ID1:number, ID2:number, ID3:number, Text:string) {
+    EGP:egpRoundedBox(11,vec2(254,20),vec2(440,40))
+    EGP:egpColor(11,vec(1,110,140))    
+    EGP:egpRoundedBox(12,vec2(254,20),vec2(434,34))
+    EGP:egpColor(12,vec(1,200,255)) 
+    EGP:egpText(13, Text,vec2(256,20))
+    EGP:egpFont(13,"coolvetica",35)
+    EGP:egpAlign(13,1,1) 
+    EGP:egpColor(13,vec(0,0,0))
+}
+
+# Creates a basic box at position
+function list_box(Index:number, BoxID:number, TextID:number, Text:string) {
+    local Position = vec2(256, 75 + (50 * (Index - 1)))
+    EGP:egpBox(BoxID, Position, vec2(380,40))    
+    EGP:egpColor(BoxID,vec(1,200,255))
+    EGP:egpAlign(BoxID,1,1)
+    # Text
+    EGP:egpText(TextID, Text, Position)
+    EGP:egpFont(TextID,"coolvetica",23)
+    EGP:egpColor(TextID,vec(0,0,0))
+    EGP:egpAlign(TextID,1,1)
+}
+
+function list_price_box(Index:number, BoxID:number, TextID:number, PriceID:number, CountID:number, Text:string, ItemID:string) {
+    local BoxPosition =  vec2(256, 75 + (50 * (Index - 1)))
+    local TextPosition = BoxPosition + vec2(-192 + 16, 0)
+    EGP:egpBox(BoxID, BoxPosition, vec2(380,40))    
+    EGP:egpColor(BoxID,vec(1,200,255))
+    EGP:egpAlign(BoxID,1,1)
+    # Item Name Text
+    EGP:egpText(TextID, Text, TextPosition)
+    EGP:egpFont(TextID,"coolvetica",23)
+    EGP:egpColor(TextID,vec(0,0,0))
+    EGP:egpAlign(TextID,0,1)
+    # Item Price Text
+    EGP:egpText(PriceID, "+$" + addCommas(PRINTER_COSTS[ItemID, number] * TAX), TextPosition + vec2(180, 0))
+    EGP:egpFont(PriceID,"coolvetica",25)
+    EGP:egpColor(PriceID, vec(0,0,0))
+    #EGP:egpColor(PriceID,vec(24,215,24))
+    EGP:egpAlign(PriceID,0,1)
+    # Item  Count Text
+    EGP:egpText(CountID, countValues(Selected, ItemID) + " / " + PRINTER_MAX[ItemID, number], TextPosition + vec2(345, 0))
+    EGP:egpFont(CountID,"coolvetica",23)
+    EGP:egpColor(CountID,vec(0,0,0))
+    EGP:egpAlign(CountID,2,1)
+}
+
+
+function subtitle_text(ID:number, Text:string) {
+    EGP:egpText(ID, Text, vec2(256,450))
+    EGP:egpFont(ID,"coolvetica",23)
+    EGP:egpColor(21,vec(0,0,0))
+    EGP:egpAlign(21,1,1)    
+}
+
+function bottom_box(ID:number, Text:string) {
+    # Top Element
+    EGP:egpRoundedBox(14,vec2(254,490),vec2(440,40))
+    EGP:egpColor(14,vec(1,110,140))
+    # Shadow Element
+    EGP:egpRoundedBox(15,vec2(254,490),vec2(434,34))
+    EGP:egpColor(15,vec(1,200,255))
+    # Text
+    EGP:egpText(ID,Text,vec2(255,490))
+    EGP:egpFont(ID,"coolvetica",23)
+    EGP:egpAlign(ID,1,1)
+    EGP:egpColor(ID,vec(0,0,0))
+}
+
+# Main Menu Graphical Logic
+function void base_menu() {
+    EGP:egpClear()
+    ### Center Gradients
+    ## Top Portion Gradient
+    EGP:egpBox(1,vec2(256,256),vec2(520,520))
+    EGP:egpMaterial(1,"gui/gradient_up")
+    EGP:egpColor(1,vec(42,200,240))
+    ## Bottom Portion Gradient
+    EGP:egpBox(2,vec2(256,256),vec2(520,520))
+    EGP:egpMaterial(2,"gui/gradient_down")
+    EGP:egpColor(2,vec(1,70,90))
+    ### Right/Left Lighter Boxes
+    ## Left
+    EGP:egpBox(3,vec2(15,256),vec2(35,550))
+    EGP:egpColor(3,vec(1,110,140))
+    ## Right
+    EGP:egpBox(4,vec2(495,256),vec2(35,550))
+    EGP:egpColor(4,vec(1,110,140))
+    ### Top/Bottom Underlying Dark Cyan
+    ## Bottom
+    EGP:egpBox(5,vec2(256,495),vec2(450,35))
+    EGP:egpColor(5,vec(1,110,140))
+    ## Top
+    EGP:egpBox(6,vec2(256,15),vec2(450,35))
+    EGP:egpColor(6,vec(1,110,140))
+    ### Top & Bottom Ultralight Trim Corners
+    ## Top    
+    EGP:egpBox(7,vec2(256,18),vec2(485,5))
+    EGP:egpColor(7,vec(1,200,255))
+    ## Bottom    
+    EGP:egpBox(8,vec2(256,493),vec2(485,5))
+    EGP:egpColor(8,vec(1,200,255))
+    ### Left and Right Vertical Trim
+    ## Right    
+    EGP:egpBox(9,vec2(496,256),vec2(5,478))
+    EGP:egpColor(9,vec(1,200,255))
+    ## Left
+    EGP:egpBox(10,vec2(16,256),vec2(5,478))
+    EGP:egpColor(10,vec(1,200,255))
+    top_title(11, 12, 13, OWNER_NAME + "'s Printer Bank")
+}
+
+function void backbutton() {
+    # Visible Triangle
+    EGP:egpTriangle(100, vec2(42, 19), vec2(67, 9), vec2(67, 27))
+    EGP:egpColor(100, vec(0,65,86))
+    # Visible Rectangle
+    EGP:egpBox(101, vec2(80, 19), vec2(30, 7))
+    EGP:egpColor(101, vec(0,65,86))
+    # Invisible Button Rectangle
+    EGP:egpBoxOutline(102, vec2(69, 19), vec2(53, 19))
+    EGP:egpColor(102, vec4(0,0,0,0)) # change alpha to see
+}
+
+function void main_menu(){
+    local CurCost = sumContract()
+    if(CurCost <= 0) {
+        bottom_box(16, "Select a Type of Printer or Bitminer to Sell")
+    } else {
+        bottom_box(16, "We'll pay $" + addCommas(CurCost) + " for these items")
+    }
+    list_box(1, 17,  18, "Bitminers")
+    list_box(2, 19, 20, "Printers")
+    subtitle_text(21, "If You Experience Any Issues PM " + OWNER_NAME)
+    
+}
+
+# Bitminers Menu Graphical Logic
+function void bitminers_menu() {
+    base_menu()
+    backbutton()
+    list_price_box(1, 200, 201, 202, 203, "Bitminer Rack",         "bitminer_rack")
+    list_price_box(2, 204, 205, 206, 207, "Bitminer Server",       "bitminer_server")
+    list_price_box(3, 208, 209, 210, 211, "Bitminer S2",           "bitminer_s2")
+    list_price_box(4, 212, 213, 214, 215, "Bitminer S1",           "bitminer_s1")
+    list_price_box(5, 216, 217, 218, 219, "Generator",             "bitminer_generator")
+    list_price_box(6, 220, 221, 222, 223, "Fuel Tank & Line",      "bitminer_fueltankline")
+    list_price_box(7, 224, 225, 226, 227, "Power Lead",            "bitminer_powerlead")
+    list_price_box(8, 228, 229, 230, 231, "Extension Lead",        "bitminer_extensionlead")
+}
+
+# Printers Menu Graphical Logic
+function void printers_menu() {
+    base_menu()
+    backbutton()
+    list_price_box(1, 200, 201, 202, 203, "Sapphire Printer", "printer_sapphire")
+    list_price_box(2, 204, 205, 206, 207, "Emerald Printer",  "printer_emerald")
+    list_price_box(3, 208, 209, 210, 211, "Ruby Printer",     "printer_ruby")
+    list_price_box(4, 212, 213, 214, 215, "Diamond Printer",  "printer_diamond")
+    list_price_box(5, 216, 217, 218, 219, "Platinum Printer", "printer_platinum")
+    list_price_box(6, 220, 221, 222, 223, "GOD Printer",      "printer_god")
+}
+
+if(!chatClk()) {
+    hint("Reloaded Screen on " + Mode, 0.4)
+    if(Mode == "main") {
+        if(onClick(17)) {
+            Mode = "bitminers"
+        } elseif(onClick(19)) {
+            Mode = "printers"
+        } else {
+            base_menu()
+            main_menu()
+        }
+    } elseif(Mode == "bitminers") {
+        if(onClick(102)){Mode = "main"}
+        elseif(onClick(200)) {add("bitminer_rack")}
+        elseif(onClick(204)) {add("bitminer_server")}
+        elseif(onClick(208)) {add("bitminer_s2")}
+        elseif(onClick(212)) {add("bitminer_s1")}
+        elseif(onClick(216)) {add("bitminer_generator")}
+        elseif(onClick(220)) {add("bitminer_fueltankline")}
+        elseif(onClick(224)) {add("bitminer_powerlead")}
+        elseif(onClick(228)) {add("bitminer_extensionlead")}
+        else {
+            base_menu()
+            bitminers_menu()
+        }
+    } elseif(Mode == "printers") {
+        if(onClick(102)) {Mode = "main"}
+        elseif(onClick(200)) {add("printer_sapphire")}
+        elseif(onClick(204)) {add("printer_emerald")}
+        elseif(onClick(208)) {add("printer_ruby")}
+        elseif(onClick(212)) {add("printer_diamond")}
+        elseif(onClick(216)) {add("printer_platinum")}
+        elseif(onClick(220)) {add("printer_god")}
+        else {
+            base_menu()
+            printers_menu()
+        }        
+    }
+} elseif(chatClk(owner())) {
+    LastSaid = lastSaid():explode(" ")
+    HideChat = 1
+    if(LastSaid[1, string] == "!tax") {TAX = LastSaid[2, string]:toNumber(),timer("reload", 20)}
+    elseif(LastSaid[1, string] == "!clearinv") {Selected = array(),printColor(COLOR_CHATBLUE,"Reset Selected Items")}
+    elseif(LastSaid[1, string] == "!cleargui") {Mode = "main",printColor(COLOR_CHATBLUE, "Reset GUI")}
+    elseif(LastSaid[1, string] == "!clearall") {Mode = "main",Selected = array(),printColor(COLOR_CHATBLUE, "Reset all Menus")}
+    elseif(LastSaid[1, string] == "!time") {Time = LastSaid[2, string]:toNumber(),printColor(COLOR_CHATBLUE, "Set Contract Time to " + LastSaid[2, string] + " Hours")}
+    elseif(LastSaid[1, string] == "!sumcost") {printColor(COLOR_CHATBLUE, "Not yet implemented")}
+    elseif(LastSaid[1, string] == "!sumtax") {print("Not yet implemented")}
+    elseif(LastSaid[1, string] == "!sumcontract") {print("Not yet implemented")}
+    elseif(LastSaid[1, string] == "!name") {OWNER_NAME = LastSaid[2, string], hint("Name changed to \"" + OWNER_NAME + "\"", 1.0),timer("execute", 20)}
+    else {HideChat = 0}
+    if(HideChat == 1){hideChat(1)}
+    
+    #[
+    &tax <float> - Moves the tax to a certain level. 1.00 = +100%. Can be negative.
+    &clearinv - Forcefully clear selected items
+    &cleargui - Move to main menu
+    &clearall - clearinv & cleargui combined
+    &time <time> - Set the current contract time (in hours).
+    &sumcost - Print the raw cost of buying the selected items.
+    &sumtax - Print the inflicted payment upon buying the select items.
+    &sumcontract - The amount of money paid upon contract signature.
+    &name <name> - Sets the name of the Shop to the specificed name. Useful in-case of long names.
+    ]#
+}

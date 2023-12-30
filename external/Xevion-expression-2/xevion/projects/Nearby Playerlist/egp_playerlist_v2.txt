@@ -1,0 +1,25 @@
+@name EGP PlayerList v2
+@inputs EGP:wirelink
+@outputs 
+@persist ITEM_N ITEM_WIDTH ITEM_HEIGHT ITEM_XPAD ITEM_YPAD
+@trigger 
+
+interval(3000)
+
+# Drawing Constants
+if(first()) {
+    ITEM_N = 10
+    ITEM_WIDTH = 512
+    ITEM_HEIGHT = 32
+    ITEM_XPAD = 16
+    ITEM_YPAD = 4
+}
+
+EGP:egpClear()
+for(N = 0, ITEM_N, 1) {
+    EGP:egpBox(
+        N, 
+        vec2(ITEM_XPAD + ((ITEM_WIDTH - (ITEM_XPAD * 2) / 2)), (ITEM_HEIGHT + ITEM_YPAD) * N),
+        vec2(ITEM_WIDTH - ITEM_XPAD, ITEM_HEIGHT)
+    )
+}

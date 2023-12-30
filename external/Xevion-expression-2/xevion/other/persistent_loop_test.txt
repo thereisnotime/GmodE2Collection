@@ -1,0 +1,11 @@
+@name Persistent Loop Test
+@persist X:number
+
+interval(500)
+if(first()){X = 0}
+else {
+    X++
+    if(X == 2) {
+        X = 0
+    }    
+}

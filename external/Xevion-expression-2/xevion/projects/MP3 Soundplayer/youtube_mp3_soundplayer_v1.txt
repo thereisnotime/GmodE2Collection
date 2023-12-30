@@ -1,0 +1,22 @@
+@name YouTube MP3 Soundplayer V1
+@inputs 
+@outputs 
+@persist Radio:entity URL:string
+@trigger 
+
+runOnChat(1)
+runOnHTTP(1)
+if(first()) {
+    print("Attempting fetch of resource @ " + realtime())
+    httpRequest("example.com")
+    print("Request made")
+}
+if(httpClk()){print("Request finished"), print(httpData())}
+
+if(chatClk(owner())) {
+    Message =  lastSaid():explode(" ")
+    if(Message[1, string] == "!play") {
+        hideChat(1)
+        entity():streamStart(1, "https://xevion.dev/stream/youtube/sWe4sPvzRLw")
+    }
+}

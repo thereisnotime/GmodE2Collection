@@ -1,0 +1,44 @@
+@name SilentHillAlarm By Fatality
+@outputs Input Text:string AlarmColor:vector BackgroundTextColor:vector LightStatus:number
+@persist LightStatus:number
+
+interval(1000) 
+runOnChat(1)
+
+if(first()) {
+    streamRadius(1,1000)
+    streamVolume(1,1000)
+    streamDisable3D(1)
+    Mode = 0
+}
+
+if(Mode == 1) {
+    LightStatus++
+    if(LightStatus == 2) {
+        LightStatus = 0
+    }
+}
+
+if(chatClk(owner())) {
+        LS = lastSaid():lower():explode(" ")
+        if(LS[1, string] == "!sirenon") {
+            if(Mode == 0) {
+                #Link = "https://www.dropbox.com/s/rzm1pvto4pi71s8/SilentHillSirenFinal.mp3?dl=1"
+                Link = "https://www.dropbox.com/s/7l6v3nync6cq575/oki doki boomer.mp3?dl=0&raw=1"
+                entity():streamStart(1,Link)
+
+                Input = 1
+                Text = "Warning: Breach Detected!"
+                AlarmColor = vec(255,0,0)
+                BackgroundTextColor = vec(0,0,0)
+            }
+        } elseif(LS[1, string] == "!sirenoff") {
+            if(Mode == 1) {
+                streamStop(1)
+                Input = 0
+                Text = "Status: Green"
+                AlarmColor = vec(0,255,0)
+                BackgroundTextColor = vec(255,255,255)
+            }
+    }
+}

@@ -1,0 +1,36 @@
+@name AFK Bypass E2 by Xevion
+@persist Position:vector LastTime:number AutoDisable:number Direction:number
+
+interval(100)
+
+local Time = time()
+local NewPosition = owner():pos()
+
+# Setup constants
+if(first()) {
+    Position = NewPosition # Last position when a difference in position was detected
+    LastTime = Time # Last time a difference in position was detected
+    AutoDisableForwards = 0 # 1 if should run -forward or -backward next tick
+    Direction = 1 # current/next walking direction is backwards, 0 is backward, 1 is forward
+}
+
+# if movement command executed, must disable and switch directions
+if(AutoDisable) {
+    Direction ? concmd("-forward") : concmd("-back")
+    AutoDisable = !AutoDisable
+    Direction = !Direction
+}
+
+# If movement detected
+if(Position:distance(NewPosition) > 1) {
+    LastTime = Time
+    Position = NewPosition
+} else {
+    local Difference = Time - LastTime
+    # If 8 minutes without movement
+    if(Difference > (60 * 8)) {
+        print("Automatically moving to disable AFK timer")
+        Direction ? concmd("+forward") : concmd("+back")
+        AutoDisable = 1
+    }
+}
